@@ -1,0 +1,685 @@
+================================================================================
+              OCAML - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ И ТИПАМ
+                    С расширенными примерами и типичными ошибками
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (каррирование, частичное применение)
+5. Pattern Matching (критично важно!)
+6. Списки и массивы
+7. Records и Variants
+8. Модули и Functors
+9. Обработка ошибок (Option, Result, Exception)
+10. Имперавтивные конструкции (ref, mutable)
+11. Объекты и классы
+12. Типичные ошибки (РАСШИРЕНО!)
+13. Примеры лучших практик
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+(* Комментарии в OCaml *)
+(* Многострочные
+   комментарии *)
+
+(* Точка с запятой НЕ нужна в конце выражений *)
+let x = 5
+let y = 10
+
+(* Точка с запятой нужна для последовательности *)
+let x = 5 in
+let y = 10 in
+x + y
+
+(* ;; только в REPL для разделения команд *)
+# let x = 5;;
+# let y = 10;;
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ int             │ 1, -10, 1000000 (машинные целые)                           │
+│ int32           │ 1l, -10l (32-битные)                                       │
+│ int64           │ 1L, -10L (64-битные)                                       │
+│ nativeint       │ 1n (размер с указатель)                                    │
+│ float           │ 3.14, -0.5, 2.5e10 (обязательно точка!)                    │
+│ bool            │ true, false                                                │
+│ char            │ 'a', 'б' (одиночные кавычки)                               │
+│ string          │ "hello", "привет" (двойные кавычки)                        │
+│ bytes           │ Bytes.create 10 (изменяемые байты)                         │
+│ list            │ [1; 2; 3] (однотипный, неизменяемый)                       │
+│ array           │ [|1; 2; 3|] (изменяемый, доступ O(1))                      │
+│ tuple           │ (1, "a", true) (разнотипный)                               │
+│ record          │ {name = "John"; age = 25}                                  │
+│ variant         │ type t = A | B of int | C of string * int                  │
+│ option          │ Some 5, None (может быть ничего)                           │
+│ result          │ Ok 5, Error "msg" (результат с ошибкой)                    │
+│ lazy            │ lazy (expensive_computation ())                            │
+│ ref             │ ref 5 (изменяемая ячейка)                                  │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+(* Проверка типа в REPL: *)
+# let x = 5;;
+val x : int = 5
+
+(* Явное указание типа: *)
+let x : int = 5
+let (y : float) = 3.14
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+(* let - неизменяемая связка (по умолчанию) *)
+let x = 5
+(* x = 6  (* ОШИБКА! Нельзя изменить *) *)
+
+(* let ... in - локальная связка *)
+let result =
+  let x = 5 in
+  let y = 10 in
+  x + y
+
+(* let ... and - взаимная рекурсия *)
+let rec even n =
+  if n = 0 then true else odd (n - 1)
+and odd n =
+  if n = 0 then false else even (n - 1)
+
+(* mutable - изменяемое поле *)
+type counter = { mutable count : int }
+let c = { count = 0 }
+c.count <- c.count + 1  (* OK! *)
+
+(* ref - изменяемая ячейка *)
+let r = ref 5
+r := 10  (* Изменить значение *)
+!r  (* Получить значение (10) *)
+
+================================================================================
+4. ФУНКЦИИ (КАРРИРОВАНИЕ, ЧАСТИЧНОЕ ПРИМЕНЕНИЕ)
+================================================================================
+
+(* Базовая функция *)
+let add x y = x + y
+(* add : int -> int -> int *)
+
+(* Вызов *)
+add 3 4  (* 7 *)
+
+(* Каррирование - функция возвращает функцию *)
+let add_three = add 3
+(* add_three : int -> int *)
+add_three 4  (* 7 *)
+
+(* Частичное применение *)
+let multiply x y = x * y
+let double = multiply 2
+double 5  (* 10 *)
+
+(* Анонимные функции *)
+let square = fun x -> x * x
+square 5  (* 25 *)
+
+(* Функции с именованными параметрами *)
+let greet ~name ~greeting = greeting ^ ", " ^ name
+greet ~name:"John" ~greeting:"Hello"
+
+(* Параметры по умолчанию *)
+let greet ?(greeting="Hello") name = greeting ^ ", " ^ name
+greet "John"  (* "Hello, John" *)
+greet ~greeting:"Hi" "John"  (* "Hi, John" *)
+
+(* Рекурсивные функции (нужен rec!) *)
+let rec factorial n =
+  if n <= 1 then 1 else n * factorial (n - 1)
+
+(* Tail-рекурсия (оптимизирована) *)
+let factorial n =
+  let rec aux acc n =
+    if n <= 1 then acc else aux (acc * n) (n - 1)
+  in
+  aux 1 n
+
+================================================================================
+5. PATTERN MATCHING (КРИТИЧНО ВАЖНО!)
+================================================================================
+
+(* Базовый match *)
+let describe x =
+  match x with
+  | 0 -> "zero"
+  | 1 -> "one"
+  | n -> "other: " ^ string_of_int n
+
+(* Match с кортежами *)
+let add_pairs (x1, y1) (x2, y2) =
+  (x1 + x2, y1 + y2)
+
+(* Match со списками *)
+let rec sum_list lst =
+  match lst with
+  | [] -> 0
+  | head :: tail -> head + sum_list tail
+
+(* Match с вариантами *)
+type shape =
+  | Circle of float
+  | Rectangle of float * float
+  | Triangle of float * float * float
+
+let area s =
+  match s with
+  | Circle r -> 3.14 *. r *. r
+  | Rectangle (w, h) -> w *. h
+  | Triangle (a, b, c) ->
+      let s = (a +. b +. c) /. 2.0 in
+      sqrt (s *. (s -. a) *. (s -. b) *. (s -. c))
+
+(* Match с option *)
+let get_value opt =
+  match opt with
+  | Some x -> x
+  | None -> 0
+
+(* Или короче: *)
+let get_value opt = match opt with Some x -> x | None -> 0
+
+(* Match с guards (условия) *)
+let classify x =
+  match x with
+  | n when n < 0 -> "negative"
+  | n when n = 0 -> "zero"
+  | n when n > 0 -> "positive"
+
+(* Exhaustiveness warning - компилятор предупредит! *)
+let bad_match x =
+  match x with
+  | Some n -> n
+  (* | None -> 0  (* Если забыть - компилятор предупредит! *) *)
+
+================================================================================
+6. СПИСКИ И МАССИВЫ
+================================================================================
+
+(* Списки (неизменяемые, односвязные) *)
+let lst = [1; 2; 3; 4; 5]  (* Обратите на ; *)
+
+(* Доступ *)
+let head = List.hd lst  (* 1 *)
+let tail = List.tl lst  (* [2; 3; 4; 5] *)
+let length = List.length lst  (* 5 *)
+
+(* Операции *)
+let lst2 = 0 :: lst  (* [0; 1; 2; 3; 4; 5] *)
+let lst3 = lst @ [6; 7]  (* [1; 2; 3; 4; 5; 6; 7] *)
+
+(* Map, filter, fold *)
+let squares = List.map (fun x -> x * x) lst
+let evens = List.filter (fun x -> x mod 2 = 0) lst
+let sum = List.fold_left (+) 0 lst
+
+(* ⚠️ ОШИБКА: @ медленный для больших списков! *)
+(* ПЛОХО: *)
+let rec append_bad lst1 lst2 =
+  match lst1 with
+  | [] -> lst2
+  | h :: t -> h :: append_bad t lst2  (* O(n) *)
+
+(* ХОРОШО: *)
+let append_good lst1 lst2 = lst1 @ lst2  (* Использовать встроенный *)
+
+(* Массивы (изменяемые, доступ O(1)) *)
+let arr = [|1; 2; 3; 4; 5|]  (* Обратите на [| |] *)
+
+(* Доступ *)
+let x = arr.(0)  (* 1 *)
+arr.(0) <- 10  (* Изменить *)
+
+(* Операции *)
+let length = Array.length arr
+let map_arr = Array.map (fun x -> x * x) arr
+
+(* Конвертация *)
+let lst_from_arr = Array.to_list arr
+let arr_from_lst = Array.of_list lst
+
+================================================================================
+7. RECORDS И VARIANTS
+================================================================================
+
+(* Records (именованные поля) *)
+type person = {
+  name : string;
+  age : int;
+  email : string option;  (* Может быть None *)
+}
+
+(* Создание *)
+let p = { name = "John"; age = 25; email = Some "john@example.com" }
+
+(* Доступ *)
+let name = p.name
+let age = p.age
+
+(* Обновление (создаёт новый record!) *)
+let p2 = { p with age = 26 }
+
+(* Pattern matching с records *)
+let get_name p =
+  match p with
+  | { name; age; email } -> name
+  (* Или короче: *)
+let get_name { name; _ } = name
+
+(* Variants (алгебраические типы) *)
+type result =
+  | Success of int
+  | Failure of string
+  | Pending
+
+(* Создание *)
+let r1 = Success 42
+let r2 = Failure "Error occurred"
+let r3 = Pending
+
+(* Pattern matching *)
+let handle_result r =
+  match r with
+  | Success n -> "Success: " ^ string_of_int n
+  | Failure msg -> "Failure: " ^ msg
+  | Pending -> "Still pending"
+
+(* Полиморфные варианты *)
+type 'a option = Some of 'a | None
+type ('a, 'b) result = Ok of 'a | Error of 'b
+
+================================================================================
+8. МОДУЛИ И FUNCTORS
+================================================================================
+
+(* Модуль *)
+module Math = struct
+  let pi = 3.14159
+  let square x = x * x
+  let add x y = x + y
+end
+
+(* Использование *)
+let x = Math.square 5
+let y = Math.add 3 4
+
+(* Сигнатура модуля (интерфейс) *)
+module type MATH = sig
+  val pi : float
+  val square : int -> int
+  val add : int -> int -> int
+end
+
+(* Ограничение модуля сигнатурой *)
+module Math : MATH = struct
+  let pi = 3.14159
+  let square x = x * x
+  let add x y = x + y
+  let secret = 42  (* Скрыто! *)
+end
+
+(* Functors (модули над модулями) *)
+module type SET = sig
+  type t
+  type element
+  val empty : t
+  val add : element -> t -> t
+  val mem : element -> t -> bool
+end
+
+module MakeSet (Ord : sig type t val compare : t -> t -> int end) : SET = struct
+  type element = Ord.t
+  type t = element list
+  let empty = []
+  let add x s = if List.mem x s then s else x :: s
+  let mem = List.mem
+end
+
+================================================================================
+9. ОБРАБОТКА ОШИБОК (OPTION, RESULT, EXCEPTION)
+================================================================================
+
+(* Option - значение или ничего *)
+let find lst x =
+  if List.mem x lst then Some x else None
+
+(* Обработка Option *)
+match find lst 5 with
+| Some n -> print_endline ("Found: " ^ string_of_int n)
+| None -> print_endline "Not found"
+
+(* Или: *)
+let value = match opt with Some x -> x | None -> default
+
+(* Result - успех или ошибка *)
+let divide x y =
+  if y = 0 then Error "Division by zero"
+  else Ok (x / y)
+
+(* Обработка Result *)
+match divide 10 2 with
+| Ok n -> print_endline ("Result: " ^ string_of_int n)
+| Error msg -> print_endline ("Error: " ^ msg)
+
+(* Exceptions (использовать реже!) *)
+exception Division_by_zero
+
+let divide_exn x y =
+  if y = 0 then raise Division_by_zero
+  else x / y
+
+(* Обработка исключений *)
+try
+  let result = divide_exn 10 0 in
+  print_endline (string_of_int result)
+with
+| Division_by_zero -> print_endline "Cannot divide by zero"
+| Failure msg -> print_endline ("Failure: " ^ msg)
+| _ -> print_endline "Unknown error"
+
+(* Option vs Result vs Exception *)
+(* Option: когда отсутствие значения нормально *)
+(* Result: когда нужна информация об ошибке *)
+(* Exception: когда ошибка действительно исключительная *)
+
+================================================================================
+10. ИМПЕРАТИВНЫЕ КОНСТРУКЦИИ (REF, MUTABLE)
+================================================================================
+
+(* ref - изменяемая ячейка *)
+let counter = ref 0
+counter := !counter + 1
+let value = !counter
+
+(* mutable поля в records *)
+type mutable_counter = { mutable count : int }
+let c = { count = 0 }
+c.count <- c.count + 1
+
+(* for цикл *)
+for i = 1 to 10 do
+  print_endline (string_of_int i)
+done
+
+(* for с шагом *)
+for i = 10 downto 1 do
+  print_endline (string_of_int i)
+done
+
+(* while цикл *)
+let i = ref 0 in
+while !i < 10 do
+  print_endline (string_of_int !i);
+  i := !i + 1
+done
+
+(* ⚠️ ИЗБЕГАЙТЕ императивного кода когда можно функциональный! *)
+(* ПЛОХО: *)
+let sum_bad lst =
+  let total = ref 0 in
+  List.iter (fun x -> total := !total + x) lst;
+  !total
+
+(* ХОРОШО: *)
+let sum_good lst = List.fold_left (+) 0 lst
+
+================================================================================
+11. ОБЪЕКТЫ И КЛАССЫ
+================================================================================
+
+(* Класс *)
+class counter =
+  object
+    val mutable count = 0
+    method get = count
+    method increment = count <- count + 1
+    method reset = count <- 0
+  end
+
+(* Использование *)
+let c = new counter
+let value = c#get
+c#increment
+c#reset
+
+(* Наследование *)
+class labeled_counter label =
+  object
+    inherit counter
+    val mutable label = label
+    method get_label = label
+    method set_label l = label <- l
+  end
+
+(* ⚠️ Объекты в OCaml используются редко! *)
+(* Предпочитайте модули и функторы *)
+
+================================================================================
+12. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Забыть rec для рекурсии
+let factorial n =
+  if n <= 1 then 1 else n * factorial (n - 1)
+(* ОШИБКА: Unbound value factorial *)
+
+✓ Решение:
+let rec factorial n =
+  if n <= 1 then 1 else n * factorial (n - 1)
+
+❌ Ошибка 2: Неполный pattern matching
+let get_value opt =
+  match opt with
+  | Some x -> x
+(* ОШИБКА: Warning 8: this pattern-matching is not exhaustive *)
+
+✓ Решение:
+let get_value opt =
+  match opt with
+  | Some x -> x
+  | None -> 0  (* Всегда обрабатывайте все случаи! *)
+
+❌ Ошибка 3: Путаница list и array
+let lst = [1; 2; 3]
+let x = lst.(0)  (* ОШИБКА: This expression has type int list *)
+
+✓ Решение:
+let x = List.hd lst  (* Для списка *)
+let arr = [|1; 2; 3|]
+let x = arr.(0)  (* Для массива *)
+
+❌ Ошибка 4: Забыть точку с запятой в списке
+let lst = [1, 2, 3]  (* ОШИБКА: Это кортеж! *)
+
+✓ Решение:
+let lst = [1; 2; 3]  (* Точка с запятой для списка *)
+let tuple = (1, 2, 3)  (* Запятая для кортежа *)
+
+❌ Ошибка 5: Изменение неизменяемого
+let x = 5
+x <- 6  (* ОШИБКА: This expression is not a lvalue *)
+
+✓ Решение:
+let r = ref 5
+r := 6  (* Используйте ref для изменяемых значений *)
+
+❌ Ошибка 6: Неправильное сравнение float
+let x = 3.14
+if x = 3.14 then ...  (* ОШИБКА: = для int, =. для float *)
+
+✓ Решение:
+if x =. 3.14 then ...  (* =. для float *)
+(* Или лучше: *)
+if abs_float (x -. 3.14) < 0.001 then ...
+
+❌ Ошибка 7: @ для больших списков
+let rec append lst1 lst2 =
+  match lst1 with
+  | [] -> lst2
+  | h :: t -> h :: append t lst2  (* O(n²) для многих вызовов! *)
+
+✓ Решение:
+let append lst1 lst2 = lst1 @ lst2  (* Встроенный оптимизирован *)
+(* Или используйте Sequence для больших данных *)
+
+❌ Ошибка 8: Не tail-рекурсивная функция
+let rec sum lst =
+  match lst with
+  | [] -> 0
+  | h :: t -> h + sum t  (* Stack overflow для больших списков! *)
+
+✓ Решение:
+let rec sum lst acc =
+  match lst with
+  | [] -> acc
+  | h :: t -> sum t (acc + h)
+(* Вызов: sum lst 0 *)
+
+❌ Ошибка 9: Путаница с типами чисел
+let x = 5
+let y = 5.0
+let z = x + y  (* ОШИБКА: Нельзя смешивать int и float *)
+
+✓ Решение:
+let z = float_of_int x +. y  (* Явное приведение *)
+
+❌ Ошибка 10: Игнорирование Option/Result
+let value = Some 5
+let x = value  (* ОШИБКА: type mismatch, Some 5 ≠ 5 *)
+
+✓ Решение:
+let x = match value with Some n -> n | None -> default
+(* Или: *)
+let x = Option.value ~default:0 value
+
+❌ Ошибка 11: Неправильный порядок аргументов
+let divide x y = x / y
+divide 10 2  (* OK: 5 *)
+divide 2 10  (* OK: 0, но возможно не то что хотели! *)
+
+✓ Решение:
+let divide ~dividend ~divisor = dividend / divisor
+divide ~dividend:10 ~divisor:2  (* Явно и понятно *)
+
+❌ Ошибка 12: Забыть eval $(opam env)
+opam install package
+ocamlfind: Command not found  (* ОШИБКА! *)
+
+✓ Решение:
+eval $(opam env)  (* Настроить окружение *)
+
+❌ Ошибка 13: Неправильное использование модулей
+module M = struct let x = 5 end
+let y = M.x  (* OK *)
+let z = x  (* ОШИБКА: Unbound value x *)
+
+✓ Решение:
+let z = M.x  (* Всегда квалифицируйте значения из модулей *)
+
+❌ Ошибка 14: Мутация в функциональном коде
+let process lst =
+  let result = ref [] in
+  List.iter (fun x -> result := x :: !result) lst;
+  !result
+
+✓ Решение:
+let process lst = List.map (fun x -> x * 2) lst
+(* Избегайте ref когда можно! *)
+
+❌ Ошибка 15: Игнорирование warnings
+let x = 5  (* Warning 32: unused value *)
+
+✓ Решение:
+let _ = x  (* Игнорировать явно *)
+(* Или лучше: используйте x! *)
+
+================================================================================
+13. ПРИМЕРЫ ЛУЧШИХ ПРАКТИК
+================================================================================
+
+Пример 1: Правильная обработка ошибок
+-------------------------------------
+type error =
+  | Division_by_zero
+  | Negative_input
+  | Overflow
+
+let safe_divide x y =
+  if y = 0 then Error Division_by_zero
+  else if x < 0 || y < 0 then Error Negative_input
+  else Ok (x / y)
+
+let handle_division x y =
+  match safe_divide x y with
+  | Ok result -> Printf.printf "Result: %d\n" result
+  | Error Division_by_zero -> print_endline "Cannot divide by zero"
+  | Error Negative_input -> print_endline "Inputs must be positive"
+  | Error Overflow -> print_endline "Overflow occurred"
+
+Пример 2: Tail-рекурсия для больших данных
+------------------------------------------
+let rec sum_tail lst acc =
+  match lst with
+  | [] -> acc
+  | h :: t -> sum_tail t (acc + h)
+
+let sum lst = sum_tail lst 0
+
+Пример 3: Использование Option правильно
+----------------------------------------
+let find_max lst =
+  match lst with
+  | [] -> None
+  | _ -> Some (List.fold_left max (List.hd lst) (List.tl lst))
+
+let result = find_max [1; 5; 3; 9; 2]
+match result with
+| Some max -> Printf.printf "Max: %d\n" max
+| None -> print_endline "Empty list"
+
+Пример 4: Модульная организация кода
+------------------------------------
+(* math.mli - интерфейс *)
+val pi : float
+val square : int -> int
+val add : int -> int -> int
+
+(* math.ml - реализация *)
+let pi = 3.14159
+let square x = x * x
+let add x y = x + y
+
+(* main.ml - использование *)
+open Math
+let result = square (add 3 4)
+
+Пример 5: Pattern matching с guards
+-----------------------------------
+type grade = A | B | C | D | F
+
+let describe_grade score =
+  match score with
+  | n when n >= 90 -> A
+  | n when n >= 80 -> B
+  | n when n >= 70 -> C
+  | n when n >= 60 -> D
+  | _ -> F
+
+================================================================================
+                         КОНЕЦ SYNTAX_OCAML
+================================================================================

@@ -1,0 +1,596 @@
+================================================================================
+              COBOL - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Banking + Mainframe + Fixed Format + 60+ лет
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (DIVISIONS)
+2. Data Division (переменные)
+3. Procedure Division (логика)
+4. PIC clauses (типы данных)
+5. Control Flow
+6. File I/O
+7. Tables (arrays)
+8. String operations
+9. Subprograms
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры banking стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (DIVISIONS)
+================================================================================
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. MYPROGRAM.
+       AUTHOR. YOUR-NAME.
+       DATE-WRITTEN. 2024-01-01.
+
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT INPUT-FILE ASSIGN TO "input.dat"
+               ORGANIZATION IS LINE SEQUENTIAL.
+           SELECT OUTPUT-FILE ASSIGN TO "output.dat"
+               ORGANIZATION IS LINE SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD  INPUT-FILE.
+       01  INPUT-RECORD.
+           05  FIELD-1    PIC X(10).
+           05  FIELD-2    PIC 9(5).
+
+       FD  OUTPUT-FILE.
+       01  OUTPUT-RECORD.
+           05  OUT-FIELD  PIC X(20).
+
+       WORKING-STORAGE SECTION.
+       01  WS-COUNTER     PIC 9(3) VALUE 0.
+       01  WS-FLAG        PIC X VALUE "N".
+
+       PROCEDURE DIVISION.
+       MAIN-PROCEDURE.
+           DISPLAY "Hello, COBOL!".
+           STOP RUN.
+
+================================================================================
+2. DATA DIVISION (ПЕРЕМЕННЫЕ)
+================================================================================
+
+       WORKING-STORAGE SECTION.
+
+       * Numeric variables
+       01  WS-NUMBER      PIC 9(5).           * 00000 to 99999
+       01  WS-DECIMAL     PIC 9(3)V99.        * 000.00 to 999.99
+       01  WS-SIGNED      PIC S9(4).          * -9999 to 9999
+       01  WS-CURRENCY    PIC $$$,$$9.99.     * $1,234.56
+
+       * Character variables
+       01  WS-NAME        PIC X(30).          * 30 characters
+       01  WS-TEXT        PIC X(100).         * 100 characters
+
+       * Boolean (флаги)
+       01  WS-FLAG        PIC X VALUE "N".
+           88  FLAG-YES   VALUE "Y".
+           88  FLAG-NO    VALUE "N".
+
+       * Date/Time
+       01  WS-DATE.
+           05  WS-YEAR    PIC 9(4).
+           05  WS-MONTH   PIC 9(2).
+           05  WS-DAY     PIC 9(2).
+
+       * Group items
+       01  WS-EMPLOYEE.
+           05  EMP-ID     PIC 9(5).
+           05  EMP-NAME   PIC X(30).
+           05  EMP-SALARY PIC 9(6)V99.
+
+       * Initialization
+       01  WS-ZERO        PIC 9(5) VALUE ZERO.
+       01  WS-SPACE       PIC X(10) VALUE SPACE.
+       01  WS-LOW-VALUE   PIC X(10) VALUE LOW-VALUE.
+
+================================================================================
+3. PROCEDURE DIVISION (ЛОГИКА)
+================================================================================
+
+       PROCEDURE DIVISION.
+
+       * DISPLAY (вывод)
+           DISPLAY "Hello, World!".
+           DISPLAY WS-NAME.
+
+       * ACCEPT (ввод)
+           ACCEPT WS-NAME.
+           ACCEPT WS-DATE FROM DATE.
+
+       * MOVE (присваивание)
+           MOVE 100 TO WS-NUMBER.
+           MOVE "John" TO WS-NAME.
+           MOVE WS-NAME TO OUTPUT-FIELD.
+
+       * Arithmetic operations
+           ADD 10 TO WS-NUMBER.
+           SUBTRACT 5 FROM WS-NUMBER.
+           MULTIPLY 2 BY WS-NUMBER.
+           DIVIDE 10 INTO WS-NUMBER.
+           COMPUTE WS-RESULT = WS-A * WS-B + WS-C.
+
+       * Conditional statements
+           IF WS-NUMBER > 100
+               DISPLAY "Large"
+           ELSE
+               DISPLAY "Small"
+           END-IF.
+
+       * PERFORM (циклы)
+           PERFORM 10 TIMES
+               DISPLAY "Loop"
+           END-PERFORM.
+
+           PERFORM UNTIL WS-COUNTER > 100
+               ADD 1 TO WS-COUNTER
+           END-PERFORM.
+
+           PERFORM VARYING I FROM 1 BY 1 UNTIL I > 10
+               DISPLAY I
+           END-PERFORM.
+
+       * STOP RUN (завершение)
+           STOP RUN.
+
+================================================================================
+4. PIC CLAUSES (ТИПЫ ДАННЫХ)
+================================================================================
+
+       * Numeric (числовые)
+       PIC 9          * Single digit (0-9)
+       PIC 9(5)       * 5 digits (00000-99999)
+       PIC S9(4)      * Signed 4 digits (-9999 to 9999)
+       PIC 9(3)V99    * Decimal (000.00 to 999.99)
+       PIC 9(2).99    * Decimal with dot
+
+       * Character (символьные)
+       PIC X          * Single character
+       PIC X(10)      * 10 characters
+       PIC A          * Alphabetic (A-Z)
+       PIC A(20)      * 20 alphabetic characters
+
+       * Alphanumeric (смешанные)
+       PIC X(30)      * 30 alphanumeric characters
+
+       * Edited (форматированные)
+       PIC $$$,$$9.99     * Currency ($1,234.56)
+       PIC ZZ,ZZ9         * With zero suppression
+       PIC *(7)           * Asterisk fill
+       PIC +999           * Sign leading
+       PIC 999-           * Sign trailing
+
+       * Special
+       PIC 9(4)-99-9999   * SSN format
+       PIC (999)999-9999  * Phone format
+
+================================================================================
+5. CONTROL FLOW
+================================================================================
+
+       * IF/ELSE
+           IF WS-NUMBER > 100
+               DISPLAY "Large"
+           ELSE IF WS-NUMBER > 50
+               DISPLAY "Medium"
+           ELSE
+               DISPLAY "Small"
+           END-IF
+           END-IF.
+
+       * EVALUATE (CASE/SWITCH)
+           EVALUATE WS-CODE
+               WHEN "A"
+                   DISPLAY "Option A"
+               WHEN "B"
+                   DISPLAY "Option B"
+               WHEN OTHER
+                   DISPLAY "Unknown"
+           END-EVALUATE.
+
+       * PERFORM TIMES
+           PERFORM 5 TIMES
+               DISPLAY "Loop"
+           END-PERFORM.
+
+       * PERFORM UNTIL
+           MOVE 0 TO WS-COUNTER
+           PERFORM UNTIL WS-COUNTER >= 10
+               ADD 1 TO WS-COUNTER
+               DISPLAY WS-COUNTER
+           END-PERFORM.
+
+       * PERFORM VARYING
+           PERFORM VARYING I FROM 1 BY 1 
+               UNTIL I > 10
+               DISPLAY I
+           END-PERFORM.
+
+       * GO TO (не рекомендуется!)
+           GO TO END-PROGRAM.
+           
+       * EXIT
+           EXIT.
+
+================================================================================
+6. FILE I/O
+================================================================================
+
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT INPUT-FILE ASSIGN TO "input.txt"
+               ORGANIZATION IS LINE SEQUENTIAL
+               FILE STATUS IS WS-FILE-STATUS.
+           SELECT OUTPUT-FILE ASSIGN TO "output.txt"
+               ORGANIZATION IS LINE SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD  INPUT-FILE.
+       01  INPUT-RECORD.
+           05  INPUT-FIELD    PIC X(50).
+
+       FD  OUTPUT-FILE.
+       01  OUTPUT-RECORD.
+           05  OUTPUT-FIELD   PIC X(50).
+
+       WORKING-STORAGE SECTION.
+       01  WS-FILE-STATUS     PIC XX.
+       01  WS-EOF             PIC X VALUE "N".
+           88  END-OF-FILE    VALUE "Y".
+
+       PROCEDURE DIVISION.
+       FILE-PROCESSING.
+           OPEN INPUT INPUT-FILE
+           OPEN OUTPUT OUTPUT-FILE
+
+           PERFORM UNTIL END-OF-FILE
+               READ INPUT-FILE
+                   AT END
+                       SET END-OF-FILE TO TRUE
+                   NOT AT END
+                       MOVE INPUT-FIELD TO OUTPUT-FIELD
+                       WRITE OUTPUT-RECORD
+               END-READ
+           END-PERFORM
+
+           CLOSE INPUT-FILE
+           CLOSE OUTPUT-FILE.
+
+================================================================================
+7. TABLES (ARRAYS)
+================================================================================
+
+       WORKING-STORAGE SECTION.
+
+       * One-dimensional table
+       01  WS-TABLE.
+           05  WS-ELEMENT    PIC 9(3) OCCURS 10 TIMES.
+
+       * Two-dimensional table
+       01  WS-MATRIX.
+           05  WS-ROW        OCCURS 5 TIMES.
+               10  WS-COL    PIC 9(2) OCCURS 5 TIMES.
+
+       * Table with index
+       01  WS-INDEXED-TABLE.
+           05  WS-ITEM       PIC X(20) OCCURS 100 TIMES
+                             INDEXED BY WS-IDX.
+
+       * Initialize table
+           INITIALIZE WS-TABLE.
+
+       * Access table
+           MOVE 100 TO WS-ELEMENT(1).
+           MOVE WS-ELEMENT(5) TO WS-RESULT.
+
+       * Search table
+           SET WS-IDX TO 1
+           SEARCH WS-ITEM
+               AT END
+                   DISPLAY "Not found"
+               WHEN WS-ITEM(WS-IDX) = "TARGET"
+                   DISPLAY "Found at " WS-IDX
+           END-SEARCH.
+
+       * Subscript vs Index
+           MOVE WS-TABLE(5) TO WS-TEMP.      * Subscript
+           SET WS-IDX TO 5
+           MOVE WS-ITEM(WS-IDX) TO WS-TEMP.  * Index
+
+================================================================================
+8. STRING OPERATIONS
+================================================================================
+
+       WORKING-STORAGE SECTION.
+       01  WS-STRING1    PIC X(20) VALUE "Hello".
+       01  WS-STRING2    PIC X(20) VALUE "World".
+       01  WS-RESULT     PIC X(50).
+       01  WS-LENGTH     PIC 9(2).
+
+       PROCEDURE DIVISION.
+
+       * STRING (concatenation)
+           STRING WS-STRING1 DELIMITED BY SIZE
+                  " " DELIMITED BY SIZE
+                  WS-STRING2 DELIMITED BY SIZE
+               INTO WS-RESULT
+           END-STRING.
+
+       * UNSTRING (split)
+           UNSTRING WS-RESULT DELIMITED BY " "
+               INTO WS-STRING1 WS-STRING2
+           END-UNSTRING.
+
+       * INSPECT (count/replace)
+           INSPECT WS-STRING1 TALLYING WS-LENGTH
+               FOR ALL "l".
+
+           INSPECT WS-STRING1 REPLACING ALL "l" WITH "L".
+
+       * Reference modification
+           MOVE WS-STRING1(1:5) TO WS-SUBSTRING.
+           MOVE "X" TO WS-STRING1(1:1).
+
+       * FUNCTION (intrinsic functions)
+           COMPUTE WS-LENGTH = FUNCTION LENGTH(WS-STRING1).
+           MOVE FUNCTION UPPER-CASE(WS-STRING1) TO WS-RESULT.
+           MOVE FUNCTION LOWER-CASE(WS-STRING1) TO WS-RESULT.
+           MOVE FUNCTION TRIM(WS-STRING1) TO WS-RESULT.
+
+================================================================================
+9. SUBPROGRAMS
+================================================================================
+
+       * Main program
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. MAIN-PROG.
+
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  WS-PARAM1    PIC 9(5) VALUE 100.
+       01  WS-PARAM2    PIC 9(5).
+
+       PROCEDURE DIVISION.
+           CALL "SUB-PROG" USING WS-PARAM1 WS-PARAM2
+           DISPLAY "Result: " WS-PARAM2
+           STOP RUN.
+
+       * Subprogram
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. SUB-PROG.
+
+       DATA DIVISION.
+       LINKAGE SECTION.
+       01  LS-PARAM1    PIC 9(5).
+       01  LS-PARAM2    PIC 9(5).
+
+       PROCEDURE DIVISION USING LS-PARAM1 LS-PARAM2.
+           COMPUTE LS-PARAM2 = LS-PARAM1 * 2
+           EXIT PROGRAM.
+
+       * Copybook (include)
+       * In separate file: CUSTOMER.CPY
+       01  CUSTOMER-RECORD.
+           05  CUST-ID      PIC 9(5).
+           05  CUST-NAME    PIC X(30).
+
+       * Usage in program
+           COPY CUSTOMER.CPY.
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Неправильный PIC clause
+01  WS-NUMBER    PIC 9(5).
+MOVE 123456 TO WS-NUMBER.  * ОШИБКА! Переполнение
+
+✓ Решение:
+01  WS-NUMBER    PIC 9(6).  * Увеличить размер
+
+❌ Ошибка 2: Не инициализированные переменные
+01  WS-TOTAL     PIC 9(5).  * Не инициализировано!
+ADD 10 TO WS-TOTAL.  * Неопределённое значение
+
+✓ Решение:
+01  WS-TOTAL     PIC 9(5) VALUE ZERO.
+
+❌ Ошибка 3: Неправильный subscript
+01  WS-TABLE     PIC 9(3) OCCURS 10 TIMES.
+MOVE WS-TABLE(11) TO WS-TEMP.  * ОШИБКА! Index out of bounds
+
+✓ Решение:
+IF WS-INDEX >= 1 AND WS-INDEX <= 10
+    MOVE WS-TABLE(WS-INDEX) TO WS-TEMP
+END-IF.
+
+❌ Ошибка 4: File не закрыт
+OPEN INPUT INPUT-FILE
+READ INPUT-FILE
+* Забыли CLOSE!
+
+✓ Решение:
+OPEN INPUT INPUT-FILE
+READ INPUT-FILE
+CLOSE INPUT-FILE.
+
+❌ Ошибка 5: Неправильный MOVE
+01  WS-NUM    PIC 9(5).
+01  WS-TEXT   PIC X(10).
+MOVE WS-NUM TO WS-TEXT.  * ОШИБКА! Типы не совместимы
+
+✓ Решение:
+MOVE WS-NUM TO WS-TEXT.  * COBOL конвертирует автоматически
+* Или использовать STRING
+
+❌ Ошибка 6: PERFORM без END-PERFORM
+PERFORM 10 TIMES
+    DISPLAY "Loop"
+* Забыли END-PERFORM!
+
+✓ Решение:
+PERFORM 10 TIMES
+    DISPLAY "Loop"
+END-PERFORM.
+
+❌ Ошибка 7: EVALUATE без WHEN OTHER
+EVALUATE WS-CODE
+    WHEN "A"
+        DISPLAY "A"
+    WHEN "B"
+        DISPLAY "B"
+* Забыли WHEN OTHER!
+
+✓ Решение:
+EVALUATE WS-CODE
+    WHEN "A"
+        DISPLAY "A"
+    WHEN "B"
+        DISPLAY "B"
+    WHEN OTHER
+        DISPLAY "Unknown"
+END-EVALUATE.
+
+❌ Ошибка 8: SEARCH без SET
+01  WS-TABLE     PIC X(10) OCCURS 100 TIMES
+                 INDEXED BY WS-IDX.
+SEARCH WS-TABLE  * ОШИБКА! WS-IDX не установлен
+
+✓ Решение:
+SET WS-IDX TO 1
+SEARCH WS-TABLE
+    ...
+END-SEARCH.
+
+❌ Ошибка 9: CALL без USING
+CALL "SUBPROG".  * ОШИБКА! Параметры не переданы
+
+✓ Решение:
+CALL "SUBPROG" USING WS-PARAM1 WS-PARAM2.
+
+❌ Ошибка 10: STOP RUN в subprogram
+PROGRAM-ID. SUBPROG.
+PROCEDURE DIVISION.
+    STOP RUN.  * ОШИБКА! Завершает всю программу
+
+✓ Решение:
+PROGRAM-ID. SUBPROG.
+PROCEDURE DIVISION.
+    EXIT PROGRAM.  * Правильно для subprogram
+
+================================================================================
+11. ПРИМЕРЫ BANKING СТИЛЯ
+================================================================================
+
+Пример 1: Account processing
+----------------------------
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. ACCOUNT-PROC.
+
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  WS-ACCOUNT-NUMBER    PIC 9(10).
+       01  WS-BALANCE           PIC 9(8)V99.
+       01  WS-AMOUNT            PIC 9(6)V99.
+
+       PROCEDURE DIVISION.
+       MAIN-PROCEDURE.
+           DISPLAY "Enter account number:"
+           ACCEPT WS-ACCOUNT-NUMBER
+           
+           DISPLAY "Enter amount:"
+           ACCEPT WS-AMOUNT
+           
+           PERFORM PROCESS-TRANSACTION
+           
+           DISPLAY "New balance: " WS-BALANCE
+           STOP RUN.
+
+       PROCESS-TRANSACTION.
+           ADD WS-AMOUNT TO WS-BALANCE
+           IF WS-BALANCE < 0
+               DISPLAY "Overdraft!"
+           END-IF.
+
+Пример 2: Payroll processing
+----------------------------
+       01  WS-EMPLOYEE-TABLE.
+           05  WS-EMPLOYEE    OCCURS 100 TIMES.
+               10  EMP-ID     PIC 9(5).
+               10  EMP-NAME   PIC X(30).
+               10  EMP-SALARY PIC 9(6)V99.
+               10  EMP-TAX    PIC 9(5)V99.
+
+       PROCEDURE DIVISION.
+       CALCULATE-PAYROLL.
+           PERFORM VARYING WS-IDX FROM 1 BY 1 
+               UNTIL WS-IDX > 100
+               COMPUTE EMP-TAX(WS-IDX) = 
+                   EMP-SALARY(WS-IDX) * 0.13
+           END-PERFORM.
+
+Пример 3: Report generation
+---------------------------
+       01  WS-REPORT-LINE     PIC X(80).
+       01  WS-PAGE-NUMBER     PIC 9(2).
+       01  WS-LINE-COUNT      PIC 9(2).
+
+       PROCEDURE DIVISION.
+       PRINT-REPORT.
+           MOVE 1 TO WS-PAGE-NUMBER
+           PERFORM PRINT-HEADER
+           PERFORM READ-AND-PRINT
+           STOP RUN.
+
+       PRINT-HEADER.
+           MOVE "===== REPORT =====" TO WS-REPORT-LINE
+           WRITE WS-REPORT-LINE.
+
+Пример 4: Data validation
+-------------------------
+       01  WS-VALID-FLAG      PIC X VALUE "Y".
+           88  VALID-DATA     VALUE "Y".
+           88  INVALID-DATA   VALUE "N".
+
+       PROCEDURE DIVISION.
+       VALIDATE-DATA.
+           IF WS-AMOUNT < 0 OR WS-AMOUNT > 999999
+               SET INVALID-DATA TO TRUE
+               DISPLAY "Invalid amount"
+           ELSE
+               SET VALID-DATA TO TRUE
+           END-IF.
+
+Пример 5: Batch processing
+--------------------------
+       PROCEDURE DIVISION.
+       BATCH-PROCESS.
+           OPEN INPUT INPUT-FILE
+           OPEN OUTPUT OUTPUT-FILE
+           
+           PERFORM UNTIL END-OF-FILE
+               READ INPUT-FILE
+                   AT END
+                       SET END-OF-FILE TO TRUE
+                   NOT AT END
+                       PERFORM PROCESS-RECORD
+                       WRITE OUTPUT-RECORD
+               END-READ
+           END-PERFORM
+           
+           CLOSE INPUT-FILE
+           CLOSE OUTPUT-FILE.
+
+================================================================================
+                         КОНЕЦ SYNTAX_COBOL
+================================================================================

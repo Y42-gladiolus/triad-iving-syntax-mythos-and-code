@@ -1,0 +1,651 @@
+================================================================================
+              SMALLTALK - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Pure OOP + Everything is Object + Message Passing
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных (всё — объект!)
+3. Переменные и присваивание
+4. Сообщения (message passing)
+5. Классы и объекты
+6. Control Flow
+7. Blocks (замыкания)
+8. Collections
+9. Error Handling
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры pure OOP стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+" Комментарии (в кавычках) "
+" Однострочные "
+
+" Многострочные
+   комментарии "
+
+" Точка с запятой = конец выражения "
+5 + 3.
+'Hello' displayNl.
+
+" Каскад сообщений (semicolon) "
+Transcript
+    show: 'Hello';
+    show: 'World';
+    cr.
+
+" Всё — объект "
+5 class.        " Integer "
+'Hello' class.  " String "
+true class.     " Boolean "
+
+" Ничего не возвращается nil "
+nil class.      " NilObject "
+
+================================================================================
+2. ТИПЫ ДАННЫХ (ВСЁ — ОБЪЕКТ!)
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Integer         │ 5, -10, 1000000                                            │
+│ Float           │ 3.14, -0.5, 2.5e10                                         │
+│ Fraction        │ 1/3, 22/7 (точные дроби)                                   │
+│ Boolean         │ true, false                                                │
+│ Character       │ $a, $A, $1                                                 │
+│ String          │ 'hello', 'привет'                                          │
+│ Symbol          │ #name, #age, #'user-id'                                    │
+│ Array           │ #(1 2 3), #('a' 'b' 'c')                                   │
+│ ByteArray       │ #[1 2 3 4 5]                                               │
+│ Date            │ Date today                                                 │
+│ Time            │ Time now                                                   │
+│ DateTime        │ DateTime now                                               │
+│ nil             │ nil (отсутствие значения)                                  │
+│ Block           │ [ :x | x + 1 ]                                             │
+│ Class           │ Object, String, Integer                                    │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+" Проверка типа "
+5 isInteger.
+'Hello' isString.
+true isBoolean.
+
+" Преобразование "
+'5' asInteger.    " 5 "
+5 asString.       " '5' "
+5 asFloat.        " 5.0 "
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+" Глобальные переменные (заглавные) "
+GlobalVar := 5.
+
+" Локальные переменные (строчные) "
+| localVar |
+localVar := 10.
+
+" Переменные экземпляра (в классах) "
+Object subclass: #Person
+    instanceVariableNames: 'name age'
+    classVariableNames: ''
+    package: 'MyPackage'
+
+" Присваивание "
+x := 5.           " := присваивание "
+x = 5.            " = сравнение "
+
+" Multiple assignment "
+x := y := 5.
+
+" Temporary variables "
+| x y z |
+x := 1.
+y := 2.
+z := x + y.
+
+" Pool variables "
+Object subclass: #MyClass
+    instanceVariableNames: ''
+    classVariableNames: 'Constants'
+    poolDictionaries: 'MyConstants'
+    package: 'MyPackage'
+
+================================================================================
+4. СООБЩЕНИЯ (MESSAGE PASSING)
+================================================================================
+
+" Unary messages (без аргументов) "
+5 factorial.      " 120 "
+'hello' size.     " 5 "
+true not.         " false "
+
+" Binary messages (1 аргумент, операторы) "
+5 + 3.            " 8 "
+10 / 2.           " 5 "
+'Hello' , ' World'. " 'Hello World' "
+
+" Keyword messages (именованные аргументы) "
+5 raisedTo: 3.           " 125 "
+'Hello' copyFrom: 1 to: 3. " 'Hel' "
+Date year: 2024 month: 1 day: 1.
+
+" Cascade messages (цепочка) "
+Transcript
+    show: 'Hello';
+    show: 'World';
+    cr.
+
+" Message precedence "
+" 1. Unary (highest) "
+" 2. Binary "
+" 3. Keyword (lowest) "
+
+5 + 3 factorial.      " 5 + 6 = 11, не (5+3)! "
+(5 + 3) factorial.    " 8! = 40320 "
+
+" doesNotUnderstand "
+Object >> doesNotUnderstand: aMessage
+    " Handle unknown message "
+    Transcript show: 'Unknown message: ', aMessage selector.
+
+================================================================================
+5. КЛАССЫ И ОБЪЕКТЫ
+================================================================================
+
+" Создание класса "
+Object subclass: #Person
+    instanceVariableNames: 'name age'
+    classVariableNames: ''
+    poolDictionaries: ''
+    package: 'MyPackage'
+
+" Instance methods "
+Person >> name
+    ^ name
+
+Person >> name: aString
+    name := aString.
+
+Person >> age
+    ^ age
+
+Person >> age: anInteger
+    age := anInteger.
+
+" Class methods "
+Person class >> createNamed: aString
+    ^ self new
+        name: aString;
+        yourself.
+
+" Constructor "
+Person >> initialize
+    super initialize.
+    name := ''.
+    age := 0.
+
+" Inheritance "
+Person subclass: #Employee
+    instanceVariableNames: 'salary'
+    classVariableNames: ''
+    package: 'MyPackage'
+
+Employee >> salary
+    ^ salary
+
+Employee >> salary: anInteger
+    salary := anInteger.
+
+" Super "
+Employee >> initialize
+    super initialize.
+    salary := 0.
+
+" Class variables "
+Person classVariableNames: 'Counter'.
+
+Person class >> counter
+    ^ Counter
+
+Person class >> incrementCounter
+    Counter := Counter + 1.
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+" If (Boolean messages) "
+x > 5
+    ifTrue: [ Transcript show: 'Greater' ]
+    ifFalse: [ Transcript show: 'Less or equal' ].
+
+" If с return "
+x > 5
+    ifTrue: [ ^ 'Greater' ]
+    ifFalse: [ ^ 'Less' ].
+
+" Case (switch) "
+x caseOf: {
+    [ 1 ] -> [ 'one' ].
+    [ 2 ] -> [ 'two' ].
+    [ 3 ] -> [ 'three' ]
+} otherwise: [ 'other' ].
+
+" While "
+[ x < 10 ] whileTrue: [
+    Transcript show: x printString.
+    x := x + 1.
+].
+
+[ x > 0 ] whileFalse: [
+    x := x + 1.
+].
+
+" For (через collections) "
+1 to: 10 do: [ :i |
+    Transcript show: i printString.
+].
+
+1 to: 10 by: 2 do: [ :i |
+    Transcript show: i printString.
+].
+
+" Enumerate "
+#(1 2 3 4 5) do: [ :each |
+    Transcript show: each printString.
+].
+
+" Loop with index "
+#(1 2 3 4 5) withIndexDo: [ :each :index |
+    Transcript show: index printString, ': ', each printString.
+].
+
+================================================================================
+7. BLOCKS (ЗАМЫКАНИЯ)
+================================================================================
+
+" Block creation "
+block := [ Transcript show: 'Hello' ].
+
+" Block execution "
+block value.
+
+" Block с аргументами "
+block := [ :x :y | x + y ].
+block value: 5 value: 3.  " 8 "
+
+" Block с return "
+block := [ :x |
+    x > 5
+        ifTrue: [ ^ 'Greater' ]
+        ifFalse: [ ^ 'Less' ].
+].
+
+" Block в методах "
+Person >> ifAdult: adultBlock ifChild: childBlock
+    age >= 18
+        ifTrue: adultBlock value
+        ifFalse: childBlock value.
+
+" Block closure "
+x := 5.
+block := [ x + 1 ].  " Захватывает x "
+x := 10.
+block value.  " 11, не 6! "
+
+" Block для error handling "
+[ riskyOperation ]
+    on: Error
+    do: [ :ex |
+        Transcript show: 'Error: ', ex messageText.
+    ].
+
+" Block для resource management "
+file := FileReference named: 'file.txt'.
+[ file writeStreamDo: [ :stream |
+    stream nextPutAll: 'Hello'
+] ] ensure: [
+    file close.
+].
+
+================================================================================
+8. COLLECTIONS
+================================================================================
+
+" Array "
+arr := #(1 2 3 4 5).
+arr at: 1.           " 1 "
+arr at: 1 put: 10.   " Modify "
+
+" OrderedCollection "
+coll := OrderedCollection new.
+coll add: 1.
+coll add: 2.
+coll add: 3.
+
+" Set "
+set := Set new.
+set add: 1.
+set add: 2.
+set add: 1.  " Duplicate, not added "
+
+" Dictionary "
+dict := Dictionary new.
+dict at: 'name' put: 'John'.
+dict at: 'age' put: 25.
+dict at: 'name'.  " 'John' "
+
+" String "
+str := 'Hello, World!'.
+str size.           " 13 "
+str asUppercase.    " 'HELLO, WORLD!' "
+str asLowercase.    " 'hello, world!' "
+str substrings.     " #('Hello,' 'World!') "
+
+" Collection operations "
+#(1 2 3 4 5) collect: [ :each | each * 2 ].
+" #(2 4 6 8 10) "
+
+#(1 2 3 4 5) select: [ :each | each even ].
+" #(2 4) "
+
+#(1 2 3 4 5) reject: [ :each | each even ].
+" #(1 3 5) "
+
+#(1 2 3 4 5) detect: [ :each | each > 3 ].
+" 4 "
+
+#(1 2 3 4 5) inject: 0 into: [ :sum :each | sum + each ].
+" 15 "
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+" Exception hierarchy "
+Exception
+    Error
+        MessageNotUnderstood
+        SubscriptOutOfBounds
+        ZeroDivide
+    Warning
+    Notification
+
+" Try/catch "
+[ riskyOperation ]
+    on: Error
+    do: [ :ex |
+        Transcript show: 'Error: ', ex messageText.
+    ].
+
+" Multiple handlers "
+[ riskyOperation ]
+    on: ZeroDivide
+    do: [ :ex | Transcript show: 'Division by zero' ];
+    on: Error
+    do: [ :ex | Transcript show: 'General error' ].
+
+" Retry "
+[ riskyOperation ]
+    on: Error
+    do: [ :ex |
+        Transcript show: 'Retrying...'.
+        ex retry.
+    ].
+
+" Resume "
+[ riskyOperation ]
+    on: Error
+    do: [ :ex |
+        Transcript show: 'Resuming...'.
+        ex resume: defaultValue.
+    ].
+
+" Signal "
+Warning signal: 'This is a warning'.
+
+" Ensure (finally) "
+[ riskyOperation ]
+    ensure: [
+        Transcript show: 'Always executed'.
+    ].
+
+" IfCurtailed "
+[ riskyOperation ]
+    ifCurtailed: [
+        Transcript show: 'Executed if exception'.
+    ].
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: = вместо :=
+x = 5.  " ОШИБКА! Это сравнение, не присваивание "
+
+✓ Решение:
+x := 5.  " OK "
+
+❌ Ошибка 2: Забыли точку с запятой
+Transcript
+    show: 'Hello'
+    show: 'World'.  " ОШИБКА! "
+
+✓ Решение:
+Transcript
+    show: 'Hello';
+    show: 'World'.  " OK "
+
+❌ Ошибка 3: Неправильный порядок сообщений
+5 + 3 factorial.  " 5 + 6 = 11, не 8! "
+
+✓ Решение:
+(5 + 3) factorial.  " 8! = 40320 "
+
+❌ Ошибка 4: Nil message
+nil size.  " ОШИБКА! MessageNotUnderstood "
+
+✓ Решение:
+nil ifNil: [ 0 ] ifNotNil: [ :x | x size ].
+
+❌ Ошибка 5: Index out of bounds
+arr := #(1 2 3).
+arr at: 4.  " ОШИБКА! SubscriptOutOfBounds "
+
+✓ Решение:
+arr := #(1 2 3).
+(arr size >= 4)
+    ifTrue: [ arr at: 4 ]
+    ifFalse: [ nil ].
+
+❌ Ошибка 6: Block без value
+block := [ :x | x + 1 ].
+block.  " ОШИБКА! Не выполнился "
+
+✓ Решение:
+block := [ :x | x + 1 ].
+block value: 5.  " 6 "
+
+❌ Ошибка 7: Class vs instance method
+Person class >> name  " ОШИБКА! Это instance method "
+
+✓ Решение:
+Person >> name  " Instance method "
+Person class >> counter  " Class method "
+
+❌ Ошибка 8: Super в wrong context
+Employee >> initialize
+    super new.  " ОШИБКА! super для методов "
+
+✓ Решение:
+Employee >> initialize
+    super initialize.  " OK "
+
+❌ Ошибка 9: Forgetting to return
+Person >> greet
+    'Hello, ', self name.  " ОШИБКА! Не возвращает "
+
+✓ Решение:
+Person >> greet
+    ^ 'Hello, ', self name.  " ^ return "
+
+❌ Ошибка 10: Memory leak (не очищать)
+coll := OrderedCollection new.
+1 to: 1000000 do: [ :i |
+    coll add: i.
+].
+" Забыли очистить coll! "
+
+✓ Решение:
+coll := OrderedCollection new.
+[ 1 to: 1000000 do: [ :i |
+    coll add: i.
+] ] ensure: [
+    coll := nil.  " Allow GC "
+].
+
+================================================================================
+11. ПРИМЕРЫ PURE OOP СТИЛЯ
+================================================================================
+
+Пример 1: Bank account
+----------------------
+Object subclass: #BankAccount
+    instanceVariableNames: 'balance'
+    classVariableNames: ''
+    package: 'Banking'
+
+BankAccount >> initialize
+    super initialize.
+    balance := 0.
+
+BankAccount >> deposit: amount
+    balance := balance + amount.
+
+BankAccount >> withdraw: amount
+    balance >= amount
+        ifTrue: [ balance := balance - amount ]
+        ifFalse: [ self error: 'Insufficient funds' ].
+
+BankAccount >> balance
+    ^ balance
+
+Пример 2: Stack
+---------------
+Object subclass: #Stack
+    instanceVariableNames: 'collection'
+    classVariableNames: ''
+    package: 'Collections'
+
+Stack >> initialize
+    super initialize.
+    collection := OrderedCollection new.
+
+Stack >> push: object
+    collection add: object.
+
+Stack >> pop
+    ^ collection isEmpty
+        ifTrue: [ self error: 'Stack empty' ]
+        ifFalse: [ collection removeLast ].
+
+Stack >> isEmpty
+    ^ collection isEmpty
+
+Пример 3: Observer pattern
+--------------------------
+Object subclass: #Subject
+    instanceVariableNames: 'observers'
+    classVariableNames: ''
+    package: 'Patterns'
+
+Subject >> initialize
+    super initialize.
+    observers := OrderedCollection new.
+
+Subject >> addObserver: observer
+    observers add: observer.
+
+Subject >> removeObserver: observer
+    observers remove: observer.
+
+Subject >> notify
+    observers do: [ :observer | observer update: self ].
+
+Object subclass: #Observer
+    instanceVariableNames: ''
+    classVariableNames: ''
+    package: 'Patterns'
+
+Observer >> update: subject
+    " Handle update "
+    Transcript show: 'Updated'.
+
+Пример 4: Factory pattern
+-------------------------
+Object subclass: #Shape
+    instanceVariableNames: ''
+    classVariableNames: ''
+    package: 'Shapes'
+
+Shape class >> create: type
+    type = 'circle'
+        ifTrue: [ ^ Circle new ]
+        ifFalse: [ type = 'square'
+            ifTrue: [ ^ Square new ]
+            ifFalse: [ self error: 'Unknown shape' ] ].
+
+Shape >> draw
+    self subclassResponsibility.
+
+Shape subclass: #Circle
+    instanceVariableNames: ''
+    classVariableNames: ''
+    package: 'Shapes'
+
+Circle >> draw
+    Transcript show: 'Drawing circle'.
+
+Пример 5: MVC pattern
+---------------------
+Object subclass: #Model
+    instanceVariableNames: 'data observers'
+    classVariableNames: ''
+    package: 'MVC'
+
+Model >> initialize
+    super initialize.
+    data := ''.
+    observers := OrderedCollection new.
+
+Model >> data: aString
+    data := aString.
+    self notifyObservers.
+
+Model >> addObserver: observer
+    observers add: observer.
+
+Model >> notifyObservers
+    observers do: [ :observer | observer update: data ].
+
+Object subclass: #View
+    instanceVariableNames: 'model'
+    classVariableNames: ''
+    package: 'MVC'
+
+View >> model: aModel
+    model := aModel.
+    model addObserver: self.
+
+View >> update: data
+    Transcript show: 'View updated: ', data.
+
+================================================================================
+                         КОНЕЦ SYNTAX_SMALLTALK
+================================================================================

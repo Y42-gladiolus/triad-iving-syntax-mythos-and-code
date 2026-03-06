@@ -1,0 +1,85 @@
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    D - КЛЮЧЕВЫЕ ОСОБЕННОСТИ                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ✅ УНИКАЛЬНЫЕ FEATURES:                                                     │
+│  ───────────────────────────────────────────────────────────────────────────  │
+│                                                                              │
+│  1. C++ СОВМЕСТИМОСТЬ                                                        │
+│     • Прямой вызов C/C++ функций без bindings                                │
+│     • Импорт C++ библиотек напрямую                                          │
+│     • Тот же ABI (Application Binary Interface)                              │
+│     • Легкая миграция с C/C++                                                │
+│                                                                              │
+│  2. ГИБРИДНОЕ УПРАВЛЕНИЕ ПАМЯТЬЮ                                             │
+│     • Garbage collection (по умолчанию)                                      │
+│     • Можно отключить GC (-betterC)                                          │
+│     • Manual memory management (malloc/free)                                 │
+│     • RAII (Resource Acquisition Is Initialization)                          │
+│     • Unique, Shared, Immutable типы                                         │
+│                                                                              │
+│  3. COMPILE-TIME EXECUTION (CTFE)                                            │
+│     • Выполнение кода во время компиляции                                    │
+│     • template metaprogramming проще чем C++                                 │
+│     • mixin (генерация кода)                                                 │
+│     • static if (условная компиляция)                                        │
+│                                                                              │
+│  4. MEMORY SAFETY                                                            │
+│     • @safe аннотация (проверка безопасности)                                │
+│     • @trusted (доверенный код)                                              │
+│     • @system (небезопасный код, как C++)                                    │
+│     • Array bounds checking                                                  │
+│     • Null pointer checking                                                  │
+│                                                                              │
+│  5. MODERN SYNTAX                                                            │
+│     • Проще чем C++ (меньше синтаксического шума)                            │
+│     • Вывод типов (auto)                                                     │
+│     • Lambda функции                                                         │
+│     • Range-based for loops                                                  │
+│     • Pattern matching (match expression)                                    │
+│                                                                              │
+│  6. BUILT-IN FEATURES                                                        │
+│     • Unit testing (встроенный)                                              │
+│     • Documentation (встроенная)                                             │
+│     • Contracts (pre/post conditions)                                        │
+│     • Assertions (встроенные)                                                │
+│                                                                              │
+│  7. PARALLELISM                                                              │
+│     • std.parallelism (встроенная библиотека)                                │
+│     • parallel foreach                                                       │
+│     • map/reduce параллельно                                                 │
+│     • Fibers (легковесные потоки)                                            │
+│                                                                              │
+│  ⚠️ ОТЛИЧИЯ ОТ ДРУГИХ ЯЗЫКОВ:                                                │
+│  ───────────────────────────────────────────────────────────────────────────  │
+│                                                                              │
+│  vs C++:                                                                     │
+│  • Проще синтаксис                                                           │
+│  • Быстрее компиляция                                                        │
+│  • Встроенный GC (можно отключить)                                           │
+│  • Встроенные unit tests                                                     │
+│  • Меньше сообщество                                                         │
+│                                                                              │
+│  vs Rust:                                                                    │
+│  • GC по умолчанию (не ownership)                                            │
+│  • Проще для изучения                                                        │
+│  • Меньше safety guarantees                                                  │
+│  • Быстрее компиляция                                                        │
+│  • C++ совместимость                                                         │
+│                                                                              │
+│  vs Zig:                                                                     │
+│  • Выше уровень абстракции                                                   │
+│  • GC доступен                                                               │
+│  • Больше features                                                           │
+│  • Старше и стабильнее                                                       │
+│                                                                              │
+│  🎯 ИДЕАЛЬНО ДЛЯ:                                                            │
+│  ───────────────────────────────────────────────────────────────────────────  │
+│  • Systems programming                                                       │
+│  • Game development                                                          │
+│  • High-performance applications                                             │
+│  • C++ migration                                                             │
+│  • Compiler/interpreter development                                          │
+│  • Embedded systems (без GC)                                                 │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘

@@ -1,0 +1,554 @@
+================================================================================
+              HARE - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Simple Systems + Manual Memory + POSIX-focused
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Structs и unions
+6. Control Flow
+7. Error handling
+8. Memory management
+9. POSIX integration
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры systems programming стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (двойной слэш)
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Module declaration
+use fmt;
+use posix;
+
+// Main функция
+export fn main() void = {
+  fmt::printline("Hello, Hare!");
+};
+
+// Semicolons опционально
+let x = 5
+let y = 10
+
+// Semicolons разрешены
+let z = 15;
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ i8, i16, i32    │ 1, -10, 1000 (целые со знаком)                             │
+│ i64             │ Большие целые                                              │
+│ u8, u16, u32    │ 0, 10, 1000 (беззнаковые)                                  │
+│ u64             │ Большие беззнаковые                                        │
+│ f32, f64        │ 3.14, -0.5 (вещественные)                                  │
+│ bool            │ true, false                                                │
+│ char            │ 'a', 'б'                                                   │
+│ str             │ "hello", "привет"                                          │
+│ void            │ void (нет значения)                                        │
+│ nullable        │ *int (nullable pointer)                                    │
+│ array           │ [5]int (массив из 5 элементов)                             │
+│ slice           │ [*]int (срез)                                              │
+│ struct          │ struct { x: int, y: int }                                  │
+│ union           │ union { int, float }                                       │
+│ enum            │ enum { A, B, C }                                           │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Type annotations
+let x: int = 5
+let y: f64 = 3.14
+
+// Type inference (ограниченный)
+let z = 10  // Hare выводит int
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// let - immutable
+let x = 5
+// x = 6  // ОШИБКА! Immutable
+
+// var - mutable (нет в Hare, все переменные mutable по умолчанию)
+var y = 10
+y = 15  // OK
+
+// Const - compile-time constant
+def PI: f64 = 3.14159;
+
+// Type inference
+let a = 5       // int
+let b = 3.14    // f64
+let c = true    // bool
+let d = "hello" // str
+
+// Shadowing (переопределение)
+let x = 5
+let x = 10  // OK в новом scope
+
+// Destructuring
+let (a, b) = (1, 2)
+let struct {x, y} = struct {x = 3, y = 4}
+
+// Tuple
+let point = (3, 4)
+let x = point.0
+let y = point.1
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+fn add(a: int, b: int) int = {
+  return a + b;
+};
+
+// No return type (void)
+fn print_hello() void = {
+  fmt::printline("Hello");
+};
+
+// Default параметры (нет, использовать overloading)
+fn greet(name: str) void = {
+  fmt::printline("Hello, " ++ name);
+};
+
+// Variadic функции (нет, использовать arrays)
+fn sum(nums: []int) int = {
+  var total = 0;
+  for (let i = 0z; i < len(nums); i += 1) {
+    total += nums[i];
+  };
+  return total;
+};
+
+// Recursive функции
+fn factorial(n: int) int = {
+  if (n <= 1) {
+    return 1;
+  };
+  return n * factorial(n - 1);
+};
+
+// Function pointers
+type fn_ptr = *fn(int, int) int;
+let func_ptr: fn_ptr = &add;
+
+================================================================================
+5. STRUCTS И UNIONS
+================================================================================
+
+// Struct
+struct Point {
+  x: f64,
+  y: f64,
+};
+
+// Struct methods (нет, использовать functions)
+fn point_distance(p: Point) f64 = {
+  return math::sqrt(p.x * p.x + p.y * p.y);
+};
+
+// Union
+union Number {
+  int,
+  f64,
+};
+
+// Tagged union
+struct TaggedNumber {
+  tag: enum { INT, FLOAT },
+  value: union { int, f64 },
+};
+
+// Enum
+enum Color {
+  RED,
+  GREEN,
+  BLUE,
+};
+
+// Struct initialization
+let p: Point = Point { x = 3.0, y = 4.0 };
+
+// Access struct fields
+let x = p.x;
+let y = p.y;
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+// If/else
+if (x > 5) {
+  fmt::printline("greater");
+} else {
+  fmt::printline("less or equal");
+};
+
+// If с multiple expressions
+if (x > 5) {
+  fmt::printline("positive");
+  return x * 2;
+};
+
+// Match (switch)
+match (value) {
+case 0 =>
+  fmt::printline("zero"),
+case 1 =>
+  fmt::printline("one"),
+case =>
+  fmt::printline("other"),
+};
+
+// Match с guards (нет, использовать nested match)
+match (n) {
+case =>
+  if (n < 0) {
+    fmt::printline("negative");
+  } else if (n > 0) {
+    fmt::printline("positive");
+  } else {
+    fmt::printline("zero");
+  };
+};
+
+// For loop
+for (let i = 0z; i < 10; i += 1) {
+  fmt::printline(i);
+};
+
+// While loop
+while (x > 0) {
+  fmt::printline(x);
+  x -= 1;
+};
+
+// Break/continue
+for (let i = 0z; i < 10; i += 1) {
+  if (i == 5) {
+    continue;
+  };
+  if (i == 8) {
+    break;
+  };
+  fmt::printline(i);
+};
+
+================================================================================
+7. ERROR HANDLING
+================================================================================
+
+// Error types
+type error = enum {
+  NONE,
+  INVALID,
+  NOTFOUND,
+};
+
+// Function returning error
+fn open(path: str) (file, error) = {
+  let f = posix::open(path, posix::O_RDONLY);
+  if (f < 0) {
+    return (null, error::NOTFOUND);
+  };
+  return (f, error::NONE);
+};
+
+// Handling errors
+let (f, err) = open("file.txt");
+if (err != error::NONE) {
+  fmt::printline("Error opening file");
+  return;
+};
+
+// Defer (автоматическая очистка)
+fn process() void = {
+  let f = posix::open("file.txt", posix::O_RDONLY);
+  defer posix::close(f);
+  // Use f
+  // Automatically closed on scope exit
+};
+
+// Assertions
+assert(x > 0, "x must be positive");
+
+================================================================================
+8. MEMORY MANAGEMENT
+================================================================================
+
+// Manual allocation
+let ptr = posix::malloc(100);
+defer posix::free(ptr);
+
+// Array on stack
+let arr: [10]int = [0, ...];  // Zero-initialized
+
+// Slice
+let slice: [*]int = arr[0..5];
+
+// Pointer
+let ptr: *int = &arr[0];
+let value = *ptr;
+
+// Nullable pointer
+let nullable: *int = null;
+if (nullable != null) {
+  let value = *nullable;
+};
+
+// Struct on heap
+let p = posix::malloc(size(Point));
+defer posix::free(p);
+
+// No garbage collection
+// Manual memory management
+// Programmer responsibility
+
+================================================================================
+9. POSIX INTEGRATION
+================================================================================
+
+// File I/O
+use posix;
+use io;
+
+let f = posix::open("file.txt", posix::O_RDONLY);
+defer posix::close(f);
+
+let buf: [1024]u8 = [0, ...];
+let n = posix::read(f, buf);
+io::write(io::stdout, buf[..n]);
+
+// Process management
+let pid = posix::fork();
+if (pid == 0) {
+  // Child process
+  posix::execve("/bin/ls", ["ls", "-la"], null);
+} else {
+  // Parent process
+  posix::waitpid(pid, 0);
+};
+
+// Networking
+let sock = posix::socket(posix::AF_INET, posix::SOCK_STREAM, 0);
+posix::connect(sock, ...);
+
+// Signals
+posix::signal(posix::SIGINT, &handler);
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable immutable
+let x = 5
+x = 10  // ОШИБКА! Immutable
+
+✓ Решение:
+var x = 5
+x = 10  // OK
+
+❌ Ошибка 2: Забыли defer
+let f = posix::open("file.txt", posix::O_RDONLY);
+// Забыли close!
+
+✓ Решение:
+let f = posix::open("file.txt", posix::O_RDONLY);
+defer posix::close(f);
+
+❌ Ошибка 3: Null pointer без проверки
+let ptr: *int = get_pointer();
+let value = *ptr;  // ОШИБКА! Может быть null
+
+✓ Решение:
+if (ptr != null) {
+  let value = *ptr;
+};
+
+❌ Ошибка 4: Array out of bounds
+let arr: [5]int = [0, ...];
+let x = arr[10];  // ОШИБКА!
+
+✓ Решение:
+if (index < len(arr)) {
+  let x = arr[index];
+};
+
+❌ Ошибка 5: Match без default
+match (value) {
+case 1 =>
+  fmt::printline("one"),
+case 2 =>
+  fmt::printline("two"),
+// Забыли default!
+};
+
+✓ Решение:
+match (value) {
+case 1 =>
+  fmt::printline("one"),
+case 2 =>
+  fmt::printline("two"),
+case =>
+  fmt::printline("other"),
+};
+
+❌ Ошибка 6: Error без обработки
+let (f, err) = open("file.txt");
+// Забыли проверить err!
+
+✓ Решение:
+let (f, err) = open("file.txt");
+if (err != error::NONE) {
+  return;
+};
+
+❌ Ошибка 7: Use после defer
+defer posix::free(ptr);
+use ptr;  // ОШИБКА! ptr будет freed
+
+✓ Решение:
+use ptr;
+defer posix::free(ptr);
+
+❌ Ошибка 8: Wrong type in struct
+let p: Point = Point { x = 3, y = 4.0 };  // ОШИБКА! x должен быть f64
+
+✓ Решение:
+let p: Point = Point { x = 3.0, y = 4.0 };
+
+❌ Ошибка 9: No use statement
+fmt::printline("Hello");  // ОШИБКА! Нет use fmt
+
+✓ Решение:
+use fmt;
+fmt::printline("Hello");
+
+❌ Ошибка 10: Wrong export
+fn main() void = {  // ОШИБКА! Нет export
+};
+
+✓ Решение:
+export fn main() void = {
+};
+
+================================================================================
+11. ПРИМЕРЫ SYSTEMS PROGRAMMING СТИЛЯ
+================================================================================
+
+Пример 1: File copy
+-------------------
+use posix;
+use io;
+
+fn copy_file(src: str, dst: str) void = {
+  let src_fd = posix::open(src, posix::O_RDONLY);
+  defer posix::close(src_fd);
+  
+  let dst_fd = posix::open(dst, posix::O_WRONLY | posix::O_CREAT);
+  defer posix::close(dst_fd);
+  
+  let buf: [4096]u8 = [0, ...];
+  for (true) {
+    let n = posix::read(src_fd, buf);
+    if (n <= 0) {
+      break;
+    };
+    io::write(dst_fd, buf[..n]);
+  };
+};
+
+Пример 2: Simple HTTP server
+----------------------------
+use posix;
+use io;
+
+fn handle_client(fd: int) void = {
+  defer posix::close(fd);
+  
+  let buf: [1024]u8 = [0, ...];
+  posix::recv(fd, buf, 0);
+  
+  let response = "HTTP/1.1 200 OK\r\n\r\nHello";
+  posix::send(fd, response, 0);
+};
+
+Пример 3: Process manager
+-------------------------
+use posix;
+
+fn run_command(cmd: str, args: []str) void = {
+  let pid = posix::fork();
+  if (pid == 0) {
+    posix::execve(cmd, args, null);
+  } else {
+    posix::waitpid(pid, 0);
+  };
+};
+
+Пример 4: Signal handler
+------------------------
+use posix;
+
+fn handler(sig: int) void = {
+  fmt::printline("Received signal");
+};
+
+export fn main() void = {
+  posix::signal(posix::SIGINT, &handler);
+  // Main loop
+};
+
+Пример 5: Memory pool
+---------------------
+use posix;
+
+struct Pool {
+  data: *u8,
+  size: usize,
+};
+
+fn pool_create(size: usize) Pool = {
+  let data = posix::malloc(size);
+  return Pool { data = data, size = size };
+};
+
+fn pool_destroy(p: Pool) void = {
+  posix::free(p.data);
+};
+
+Пример 6: Error handling pattern
+--------------------------------
+type result = union {
+  ok: int,
+  err: error,
+};
+
+fn safe_divide(a: int, b: int) result = {
+  if (b == 0) {
+    return result { err = error::INVALID };
+  };
+  return result { ok = a / b };
+};
+
+================================================================================
+                         КОНЕЦ SYNTAX_HARE
+================================================================================

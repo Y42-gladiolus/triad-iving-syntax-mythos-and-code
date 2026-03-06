@@ -1,0 +1,606 @@
+================================================================================
+              D - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Modern Systems + C++ Compatibility + Compile-time Execution
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Classes и Structs
+6. Templates и Mixins
+7. Memory Management (GC, @nogc)
+8. Concurrency (std.parallelism)
+9. Compile-time Execution (CTFE)
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры systems programming стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+/// Документация (для ddoc)
+/// Параметры: x - первое число
+
+// Точка с запятой обязательна
+int x = 5;
+int y = 10;
+
+// Main функция
+void main() {
+    import std.stdio;
+    writeln("Hello, D!");
+}
+
+// Module
+module mymodule;
+
+// Import
+import std.stdio;
+import std.algorithm : sort, filter;
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ bool            │ true, false                                                │
+│ byte            │ 8-bit signed integer                                       │
+│ ubyte           │ 8-bit unsigned integer                                     │
+│ short           │ 16-bit signed integer                                      │
+│ ushort          │ 16-bit unsigned integer                                    │
+│ int             │ 32-bit signed integer                                      │
+│ uint            │ 32-bit unsigned integer                                    │
+│ long            │ 64-bit signed integer                                      │
+│ ulong           │ 64-bit unsigned integer                                    │
+│ float           │ 32-bit floating point                                      │
+│ double          │ 64-bit floating point                                      │
+│ real            │ 80-bit floating point (x87)                                │
+│ char            │ 8-bit character (UTF-8)                                    │
+│ wchar           │ 16-bit character (UTF-16)                                  │
+│ dchar           │ 32-bit character (UTF-32)                                  │
+│ void            │ Пустой тип                                                 │
+│ auto            │ Вывод типа                                                 │
+│ string          │ immutable(char)[]                                          │
+│ wstring         │ immutable(wchar)[]                                         │
+│ dstring         │ immutable(dchar)[]                                         │
+│ size_t          │ Размер типа (usize)                                        │
+│ ptrdiff_t       │ Разница pointers                                           │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Проверка типа
+import std.traits;
+static assert(is(int == int));
+
+// Преобразование
+auto x = cast(int)5.5;  // 5
+auto s = to!string(5);  // "5"
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// Объявление переменных
+int x = 5;
+auto y = 10;  // Вывод типа
+
+// Const
+const int MAX = 100;
+
+// Immutable (compile-time constant)
+immutable PI = 3.14159;
+
+// Enum
+enum Color { red, green, blue }
+Color c = Color.red;
+
+// Static (сохраняет значение)
+void counter() {
+    static int count = 0;
+    count++;
+}
+
+// Thread-local
+__gshared int global;  // Global shared
+thread int local;      // Thread-local
+
+// Scope
+{
+    int x = 5;  // Локальная переменная
+}
+// x не доступна здесь
+
+// Inout (для const/immutable)
+void func(inout int x) {
+    x = 5;
+}
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+int add(int a, int b) {
+    return a + b;
+}
+
+// Auto return type
+auto multiply(int a, int b) {
+    return a * b;  // int
+}
+
+// Default параметры
+int greet(string name, string greeting = "Hello") {
+    return greeting ~ ", " ~ name;
+}
+
+// Variadic функции
+int sum(int[] args...) {
+    int total = 0;
+    foreach (arg; args) {
+        total += arg;
+    }
+    return total;
+}
+
+// Lambda функции
+auto square = (int x) => x * x;
+
+// Function pointers
+int function(int, int) funcPtr = &add;
+
+// Delegate (замыкание)
+int delegate(int) del = (int x) => x * 2;
+
+// Pure функции
+pure int pureAdd(int a, int b) {
+    return a + b;
+}
+
+// @nogc функции (без GC)
+@nogc int nogcAdd(int a, int b) {
+    return a + b;
+}
+
+// @safe функции (проверка безопасности)
+@safe int safeAdd(int a, int b) {
+    return a + b;
+}
+
+// Contracts
+int divide(int a, int b)
+in {
+    assert(b != 0, "Division by zero");
+}
+out(result) {
+    assert(result >= 0, "Result should be positive");
+}
+body {
+    return a / b;
+}
+
+// Рекурсия
+int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
+// Tail recursion
+int factorialTail(int n, int acc = 1) {
+    if (n <= 1) return acc;
+    return factorialTail(n - 1, acc * n);
+}
+
+================================================================================
+5. CLASSES И STRUCTS
+================================================================================
+
+// Struct (value type, на стеке)
+struct Point {
+    int x;
+    int y;
+    
+    int distance() {
+        return x * x + y * y;
+    }
+}
+
+// Class (reference type, на куче)
+class Person {
+    string name;
+    int age;
+    
+    this(string name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    void greet() {
+        writeln("Hello, ", name);
+    }
+    
+    ~this() {  // Destructor
+        writeln("Destroying ", name);
+    }
+}
+
+// Inheritance
+class Employee : Person {
+    double salary;
+    
+    this(string name, int age, double salary) {
+        super(name, age);
+        this.salary = salary;
+    }
+    
+    override void greet() {
+        writeln("Hello, I'm ", name, " and I earn ", salary);
+    }
+}
+
+// Abstract class
+abstract class Shape {
+    abstract double area();
+}
+
+// Interface
+interface Drawable {
+    void draw();
+}
+
+// Mixin
+mixin template Loggable(string name) {
+    void log(string msg) {
+        writeln("[", name, "] ", msg);
+    }
+}
+
+class MyClass {
+    mixin Loggable!"MyClass";
+}
+
+================================================================================
+6. TEMPLATES И MIXINS
+================================================================================
+
+// Function template
+T add(T)(T a, T b) {
+    return a + b;
+}
+
+// Multiple template parameters
+T max(T)(T a, T b) if (__traits(compiles, a > b)) {
+    return a > b ? a : b;
+}
+
+// Struct template
+struct Container(T) {
+    T[] data;
+    
+    void add(T item) {
+        data ~= item;
+    }
+}
+
+// Template specialization
+template add(T) if (is(T == int)) {
+    T add(T a, T b) {
+        return a + b;
+    }
+}
+
+// String mixin
+string code = "int x = 5;";
+mixin(code);  // Генерирует код
+
+// Compile-time function execution (CTFE)
+int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
+enum fact5 = factorial(5);  // Вычисляется на compile-time
+
+// Static if
+static if (is(T == int)) {
+    // Код для int
+} else {
+    // Код для других типов
+}
+
+// Traits
+static if (__traits(hasMember, T, "length")) {
+    // T имеет length
+}
+
+================================================================================
+7. MEMORY MANAGEMENT (GC, @NOGC)
+================================================================================
+
+// Garbage collection (по умолчанию)
+int[] arr = new int[100];
+// GC освободит память
+
+// Manual memory management
+import core.stdc.stdlib;
+int* ptr = cast(int*)malloc(int.sizeof * 100);
+free(ptr);
+
+// @nogc функции
+@nogc void noGCFunction() {
+    // Нельзя использовать new, GC и т.д.
+}
+
+// Scope exit (RAII)
+import std.scope;
+scope(exit) {
+    writeln("Always executed");
+}
+
+// Unique pointer
+import std.unique;
+auto ptr = makeUnique!int(5);
+
+// Shared memory
+import core.atomic;
+shared int counter = 0;
+atomicOp!"+="(counter, 1);
+
+// Immutable data
+immutable int[] data = [1, 2, 3];
+// data[0] = 5;  // ОШИБКА!
+
+// Const data
+const int[] data = [1, 2, 3];
+// Можно читать, нельзя писать
+
+================================================================================
+8. CONCURRENCY (STD.PARALLELISM)
+================================================================================
+
+// Parallel foreach
+import std.parallelism;
+int[] data = [1, 2, 3, 4, 5];
+foreach (i; parallel(data)) {
+    writeln(i);
+}
+
+// Parallel map
+import std.algorithm;
+auto result = data.map!(x => x * 2).parallel;
+
+// Task
+import std.concurrency;
+auto tid = spawn(() {
+    writeln("Running in thread");
+});
+send(tid, "message");
+
+// Fiber (легковесный поток)
+import core.thread;
+auto fiber = new Fiber(() {
+    writeln("Fiber running");
+    Fiber.yield();
+});
+fiber.call();
+
+// Mutex
+import core.sync.mutex;
+Mutex mutex;
+mutex.lock();
+// critical section
+mutex.unlock();
+
+// Condition variable
+import core.sync.condition;
+Condition cond;
+cond.wait(mutex);
+cond.notifyOne();
+
+================================================================================
+9. COMPILE-TIME EXECUTION (CTFE)
+================================================================================
+
+// Compile-time function
+int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
+// Compile-time constant
+enum fact5 = factorial(5);  // 120
+
+// Compile-time string
+enum greeting = "Hello, " ~ "World";
+
+// Compile-time array
+enum int[] numbers = [1, 2, 3, 4, 5];
+
+// Compile-time reflection
+template hasMethod(T, string name) {
+    enum bool hasMethod = __traits(hasMember, T, name);
+}
+
+// Compile-time code generation
+template GenerateCode(int N) {
+    static if (N > 0) {
+        mixin GenerateCode!(N - 1);
+        enum code = "int var" ~ to!string(N) ~ ";";
+        mixin(code);
+    }
+}
+
+// Mixin GenerateCode!(5);  // Генерирует var1, var2, ..., var5
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable immutable
+immutable int x = 5;
+x = 10;  // ОШИБКА!
+
+✓ Решение:
+int x = 5;
+x = 10;  // OK
+
+❌ Ошибка 2: GC в @nogc функции
+@nogc void func() {
+    auto arr = new int[100];  // ОШИБКА!
+}
+
+✓ Решение:
+@nogc void func() {
+    int[100] arr;  // Stack allocation
+}
+
+❌ Ошибка 3: Shared без atomic
+shared int counter = 0;
+counter++;  // ОШИБКА!
+
+✓ Решение:
+import core.atomic;
+shared int counter = 0;
+atomicOp!"+="(counter, 1);
+
+❌ Ошибка 4: Template без constraints
+T add(T)(T a, T b) {
+    return a + b;
+}
+add("hello", "world");  // ОШИБКА!
+
+✓ Решение:
+T add(T)(T a, T b) if (isNumeric!T) {
+    return a + b;
+}
+
+❌ Ошибка 5: Scope exit без import
+scope(exit) {
+    writeln("Cleanup");
+}  // ОШИБКА!
+
+✓ Решение:
+import std.scope;
+scope(exit) {
+    writeln("Cleanup");
+}
+
+❌ Ошибка 6: Class без new
+Person p = Person("John", 25);  // ОШИБКА!
+
+✓ Решение:
+Person p = new Person("John", 25);
+
+❌ Ошибка 7: Struct copy
+struct S { int[] data; }
+S s1;
+S s2 = s1;  // Shallow copy!
+
+✓ Решение:
+struct S { int[] data; }
+S s1;
+S s2 = s1.dup;  // Deep copy
+
+❌ Ошибка 8: Override без override
+class Base { void func() {} }
+class Derived : Base {
+    void func() {}  // ОШИБКА!
+}
+
+✓ Решение:
+class Derived : Base {
+    override void func() {}
+}
+
+❌ Ошибка 9: CTFE без enum
+int x = factorial(5);  // Runtime
+
+✓ Решение:
+enum x = factorial(5);  // Compile-time
+
+❌ Ошибка 10: Parallel без import
+foreach (i; parallel(data)) {  // ОШИБКА!
+    writeln(i);
+}
+
+✓ Решение:
+import std.parallelism;
+foreach (i; parallel(data)) {
+    writeln(i);
+}
+
+================================================================================
+11. ПРИМЕРЫ SYSTEMS PROGRAMMING СТИЛЯ
+================================================================================
+
+Пример 1: High-performance array
+---------------------------------
+import std.algorithm;
+import std.array;
+
+int[] processData(int[] input) {
+    return input
+        .filter!(x => x > 0)
+        .map!(x => x * 2)
+        .array;
+}
+
+Пример 2: Web server (vibe-d)
+------------------------------
+import vibe.d;
+
+void main() {
+    listenHTTP(8080, (req, res) {
+        res.writeBody("Hello, D!");
+    });
+    runApplication();
+}
+
+Пример 3: C interop
+-------------------
+extern(C) int cFunction(int x);
+
+void main() {
+    int result = cFunction(5);
+}
+
+Пример 4: Unit tests
+--------------------
+unittest {
+    assert(add(2, 3) == 5);
+    assert(multiply(2, 3) == 6);
+}
+
+Пример 5: Compile-time JSON
+---------------------------
+import std.json;
+
+enum json = parseJSON(`{"key": "value"}`);
+enum value = json["key"].str;  // "value"
+
+Пример 6: Parallel processing
+-----------------------------
+import std.parallelism;
+import std.algorithm;
+
+int[] data = iota(1_000_000);
+auto result = data
+    .parallel
+    .map!(x => x * 2)
+    .filter!(x => x > 1000);
+
+================================================================================
+                         КОНЕЦ SYNTAX_D
+================================================================================

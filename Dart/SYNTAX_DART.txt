@@ -1,0 +1,634 @@
+================================================================================
+              DART - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Статическая типизация + UI фокус
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Null safety (КРИТИЧНО!)
+5. Функции
+6. Классы и ООП
+7. Асинхронность (async/await)
+8. Collections (List, Map, Set)
+9. Pattern Matching (Dart 3.0+)
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры функционального стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+/// Документация (как в JavaDoc)
+/// Используется для dart doc
+
+// Точка с запятой обязательна
+int x = 5;
+int y = 10;
+
+// main функция (точка входа)
+void main() {
+  print('Hello, Dart!');
+}
+
+// Импорты
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'my_file.dart' hide MyClass;
+import 'my_file.dart' show MyClass;
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ int             │ 1, -10, 1_000_000 (подчёркивания для читаемости)           │
+│ double          │ 3.14, -0.5, 2.5e10                                         │
+│ num             │ int или double (общий тип)                                 │
+│ String          │ "hello", 'привет', """многострочная"""                     │
+│ bool            │ true, false                                                │
+│ List<T>         │ [1, 2, 3], <int>[1, 2, 3]                                  │
+│ Map<K, V>       │ {"key": "value"}, <String, int>{"a": 1}                    │
+│ Set<T>          │ {1, 2, 3}, <int>{1, 2, 3}                                  │
+│ Runes           │ Runes('hello')  # Unicode символы                          │
+│ Symbol          │ #symbolName  # Идентификаторы для reflection               │
+│ Type            │ int, String, MyClass  # Типы как значения                  │
+│ dynamic         │ Любое значение (отключает проверку типов)                  │
+│ Object          │ Базовый тип для всех (включая null в Dart 2.x)             │
+│ Never           │ Никогда не возвращает (для ошибок)                         │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Проверка типа
+print(5 is int);        // true
+print(5 is num);        // true
+print(5 is double);     // false
+
+// Приведение типов
+num x = 5;
+int y = x as int;       // Явное приведение
+int? z = x as int?;     // Nullable приведение
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// var - вывод типа
+var x = 5;          // int
+var y = 3.14;       // double
+var name = "John";  // String
+
+// Явный тип
+int a = 10;
+double b = 3.14;
+String c = "hello";
+
+// final - неизменяемая (вычисляется runtime)
+final now = DateTime.now();
+final list = [1, 2, 3];
+// list = [4, 5, 6];  // ОШИБКА!
+
+// const - неизменяемая (compile-time константа)
+const pi = 3.14159;
+const colors = ["red", "green", "blue"];
+// const now = DateTime.now();  // ОШИБКА! runtime значение
+
+// late - инициализация позже
+late String name;
+name = "John";  // Должно быть инициализировано до использования
+
+// static - переменная класса
+class MyClass {
+  static int counter = 0;
+}
+
+================================================================================
+4. NULL SAFETY (КРИТИЧНО ВАЖНО!)
+================================================================================
+
+// ⚡ Dart 2.12+ имеет null safety по умолчанию!
+
+// Nullable тип (может быть null)
+int? nullableInt = null;
+String? nullableString;
+
+// Non-nullable тип (не может быть null)
+int nonNullInt = 5;
+// nonNullInt = null;  // ОШИБКА!
+
+// Null-aware операторы
+int? x;
+int y = x ?? 10;        // 10 если x null, иначе x
+x?.length;              // null если x null, иначе x.length
+x?.length ?? 0;         // 0 если x null или x.length null
+
+// Null assertion (!)
+int? x = 5;
+int y = x!;  // 5 (гарантируем что не null)
+// int z = null!;  // ОШИБКА runtime!
+
+// Late initialization
+late String name;
+// print(name);  // ОШИБКА! Не инициализировано
+name = "John";
+print(name);  // OK
+
+// Required для параметров
+class Person {
+  final String name;
+  final int? age;
+  
+  Person({required this.name, this.age});
+}
+
+// Flow analysis
+void test(int? x) {
+  if (x != null) {
+    print(x + 5);  // x здесь non-null!
+  }
+}
+
+================================================================================
+5. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+int add(int a, int b) {
+  return a + b;
+}
+
+// Стрелочная функция (одно выражение)
+int multiply(int a, int b) => a * b;
+
+// Анонимная функция
+var square = (int x) => x * x;
+print(square(5));  // 25
+
+// Параметры по умолчанию
+int greet(String name, [String greeting = "Hello"]) {
+  return "$greeting, $name!";
+}
+
+// Именованные параметры
+int createUser({required String name, int? age, String email = ""}) {
+  // ...
+}
+
+createUser(name: "John", age: 25);
+
+// Optional positional параметры
+int sum(int a, int b, [int c = 0]) {
+  return a + b + c;
+}
+
+// Function как параметр
+void process(List<int> numbers, int Function(int) transformer) {
+  print(numbers.map(transformer).toList());
+}
+
+process([1, 2, 3], (x) => x * 2);
+
+// Generator функции (sync*)
+Iterable<int> countdown(int from) sync* {
+  for (var i = from; i >= 0; i--) {
+    yield i;
+  }
+}
+
+// Async generator (async*)
+Stream<int> countUp(int to) async* {
+  for (var i = 0; i <= to; i++) {
+    yield i;
+    await Future.delayed(Duration(seconds: 1));
+  }
+}
+
+================================================================================
+6. КЛАССЫ И ООП
+================================================================================
+
+// Базовый класс
+class Person {
+  // Поля
+  String name;
+  int? age;
+  
+  // Конструктор
+  Person(this.name, this.age);
+  
+  // Именованный конструктор
+  Person.unknown() : name = "Unknown", age = null;
+  
+  // Factory конструктор
+  factory Person.fromJson(Map<String, dynamic> json) {
+    return Person(json['name'], json['age']);
+  }
+  
+  // Метод
+  void greet() {
+    print("Hello, I'm $name");
+  }
+  
+  // Getter
+  String get description => "$name, $age years old";
+  
+  // Setter
+  set age(int? value) {
+    if (value != null && value < 0) {
+      throw ArgumentError("Age cannot be negative");
+    }
+    age = value;
+  }
+  
+  // Static метод
+  static int compare(Person a, Person b) {
+    return a.name.compareTo(b.name);
+  }
+}
+
+// Наследование
+class Employee extends Person {
+  String? company;
+  
+  Employee(String name, int? age, this.company) : super(name, age);
+  
+  @override
+  void greet() {
+    super.greet();
+    print("I work at $company");
+  }
+}
+
+// Abstract класс
+abstract class Shape {
+  double area();
+  double perimeter();
+}
+
+// Mixin
+mixin Flyable {
+  void fly() => print("Flying...");
+}
+
+mixin Swimmable {
+  void swim() => print("Swimming...");
+}
+
+class Duck extends Animal with Flyable, Swimmable {}
+
+// Interface (все классы в Dart - интерфейсы)
+class Printable {
+  void print();  // Нет реализации = интерфейс
+}
+
+// Extension (добавить методы к существующему типу)
+extension StringExtensions on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return this[0].toUpperCase() + substring(1);
+  }
+  
+  bool get isNullOrEmpty => isEmpty || this == null;
+}
+
+"hello".capitalize();  // "Hello"
+
+================================================================================
+7. АСИНХРОННОСТЬ (ASYNC/AWAIT)
+================================================================================
+
+// Future (результат в будущем)
+Future<int> fetchNumber() async {
+  await Future.delayed(Duration(seconds: 2));
+  return 42;
+}
+
+// async/await
+void main() async {
+  int result = await fetchNumber();
+  print(result);
+}
+
+// Обработка ошибок
+try {
+  int result = await fetchNumber();
+} catch (e) {
+  print("Error: $e");
+} finally {
+  print("Always executed");
+}
+
+// Future.wait (параллельное выполнение)
+Future<void> fetchAll() async {
+  var results = await Future.wait([
+    fetchNumber(),
+    fetchNumber(),
+    fetchNumber(),
+  ]);
+  print(results);  // [42, 42, 42]
+}
+
+// Future.any (первый завершённый)
+Future<void> fetchAny() async {
+  var result = await Future.any([
+    fetchNumber(),
+    Future.delayed(Duration(seconds: 5), () => 100),
+  ]);
+  print(result);  // 42 (быстрее)
+}
+
+// Stream (поток данных)
+Stream<int> countStream(int to) async* {
+  for (var i = 1; i <= to; i++) {
+    yield i;
+  }
+}
+
+void main() async {
+  await for (var value in countStream(5)) {
+    print(value);  // 1, 2, 3, 4, 5
+  }
+}
+
+// Stream контроллер
+var controller = StreamController<int>();
+controller.stream.listen((value) => print(value));
+controller.add(1);
+controller.add(2);
+controller.close();
+
+================================================================================
+8. COLLECTIONS (LIST, MAP, SET)
+================================================================================
+
+// List (список)
+var list = [1, 2, 3];
+list.add(4);
+list.remove(2);
+list.length;
+list.isEmpty;
+list.first;
+list.last;
+list[0];
+
+// List методы
+list.map((x) => x * 2);
+list.where((x) => x > 2);
+list.reduce((a, b) => a + b);
+list.fold(0, (sum, x) => sum + x);
+list.any((x) => x > 2);
+list.every((x) => x > 0);
+
+// Spread оператор
+var list1 = [1, 2, 3];
+var list2 = [0, ...list1, 4];  // [0, 1, 2, 3, 4]
+
+// Collection if/for
+var list = [1, 2, 3];
+var filtered = [for (var x in list) if (x > 1) x * 2];  // [4, 6]
+
+// Map (словарь)
+var map = {"key": "value", "name": "John"};
+map["age"] = 25;
+map.remove("key");
+map.containsKey("name");
+map.values;
+map.keys;
+
+// Map методы
+map.map((key, value) => MapEntry(key.toUpperCase(), value));
+map.mapValues((value) => value.toString());
+
+// Set (множество)
+var set = {1, 2, 3};
+set.add(4);
+set.remove(2);
+set.contains(3);
+set.union({4, 5, 6});
+set.intersection({2, 3, 4});
+
+================================================================================
+9. PATTERN MATCHING (DART 3.0+)
+================================================================================
+
+// ⚡ Dart 3.0 добавил pattern matching!
+
+// Switch expression (возвращает значение)
+var result = switch (x) {
+  0 => "zero",
+  1 => "one",
+  2 || 3 => "two or three",
+  _ => "other"
+};
+
+// Switch statement с patterns
+switch (value) {
+  case 0:
+    print("zero");
+  case 1 || 2 || 3:
+    print("small");
+  case > 10:
+    print("big");
+  case _:
+    print("medium");
+}
+
+// Pattern matching с list
+var list = [1, 2, 3];
+if (list case [1, _, 3]) {
+  print("Matches!");
+}
+
+// Pattern matching с map
+var map = {"name": "John", "age": 25};
+if (map case {"name": String name, "age": int age}) {
+  print("$name is $age years old");
+}
+
+// Pattern matching с классами
+sealed class Shape {}
+class Circle extends Shape { double radius; }
+class Rectangle extends Shape { double width, height; }
+
+double area(Shape shape) => switch (shape) {
+  Circle(:var radius) => 3.14 * radius * radius,
+  Rectangle(:var width, :var height) => width * height,
+};
+
+// Destructuring
+var (x, y) = (10, 20);
+var [first, second, ...rest] = [1, 2, 3, 4, 5];
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Null без проверки
+String? name;
+print(name.length);  // ОШИБКА! name может быть null
+
+✓ Решение:
+print(name?.length);  // null если name null
+print(name!.length);  // ОШИБКА если name null
+print(name?.length ?? 0);  // 0 если name null
+
+❌ Ошибка 2: async без await
+void fetchData() async {
+  var result = http.get(url);  // Забыли await!
+  print(result);  // Future, не результат!
+}
+
+✓ Решение:
+void fetchData() async {
+  var result = await http.get(url);
+  print(result.body);
+}
+
+❌ Ошибка 3: final vs const
+final now = DateTime.now();  // OK (runtime)
+const now = DateTime.now();  // ОШИБКА! compile-time только
+
+✓ Решение:
+const pi = 3.14;  // compile-time константа
+final now = DateTime.now();  // runtime константа
+
+❌ Ошибка 4: Изменение final списка
+final list = [1, 2, 3];
+list = [4, 5, 6];  // ОШИБКА!
+list.add(4);  // OK! (список изменяемый)
+
+✓ Решение:
+const list = [1, 2, 3];  // Неизменяемый список
+list.add(4);  // ОШИБКА!
+
+❌ Ошибка 5: Missing await в цикле
+for (var url in urls) {
+  http.get(url);  // Запросы идут параллельно но не ждём!
+}
+
+✓ Решение:
+for (var url in urls) {
+  await http.get(url);  // Последовательно
+}
+// Или параллельно:
+await Future.wait(urls.map((url) => http.get(url)));
+
+❌ Ошибка 6: Stream без listen
+var stream = Stream.fromIterable([1, 2, 3]);
+// Ничего не произойдёт!
+
+✓ Решение:
+stream.listen((value) => print(value));
+
+❌ Ошибка 7: Не закрыт StreamController
+var controller = StreamController();
+// Утечка памяти!
+
+✓ Решение:
+var controller = StreamController();
+// ...
+controller.close();  // Всегда закрывать!
+
+❌ Ошибка 8: dynamic вместо конкретного типа
+void process(dynamic data) {  // Отключает проверку типов!
+  print(data.length);  // Ошибка runtime если нет length
+}
+
+✓ Решение:
+void process(List<int> data) {
+  print(data.length);  // Ошибка compile-time если не тот тип
+}
+
+❌ Ошибка 9: Missing return в non-void функции
+int add(int a, int b) {
+  a + b;  // Забыли return!
+}
+
+✓ Решение:
+int add(int a, int b) => a + b;
+// Или:
+int add(int a, int b) {
+  return a + b;
+}
+
+❌ Ошибка 10: Игнорирование warnings
+warning: unused variable
+var x = 5;  // x не используется!
+
+✓ Решение:
+var _x = 5;  // _ префикс для неиспользуемых
+
+================================================================================
+11. ПРИМЕРЫ ФУНКЦИОНАЛЬНОГО СТИЛЯ
+================================================================================
+
+Пример 1: Pipeline обработка данных
+------------------------------------
+var result = numbers
+    .where((x) => x > 0)
+    .map((x) => x * 2)
+    .fold(0, (sum, x) => sum + x);
+
+Пример 2: Async/await цепочка
+------------------------------
+Future<User> getUserData(String id) async {
+  final user = await fetchUser(id);
+  final posts = await fetchPosts(user.id);
+  final comments = await Future.wait(
+    posts.map((p) => fetchComments(p.id))
+  );
+  return User(..user, posts: posts, comments: comments);
+}
+
+Пример 3: Pattern matching для парсинга
+---------------------------------------
+sealed class Response {}
+class Success extends Response { final data; }
+class Error extends Response { final message; }
+
+String handle(Response response) => switch (response) {
+  Success(:var data) => "Success: $data",
+  Error(:var message) => "Error: $message",
+};
+
+Пример 4: Extension методы
+--------------------------
+extension ListExtensions<T> on List<T> {
+  T? firstWhereOrNull(bool Function(T) test) {
+    for (var element in this) {
+      if (test(element)) return element;
+    }
+    return null;
+  }
+}
+
+var user = users.firstWhereOrNull((u) => u.id == 5);
+
+Пример 5: Stream трансформация
+------------------------------
+var stream = Stream.periodic(
+  Duration(seconds: 1),
+  (count) => count
+)
+.transform(StreamTransformer.fromHandlers(
+  handleData: (data, sink) {
+    if (data < 10) sink.add(data * 2);
+  }
+))
+.take(10)
+.listen(print);
+
+================================================================================
+                         КОНЕЦ SYNTAX_DART
+================================================================================

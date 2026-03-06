@@ -1,0 +1,641 @@
+================================================================================
+              GO - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Simple + Fast + Concurrent + Production Ready
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Structs и interfaces
+6. Control Flow
+7. Concurrency (goroutines, channels)
+8. Error handling
+9. Methods и receivers
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры Go-style
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (двойной слэш)
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Package declaration
+package main
+
+// Imports
+import (
+    "fmt"
+    "os"
+)
+
+// Semicolons не нужны (автоматически добавляются)
+x := 5
+y := 10
+
+// Main функция
+func main() {
+    fmt.Println("Hello, Go!")
+}
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ int             │ 1, -10, 1000                                               │
+│ int8, int16     │ 8-bit, 16-bit integers                                     │
+│ int32, int64    │ 32-bit, 64-bit integers                                    │
+│ uint            │ Unsigned integers                                          │
+│ float32, float64│ 3.14, -0.5                                                 │
+│ complex64, complex128 │ 1 + 2i                                              │
+│ bool            │ true, false                                                │
+│ string          │ "hello", "привет" (UTF-8, immutable)                       │
+│ byte            │ alias for uint8                                            │
+│ rune            │ alias for int32 (Unicode code point)                       │
+│ array           │ [5]int (fixed size)                                        │
+│ slice           │ []int (dynamic size)                                       │
+│ map             │ map[string]int                                             │
+│ struct          │ struct { name string; age int }                            │
+│ pointer         │ *int                                                       │
+│ channel         │ chan int                                                   │
+│ function        │ func(int) string                                           │
+│ interface       │ interface { Method() }                                     │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Type declaration
+var x int = 5
+var y string = "hello"
+
+// Type inference
+z := 10  // int
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// var declaration
+var x int = 5
+var y string = "hello"
+
+// Short declaration (только внутри функций)
+z := 10
+
+// Multiple declaration
+var a, b int = 1, 2
+c, d := 3, 4
+
+// Zero values
+var e int      // 0
+var f string   // ""
+var g bool     // false
+var h *int     // nil
+
+// Constants
+const PI = 3.14159
+const MaxSize = 100
+
+// Iota (auto-increment)
+const (
+    A = iota  // 0
+    B         // 1
+    C         // 2
+)
+
+// Type conversion
+x := 5
+y := float64(x)
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+func add(a int, b int) int {
+    return a + b
+}
+
+// Multiple return values
+func divide(a, b int) (int, error) {
+    if b == 0 {
+        return 0, errors.New("division by zero")
+    }
+    return a / b, nil
+}
+
+// Named return values
+func getPerson() (name string, age int) {
+    name = "John"
+    age = 25
+    return  // naked return
+}
+
+// Variadic функции
+func sum(nums ...int) int {
+    total := 0
+    for _, n := range nums {
+        total += n
+    }
+    return total
+}
+
+// Deferred функции
+func process() {
+    file, _ := os.Open("file.txt")
+    defer file.Close()  // Выполнится при выходе из функции
+    // Process file
+}
+
+// Anonymous функции
+add := func(a, b int) int {
+    return a + b
+}
+
+// Closures
+func makeAdder(n int) func(int) int {
+    return func(x int) int {
+        return x + n
+    }
+}
+
+================================================================================
+5. STRUCTS И INTERFACES
+================================================================================
+
+// Struct
+type Person struct {
+    Name string
+    Age  int
+}
+
+// Struct initialization
+p := Person{Name: "John", Age: 25}
+p2 := Person{"John", 25}  // Positional
+
+// Access fields
+name := p.Name
+p.Age = 26
+
+// Methods
+func (p Person) Greet() string {
+    return "Hello, " + p.Name
+}
+
+// Pointer receivers (для мутации)
+func (p *Person) SetAge(age int) {
+    p.Age = age
+}
+
+// Interface
+type Speaker interface {
+    Speak() string
+}
+
+// Interface implementation (implicit)
+type Dog struct{}
+
+func (d Dog) Speak() string {
+    return "Woof"
+}
+
+// Dog автоматически реализует Speaker
+
+// Empty interface (any type)
+func printAny(v interface{}) {
+    fmt.Println(v)
+}
+
+// Type assertion
+value, ok := v.(string)
+
+// Type switch
+switch v := v.(type) {
+case int:
+    fmt.Println("int")
+case string:
+    fmt.Println("string")
+}
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+// If/else
+if x > 5 {
+    fmt.Println("greater")
+} else if x == 5 {
+    fmt.Println("equal")
+} else {
+    fmt.Println("less")
+}
+
+// If с initialization
+if x := getValue(); x > 5 {
+    fmt.Println(x)
+}
+
+// For (единственный цикл в Go)
+for i := 0; i < 10; i++ {
+    fmt.Println(i)
+}
+
+// For как while
+for x > 0 {
+    x--
+}
+
+// For как infinite
+for {
+    // ...
+    break
+}
+
+// Range (для slice, map, string)
+for i, v := range slice {
+    fmt.Println(i, v)
+}
+
+// Switch
+switch x {
+case 1:
+    fmt.Println("one")
+case 2, 3:
+    fmt.Println("two or three")
+default:
+    fmt.Println("other")
+}
+
+// Break/continue
+for i := 0; i < 10; i++ {
+    if i == 5 {
+        continue
+    }
+    if i == 8 {
+        break
+    }
+}
+
+================================================================================
+7. CONCURRENCY (GOROUTINES, CHANNELS)
+================================================================================
+
+// Goroutine
+go func() {
+    fmt.Println("Running in goroutine")
+}()
+
+// Channel
+ch := make(chan int)
+go func() {
+    ch <- 42  // Send
+}()
+value := <-ch  // Receive
+
+// Buffered channel
+ch := make(chan int, 10)
+ch <- 1  // Не блокирует
+
+// Range over channel
+for value := range ch {
+    fmt.Println(value)
+}
+
+// Close channel
+close(ch)
+
+// Select (multiple channels)
+select {
+case v := <-ch1:
+    fmt.Println("ch1:", v)
+case v := <-ch2:
+    fmt.Println("ch2:", v)
+case <-time.After(time.Second):
+    fmt.Println("timeout")
+}
+
+// WaitGroup
+var wg sync.WaitGroup
+wg.Add(1)
+go func() {
+    defer wg.Done()
+    // Do work
+}()
+wg.Wait()
+
+// Mutex
+var mu sync.Mutex
+mu.Lock()
+// Critical section
+mu.Unlock()
+
+// Context
+ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+defer cancel()
+// Use ctx for cancellation
+
+================================================================================
+8. ERROR HANDLING
+================================================================================
+
+// Error type
+type error interface {
+    Error() string
+}
+
+// Standard pattern
+file, err := os.Open("file.txt")
+if err != nil {
+    return err
+}
+defer file.Close()
+
+// Custom error
+type MyError struct {
+    Message string
+}
+
+func (e *MyError) Error() string {
+    return e.Message
+}
+
+// Error wrapping (Go 1.13+)
+if err != nil {
+    return fmt.Errorf("context: %w", err)
+}
+
+// Error checking
+errors.Is(err, target)
+errors.As(err, &target)
+
+// Panic/Recover (rarely used)
+panic("fatal error")
+
+recover()  // В defer
+
+================================================================================
+9. METHODS И RECEIVERS
+================================================================================
+
+// Value receiver (копия)
+func (p Person) Greet() string {
+    return "Hello, " + p.Name
+}
+
+// Pointer receiver (ссылка, может менять)
+func (p *Person) SetAge(age int) {
+    p.Age = age
+}
+
+// Когда использовать pointer receiver:
+// 1. Нужно менять receiver
+// 2. Receiver большой (избегать копирования)
+// 3. Consistency (если один метод pointer, все должны быть)
+
+// Constructor pattern
+func NewPerson(name string, age int) *Person {
+    return &Person{Name: name, Age: age}
+}
+
+// Functional options pattern
+type Option func(*Person)
+
+func WithName(name string) Option {
+    return func(p *Person) {
+        p.Name = name
+    }
+}
+
+func NewPerson(opts ...Option) *Person {
+    p := &Person{}
+    for _, opt := range opts {
+        opt(p)
+    }
+    return p
+}
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Unused variable
+x := 5  // ОШИБКА! Переменная не используется
+
+✓ Решение:
+_ = x  // Или удалить переменную
+
+❌ Ошибка 2: Shadowing
+x := 5
+if x := 10; x > 5 {  // Новый x в scope if
+    fmt.Println(x)  // 10, не 5
+}
+
+✓ Решение:
+Избегать shadowing или использовать разные имена
+
+❌ Ошибка 3: Slice modification
+func modify(s []int) {
+    s[0] = 100  // Изменяет оригинал!
+}
+
+✓ Решение:
+Создать копию если нужно immutable:
+copy := make([]int, len(s))
+copy(copy, s)
+
+❌ Ошибка 4: Map iteration order
+for k, v := range myMap {
+    // Порядок не гарантирован!
+}
+
+✓ Решение:
+Не полагаться на порядок итерации map
+
+❌ Ошибка 5: Goroutine leak
+go func() {
+    for {
+        // Бесконечный цикл без выхода
+    }
+}()
+
+✓ Решение:
+Использовать context для cancellation:
+go func(ctx context.Context) {
+    for {
+        select {
+        case <-ctx.Done():
+            return
+        default:
+            // Work
+        }
+    }
+}(ctx)
+
+❌ Ошибка 6: Channel deadlock
+ch := make(chan int)
+ch <- 1  // Блокирует! Нет receiver
+
+✓ Решение:
+go func() { ch <- 1 }()  // Или использовать buffered channel
+
+❌ Ошибка 7: Interface nil check
+var s *Struct = nil
+var i Interface = s
+if i == nil {  // false! i не nil
+    // ...
+}
+
+✓ Решение:
+Проверять конкретный тип:
+if s == nil { ... }
+
+❌ Ошибка 8: Defer в loop
+for _, file := range files {
+    f, _ := os.Open(file)
+    defer f.Close()  // Закроет после выхода из функции!
+}
+
+✓ Решение:
+for _, file := range files {
+    func() {
+        f, _ := os.Open(file)
+        defer f.Close()
+        // Process
+    }()
+}
+
+❌ Ошибка 9: Copy slice
+s1 := []int{1, 2, 3}
+s2 := s1  // Ссылка, не копия!
+s2[0] = 100  // s1[0] тоже изменится
+
+✓ Решение:
+s2 := make([]int, len(s1))
+copy(s2, s1)
+
+❌ Ошибка 10: Error игнорирование
+file, _ := os.Open("file.txt")  // ОШИБКА! err игнорируется
+
+✓ Решение:
+file, err := os.Open("file.txt")
+if err != nil {
+    // Handle error
+}
+
+================================================================================
+11. ПРИМЕРЫ GO-STYLE
+================================================================================
+
+Пример 1: HTTP server
+---------------------
+package main
+
+import (
+    "fmt"
+    "net/http"
+)
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
+}
+
+func main() {
+    http.HandleFunc("/", handler)
+    http.ListenAndServe(":8080", nil)
+}
+
+Пример 2: CLI tool
+------------------
+package main
+
+import (
+    "flag"
+    "fmt"
+)
+
+func main() {
+    name := flag.String("name", "World", "Name to greet")
+    flag.Parse()
+    fmt.Printf("Hello, %s!\n", *name)
+}
+
+Пример 3: Worker pool
+---------------------
+func worker(id int, jobs <-chan int, results chan<- int) {
+    for j := range jobs {
+        results <- j * 2
+    }
+}
+
+func main() {
+    jobs := make(chan int, 100)
+    results := make(chan int, 100)
+    
+    for w := 1; w <= 3; w++ {
+        go worker(w, jobs, results)
+    }
+    
+    for j := 1; j <= 5; j++ {
+        jobs <- j
+    }
+    close(jobs)
+    
+    for r := 1; r <= 5; r++ {
+        <-results
+    }
+}
+
+Пример 4: Middleware pattern
+----------------------------
+func logging(next http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        log.Println(r.Method, r.URL)
+        next(w, r)
+    }
+}
+
+Пример 5: Context with timeout
+------------------------------
+func fetchWithTimeout(ctx context.Context, url string) ([]byte, error) {
+    ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+    defer cancel()
+    
+    req, _ := http.NewRequest("GET", url, nil)
+    req = req.WithContext(ctx)
+    
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    
+    return io.ReadAll(resp.Body)
+}
+
+Пример 6: Interface для testing
+-------------------------------
+type Database interface {
+    Query(string) ([]Row, error)
+}
+
+type MockDB struct{}
+
+func (m MockDB) Query(q string) ([]Row, error) {
+    // Return mock data
+}
+
+// Легко тестировать с mock
+
+================================================================================
+                         КОНЕЦ SYNTAX_GO
+================================================================================

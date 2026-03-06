@@ -1,0 +1,636 @@
+================================================================================
+              TYPESCRIPT - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Статическая типизация + JavaScript экосистема
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Интерфейсы и типы
+5. Функции
+6. Классы и ООП
+7. Generics (обобщения)
+8. Utility Types
+9. Асинхронность (Promise, async/await)
+10. Модули и импорты
+11. Типичные ошибки (РАСШИРЕНО!)
+12. Примеры функционального стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Точка с запятой опциональна (но рекомендуется)
+const x = 5;
+const y = 10;
+
+// Export/Import (ES modules)
+export const value = 5;
+import { value } from './module';
+
+// Default export
+export default function main() {}
+import main from './module';
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ number          │ 1, -10, 3.14, Infinity, NaN                                │
+│ string          │ "hello", 'привет', `template ${value}`                     │
+│ boolean         │ true, false                                                │
+│ null            │ null (только null)                                         │
+│ undefined       │ undefined (не инициализировано)                            │
+│ any             │ Любое значение (отключает проверку типов)                  │
+│ unknown         │ Безопасный any (нужно проверить тип)                       │
+│ never           │ Никогда не возвращает (ошибки, бесконечные циклы)          │
+│ void            │ Нет возвращаемого значения                                 │
+│ symbol          │ Symbol('id') (уникальный идентификатор)                    │
+│ bigint          │ 100n (целые произвольной точности)                         │
+│ Array<T>        │ number[], Array<number>                                    │
+│ Tuple           │ [string, number] (фиксированная длина и типы)              │
+│ Enum            │ enum Color { Red, Green, Blue }                            │
+│ Object          │ { name: string, age: number }                              │
+│ Function        │ (a: number, b: number) => number                           │
+│ Union           │ string | number (или то или другое)                        │
+│ Intersection    │ TypeA & TypeB (оба типа одновременно)                      │
+│ Literal         │ "success" | "error" (конкретные значения)                  │
+│ Template        │ `hello ${string}` (шаблонные строки)                       │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Проверка типа (runtime)
+typeof x === "number"
+x instanceof Array
+x === null
+
+// Type assertion (приведение типа)
+const value = something as string;
+const value = <string>something;  // Не работает в JSX!
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// var - устаревший (function scope)
+var x = 5;  // Избегайте!
+
+// let - изменяемый (block scope)
+let y = 10;
+y = 15;  // OK
+
+// const - неизменяемый (block scope)
+const z = 20;
+// z = 25;  // ОШИБКА!
+
+// Type inference (вывод типа)
+let a = 5;        // number
+let b = "hello";  // string
+let c = true;     // boolean
+
+// Явная аннотация типа
+let d: number = 5;
+let e: string = "hello";
+
+// Destructuring
+const [first, second] = [1, 2];
+const { name, age } = { name: "John", age: 25 };
+
+// Spread оператор
+const arr1 = [1, 2, 3];
+const arr2 = [...arr1, 4, 5];  // [1, 2, 3, 4, 5]
+
+const obj1 = { a: 1 };
+const obj2 = { ...obj1, b: 2 };  // { a: 1, b: 2 }
+
+================================================================================
+4. ИНТЕРФЕЙСЫ И ТИПЫ
+================================================================================
+
+// Interface (можно расширять)
+interface User {
+  id: number;
+  name: string;
+  email?: string;  // Optional
+  readonly createdAt: Date;  // Readonly
+}
+
+// Type alias (нельзя расширять)
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+};
+
+// Interface extension
+interface Admin extends User {
+  permissions: string[];
+}
+
+// Type intersection
+type Admin = User & { permissions: string[] };
+
+// Interface merging (автоматически)
+interface User {
+  age: number;
+}
+interface User {
+  email: string;
+}
+// User = { age: number, email: string }
+
+// Type vs Interface:
+// Interface: лучше для объектов, можно расширять, merging
+// Type: лучше для union, intersection, primitives
+
+================================================================================
+5. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+function add(a: number, b: number): number {
+  return a + b;
+}
+
+// Стрелочная функция
+const multiply = (a: number, b: number): number => a * b;
+
+// Optional параметры
+function greet(name: string, greeting?: string): string {
+  return `${greeting || "Hello"}, ${name}!`;
+}
+
+// Параметры по умолчанию
+function greet(name: string, greeting: string = "Hello"): string {
+  return `${greeting}, ${name}!`;
+}
+
+// Rest параметры
+function sum(...numbers: number[]): number {
+  return numbers.reduce((a, b) => a + b, 0);
+}
+
+// Function overloads (перегрузка)
+function process(value: string): string;
+function process(value: number): number;
+function process(value: string | number): string | number {
+  return value;
+}
+
+// Void функция
+function log(message: string): void {
+  console.log(message);
+}
+
+// Never (никогда не возвращает)
+function throwError(message: string): never {
+  throw new Error(message);
+}
+
+// Function type
+type MathFunc = (a: number, b: number) => number;
+const add: MathFunc = (a, b) => a + b;
+
+================================================================================
+6. КЛАССЫ И ООП
+================================================================================
+
+class Person {
+  // Поля
+  private id: number;
+  protected name: string;
+  public age: number;
+  static species = "Homo sapiens";
+  
+  // Конструктор
+  constructor(id: number, name: string, age: number) {
+    this.id = id;
+    this.name = name;
+    this.age = age;
+  }
+  
+  // Метод
+  greet(): string {
+    return `Hello, I'm ${this.name}`;
+  }
+  
+  // Getter
+  get displayName(): string {
+    return this.name.toUpperCase();
+  }
+  
+  // Setter
+  set age(value: number) {
+    if (value < 0) throw new Error("Age cannot be negative");
+    this.age = value;
+  }
+  
+  // Static метод
+  static getSpecies(): string {
+    return Person.species;
+  }
+}
+
+// Наследование
+class Employee extends Person {
+  private salary: number;
+  
+  constructor(id: number, name: string, age: number, salary: number) {
+    super(id, name, age);
+    this.salary = salary;
+  }
+  
+  @override
+  greet(): string {
+    return `${super.greet()}, I'm an employee`;
+  }
+}
+
+// Abstract класс
+abstract class Shape {
+  abstract area(): number;
+  
+  describe(): string {
+    return "I'm a shape";
+  }
+}
+
+class Circle extends Shape {
+  constructor(private radius: number) {
+    super();
+  }
+  
+  area(): number {
+    return Math.PI * this.radius ** 2;
+  }
+}
+
+// Implements интерфейс
+interface Printable {
+  print(): string;
+}
+
+class Document implements Printable {
+  print(): string {
+    return "Printing...";
+  }
+}
+
+================================================================================
+7. GENERICS (ОБОБЩЕНИЯ)
+================================================================================
+
+// Generic функция
+function identity<T>(value: T): T {
+  return value;
+}
+
+identity<string>("hello");
+identity<number>(42);
+identity("hello");  // Type inference
+
+// Generic интерфейс
+interface Container<T> {
+  value: T;
+  getValue(): T;
+}
+
+// Generic класс
+class Stack<T> {
+  private items: T[] = [];
+  
+  push(item: T): void {
+    this.items.push(item);
+  }
+  
+  pop(): T | undefined {
+    return this.items.pop();
+  }
+}
+
+// Generic constraints
+function logLength<T extends { length: number }>(value: T): void {
+  console.log(value.length);
+}
+
+logLength("hello");  // OK
+logLength([1, 2, 3]);  // OK
+// logLength(42);  // ОШИБКА!
+
+// Multiple generics
+function merge<T, U>(obj1: T, obj2: U): T & U {
+  return { ...obj1, ...obj2 };
+}
+
+// Generic utility
+type Partial<T> = {
+  [K in keyof T]?: T[K];
+};
+
+type Readonly<T> = {
+  readonly [K in keyof T]: T[K];
+};
+
+================================================================================
+8. UTILITY TYPES
+================================================================================
+
+// Встроенные utility типы TypeScript
+
+// Partial<T> - все свойства optional
+type PartialUser = Partial<User>;
+
+// Required<T> - все свойства required
+type RequiredUser = Required<User>;
+
+// Readonly<T> - все свойства readonly
+type ReadonlyUser = Readonly<User>;
+
+// Pick<T, K> - выбрать свойства
+type UserPreview = Pick<User, "id" | "name">;
+
+// Omit<T, K> - исключить свойства
+type UserWithoutEmail = Omit<User, "email">;
+
+// Exclude<T, U> - исключить из union
+type WithoutNull = Exclude<string | null, null>;  // string
+
+// Extract<T, U> - извлечь из union
+type OnlyString = Extract<string | number, string>;  // string
+
+// NonNullable<T> - исключить null и undefined
+type NonNullableString = NonNullable<string | null | undefined>;
+
+// ReturnType<T> - тип возврата функции
+type AddReturn = ReturnType<typeof add>;  // number
+
+// Parameters<T> - параметры функции
+type AddParams = Parameters<typeof add>;  // [number, number]
+
+// Awaited<T> - тип Promise
+type AsyncResult = Awaited<Promise<string>>;  // string
+
+// Record<K, T> - объект с ключами K и значениями T
+type UserMap = Record<number, User>;
+
+================================================================================
+9. АСИНХРОННОСТЬ (PROMISE, ASYNC/AWAIT)
+================================================================================
+
+// Promise
+function fetchData(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve("Data loaded");
+    }, 1000);
+  });
+}
+
+// async/await
+async function loadData(): Promise<void> {
+  try {
+    const data = await fetchData();
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Promise.all (параллельное выполнение)
+async function loadAll(): Promise<void> {
+  const [data1, data2, data3] = await Promise.all([
+    fetchData(),
+    fetchData(),
+    fetchData(),
+  ]);
+}
+
+// Promise.race (первый завершённый)
+async function loadAny(): Promise<void> {
+  const result = await Promise.race([
+    fetchData(),
+    new Promise((_, reject) => 
+      setTimeout(() => reject("Timeout"), 5000)
+    ),
+  ]);
+}
+
+// Promise.allSettled (все результаты)
+async function loadAllSettled(): Promise<void> {
+  const results = await Promise.allSettled([
+    fetchData(),
+    Promise.reject("Error"),
+  ]);
+  // results: [{ status: "fulfilled", value: ... }, { status: "rejected", reason: ... }]
+}
+
+================================================================================
+10. МОДУЛИ И ИМПОРТЫ
+================================================================================
+
+// Export
+export const value = 5;
+export function func() {}
+export class MyClass {}
+export type MyType = string;
+export interface MyInterface {}
+
+// Default export
+export default function main() {}
+
+// Import
+import { value, func } from './module';
+import MyClass from './module';  // Default
+import * as Module from './module';  // Namespace
+import { value as v } from './module';  // Alias
+
+// Dynamic import
+async function loadModule() {
+  const module = await import('./module');
+  module.func();
+}
+
+// Re-export
+export { value } from './module';
+export * from './module';
+
+================================================================================
+11. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: any вместо конкретного типа
+function process(data: any) {  // Отключает проверку типов!
+  return data.length;  // Ошибка runtime если нет length
+}
+
+✓ Решение:
+function process(data: string[] | string) {
+  return Array.isArray(data) ? data.length : data.length;
+}
+
+❌ Ошибка 2: Неявный any
+let x;  // Неявный any!
+x = 5;
+x = "hello";  // ОШИБКА в strict mode!
+
+✓ Решение:
+let x: number | string;
+
+❌ Ошибка 3: Null без проверки
+function getName(user: { name: string | null }): string {
+  return user.name.toUpperCase();  // ОШИБКА! name может быть null
+}
+
+✓ Решение:
+function getName(user: { name: string | null }): string {
+  return user.name?.toUpperCase() ?? "Unknown";
+}
+
+❌ Ошибка 4: async без await
+async function fetchData() {
+  const result = http.get(url);  // Забыли await!
+  return result;  // Promise, не результат!
+}
+
+✓ Решение:
+async function fetchData() {
+  const result = await http.get(url);
+  return result;
+}
+
+❌ Ошибка 5: Неправильный type assertion
+const value = something as string;
+value.length;  // Ошибка runtime если не string!
+
+✓ Решение:
+if (typeof something === "string") {
+  something.length;  // Безопасно
+}
+
+❌ Ошибка 6: Mutable массив в readonly контексте
+function process(items: readonly number[]) {
+  items.push(5);  // ОШИБКА! readonly
+}
+
+✓ Решение:
+function process(items: number[]) {
+  items.push(5);  // OK
+}
+
+❌ Ошибка 7: Не тот generic
+function identity<T>(value: T): T {
+  return value;
+}
+identity<string>(5);  // ОШИБКА! 5 не string
+
+✓ Решение:
+identity<number>(5);  // OK
+
+❌ Ошибка 8: Missing return в функции
+function add(a: number, b: number): number {
+  a + b;  // Забыли return!
+}
+
+✓ Решение:
+function add(a: number, b: number): number {
+  return a + b;
+}
+
+❌ Ошибка 9: Index signature ошибка
+const obj: { [key: string]: number } = {};
+obj.name = "John";  // ОШИБКА! string не number
+
+✓ Решение:
+const obj: { [key: string]: number | string } = {};
+
+❌ Ошибка 10: Игнорирование ESLint warnings
+// eslint-disable-next-line  // Избегайте!
+const x = 5;  // unused variable
+
+✓ Решение:
+const _x = 5;  // _ префикс для неиспользуемых
+
+================================================================================
+12. ПРИМЕРЫ ФУНКЦИОНАЛЬНОГО СТИЛЯ
+================================================================================
+
+Пример 1: Pipeline обработка данных
+------------------------------------
+const result = numbers
+  .filter(x => x > 0)
+  .map(x => x * 2)
+  .reduce((sum, x) => sum + x, 0);
+
+Пример 2: Generic utility функции
+---------------------------------
+function pipe<T>(value: T, ...fns: Array<(v: T) => T>): T {
+  return fns.reduce((acc, fn) => fn(acc), value);
+}
+
+const result = pipe(5, 
+  x => x + 1,
+  x => x * 2,
+  x => x - 3
+);  // 9
+
+Пример 3: Type-safe API клиент
+-------------------------------
+type ApiResponse<T> = {
+  data: T;
+  status: number;
+};
+
+async function fetchApi<T>(url: string): Promise<ApiResponse<T>> {
+  const response = await fetch(url);
+  const data = await response.json();
+  return { data, status: response.status };
+}
+
+const user = await fetchApi<User>('/api/user');
+
+Пример 4: Discriminated Union
+-----------------------------
+type Success = { status: "success"; data: string };
+type Error = { status: "error"; message: string };
+
+type Result = Success | Error;
+
+function handle(result: Result): string {
+  if (result.status === "success") {
+    return result.data;  // Type narrowed!
+  } else {
+    return result.message;  // Type narrowed!
+  }
+}
+
+Пример 5: Functional React Component
+------------------------------------
+type Props = {
+  name: string;
+  age: number;
+};
+
+const UserCard: React.FC<Props> = ({ name, age }) => {
+  return (
+    <div>
+      <h1>{name}</h1>
+      <p>{age} years old</p>
+    </div>
+  );
+};
+
+================================================================================
+                         КОНЕЦ SYNTAX_TYPESCRIPT
+================================================================================

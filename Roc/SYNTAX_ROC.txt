@@ -1,0 +1,485 @@
+================================================================================
+              ROC - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Modern Functional + Fast + No GC + Great UX
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Control Flow
+6. Collections (List, Dict, Set)
+7. Error Handling (Result, Option)
+8. Abilities (вместо type classes)
+9. Modules и imports
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры functional стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+# Комментарии (решётка)
+# Однострочные
+
+#{
+    Многострочные
+    комментарии
+}#
+
+# Indentation important (как Python/Haskell)
+x = 5
+y = 10
+
+# App declaration
+app "hello"
+    packages { pf: "https://github.com/roc-lang/basic-cli/releases/latest/download/basic-cli.tar.br" }
+    imports [pf.Stdout]
+    provides [main] to pf
+
+# Main функция
+main =
+    Stdout.line "Hello, Roc!"
+
+# Expressions (всё выражения)
+result =
+    if x > 5 then
+        "greater"
+    else
+        "less"
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Num             │ 1, -10, 3.14 (числа)                                       │
+│ Int             │ 1, -10 (целые)                                             │
+│ Float           │ 3.14, -0.5 (вещественные)                                  │
+│ Str             │ "hello", "привет" (строки)                                 │
+│ Bool            │ Bool.true, Bool.false                                      │
+│ List a          │ [1, 2, 3] (списки)                                         │
+│ Dict k v        │ Dict.fromList [("key", "value")] (словари)                 │
+│ Set a           │ Set.fromList [1, 2, 3] (множества)                         │
+│ Option a        │ Some 5, None (опциональные)                                │
+│ Result ok err   │ Ok 5, Err "error" (результаты)                             │
+│ Tuple           │ (1, "a", Bool.true) (кортежи)                              │
+│ Tagged Union    │ type Color = Red | Green | Blue                            │
+│ Record          │ { name: Str, age: Int } (записи)                           │
+│ Function        │ Int -> Int (функции)                                       │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+# Type annotations (опционально)
+x : Int
+x = 5
+
+# Type inference
+y = 10  # Roc выводит Int
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+# Immutable по умолчанию
+x = 5
+# x = 6  # ОШИБКА! Immutable
+
+# Let binding
+result =
+    x = 5
+    y = 10
+    x + y
+
+# Pattern matching в let
+{ x, y } = { x: 5, y: 10 }
+
+# Shadowing (переопределение)
+x = 5
+x = 10  # OK в новом scope
+
+# Records
+person = { name: "John", age: 25 }
+person.name  # "John"
+
+# Record update
+olderPerson = { person & age: 26 }
+
+# Tuples
+point = (3, 4)
+point.0  # 3
+point.1  # 4
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+# Базовая функция
+add = \a, b -> a + b
+
+# Type annotation
+add : Int, Int -> Int
+add = \a, b -> a + b
+
+# Lambda (анонимная)
+square = \x -> x * x
+
+# Partial application
+add5 = add 5
+add5 10  # 15
+
+# Function composition
+compose = \f, g, x -> f (g x)
+
+# Pipeline operator
+result =
+    5
+    |> add 10
+    |> square
+
+# Default parameters (через records)
+greet = \{ name, greeting ? "Hello" } ->
+    "$(greeting), $(name)!"
+
+# Variadic functions (через List)
+sum = \nums ->
+    List.sum nums
+
+# Recursive functions
+factorial = \n ->
+    if n <= 1 then
+        1
+    else
+        n * factorial (n - 1)
+
+# Tail recursion
+factorialTail = \n, acc ->
+    if n <= 1 then
+        acc
+    else
+        factorialTail (n - 1) (acc * n)
+
+================================================================================
+5. CONTROL FLOW
+================================================================================
+
+# If/else (всё выражения)
+result =
+    if x > 5 then
+        "greater"
+    else
+        "less"
+
+# When (pattern matching)
+color =
+    when value is
+        1 -> "red"
+        2 -> "green"
+        3 -> "blue"
+        _ -> "unknown"
+
+# When с guards
+classify = \n ->
+    when n is
+        n if n < 0 -> "negative"
+        0 -> "zero"
+        n if n > 0 -> "positive"
+
+# Case (альтернатива when)
+result =
+    case value of
+        1 -> "one"
+        2 -> "two"
+        _ -> "other"
+
+# List comprehension (через List.map)
+squares = List.map numbers \x -> x * x
+
+# Filtering
+evens = List.filter numbers \x -> x % 2 == 0
+
+================================================================================
+6. COLLECTIONS (LIST, DICT, SET)
+================================================================================
+
+# List
+numbers = [1, 2, 3, 4, 5]
+List.get numbers 0  # Ok 1
+List.length numbers  # 5
+
+# List operations
+List.map numbers \x -> x * 2
+List.filter numbers \x -> x > 2
+List.sum numbers
+List.range 1 10
+
+# Dict
+dict = Dict.fromList [("key", "value")]
+Dict.get dict "key"  # Ok "value"
+Dict.insert dict "key2" "value2"
+Dict.keys dict
+Dict.values dict
+
+# Set
+set = Set.fromList [1, 2, 3]
+Set.contains set 2  # Bool.true
+Set.insert set 4
+Set.union set1 set2
+Set.intersection set1 set2
+
+# List comprehensions
+squares = List.map (List.range 1 10) \x -> x * x
+
+# Folding
+sum = List.foldl numbers 0 \acc, x -> acc + x
+
+================================================================================
+7. ERROR HANDLING (RESULT, OPTION)
+================================================================================
+
+# Option (Maybe)
+maybeValue : Option Int
+maybeValue = Some 5
+
+maybeValue = None
+
+# Handling Option
+result =
+    when maybeValue is
+        Some x -> "Value: $(Num.toStr x)"
+        None -> "No value"
+
+# Result
+result : Result Str Str
+result = Ok "success"
+
+result = Err "error"
+
+# Handling Result
+output =
+    when result is
+        Ok value -> "Success: $(value)"
+        Err error -> "Error: $(error)"
+
+# Try operator (предлагается)
+# value <- try someFunction()
+
+# Chaining Results
+pipeline =
+    readFile "file.txt"
+    |> Result.map parseContent
+    |> Result.map validate
+    |> Result.map process
+
+# Custom error types
+type MyError = NotFound | PermissionDenied | InvalidInput
+
+================================================================================
+8. ABILITIES (ВМЕСТО TYPE CLASSES)
+================================================================================
+
+# Abilities = capabilities для функций
+# Вместо Haskell type classes
+
+# Example ability
+ability WriteLog where
+    writeLog : Str -> Result Str []
+
+# Using ability
+logMessage : Str -> Result Str [] where WriteLog
+logMessage = \msg ->
+    writeLog msg
+
+# Implementing ability
+implement WriteLog for Console where
+    writeLog = \msg ->
+        Stdout.line msg
+        Ok {}
+
+# Multiple abilities
+ability ReadFile, WriteFile where
+    readFile : Str -> Result Str []
+    writeFile : Str, Str -> Result Str []
+
+# Ability inference
+# Roc автоматически выводит abilities
+
+================================================================================
+9. MODULES И IMPORTS
+================================================================================
+
+# Module declaration
+module { provides: [main], imports: [] }
+
+# Import modules
+import Stdout
+import Stdin
+import Dict
+import List
+
+# Import with alias
+import Dict as D
+D.fromList [("key", "value")]
+
+# Import specific functions
+import List [map, filter, sum]
+
+# Platform modules
+platform "linux" provides [readFile] to "./platform/linux.roc"
+
+# Package imports
+packages { cli: "https://github.com/roc-lang/basic-cli/releases/latest/download/basic-cli.tar.br" }
+imports [cli.Stdout]
+
+# Local modules
+import MyModule
+import MyModule [function1, function2]
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable immutable
+x = 5
+x = 10  # ОШИБКА! Immutable по умолчанию
+
+✓ Решение:
+x = 5
+y = 10  # Новая переменная
+
+❌ Ошибка 2: Забыли provides
+app "hello"
+    packages { pf: "..." }
+    imports [pf.Stdout]
+    # Забыли provides!
+
+✓ Решение:
+app "hello"
+    packages { pf: "..." }
+    imports [pf.Stdout]
+    provides [main] to pf
+
+❌ Ошибка 3: Неправильный when
+when value is
+    1 -> "one"
+    # Забыли default case!
+
+✓ Решение:
+when value is
+    1 -> "one"
+    _ -> "other"
+
+❌ Ошибка 4: Option без обработки
+maybeValue = Some 5
+maybeValue.value  # ОШИБКА!
+
+✓ Решение:
+when maybeValue is
+    Some x -> x
+    None -> defaultValue
+
+❌ Ошибка 5: Result без обработки
+result = Ok 5
+result.value  # ОШИБКА!
+
+✓ Решение:
+when result is
+    Ok value -> value
+    Err error -> handleError error
+
+❌ Ошибка 6: Indentation error
+result =
+if x > 5 then  # ОШИБКА! Wrong indentation
+    "greater"
+
+✓ Решение:
+result =
+    if x > 5 then
+        "greater"
+
+❌ Ошибка 7: Function application
+add 5 10  # OK
+add (5, 10)  # ОШИБКА! Не tuple
+
+✓ Решение:
+add = \a, b -> a + b
+add 5 10  # OK
+
+❌ Ошибка 8: Record access
+person = { name: "John" }
+person.name  # OK
+person["name"]  # ОШИБКА!
+
+✓ Решение:
+person.name  # OK
+
+❌ Ошибка 9: List indexing
+numbers = [1, 2, 3]
+numbers[0]  # ОШИБКА!
+
+✓ Решение:
+List.get numbers 0  # Ok 1
+
+❌ Ошибка 10: Type mismatch
+add : Int, Int -> Int
+add = \a, b -> a + b
+add "hello" "world"  # ОШИБКА!
+
+✓ Решение:
+add 5 10  # OK
+
+================================================================================
+11. ПРИМЕРЫ FUNCTIONAL СТИЛЯ
+================================================================================
+
+Пример 1: Data processing pipeline
+----------------------------------
+processData = \data ->
+    data
+    |> List.filter \x -> x > 0
+    |> List.map \x -> x * 2
+    |> List.sum
+
+Пример 2: Error handling
+------------------------
+readAndProcess = \filename ->
+    readFile filename
+    |> Result.map parseContent
+    |> Result.map validate
+    |> Result.map process
+    |> Result.mapError \err -> "Failed: $(err)"
+
+Пример 3: Record manipulation
+-----------------------------
+updateUser = \user, updates ->
+    { user & ...updates }
+
+Пример 4: Ability usage
+-----------------------
+logAndProcess = \msg ->
+    writeLog msg
+    |> Result.map \_ -> process msg
+
+Пример 5: Web server (псевдокод)
+--------------------------------
+server = 
+    Router.new
+    |> Router.get "/" \_ -> Response.text "Hello"
+    |> Router.get "/users" \_ -> getUsers
+    |> Router.serve 8080
+
+Пример 6: CLI application
+-------------------------
+main =
+    args <- Args.get
+    when args is
+        Ok ["--help"] -> Stdout.line "Help text"
+        Ok [filename] -> processFile filename
+        _ -> Stdout.line "Invalid arguments"
+
+================================================================================
+                         КОНЕЦ SYNTAX_ROC
+================================================================================

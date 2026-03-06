@@ -1,0 +1,557 @@
+================================================================================
+              CARP - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Lisp + C + Static Types + No GC + Real-time
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (Lisp стиль)
+2. Типы данных (статические!)
+3. Переменные и присваивание
+4. Функции (defn, type signatures)
+5. Control Flow
+6. Memory Management (no GC!)
+7. Arrays и коллекции
+8. C интероперабельность
+9. Error Handling
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры real-time стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (LISP СТИЛЬ)
+================================================================================
+
+; Комментарии (точка с запятой)
+; Однострочные
+
+#|
+    Многострочные
+    комментарии
+|#
+
+; S-выражения (как в Lisp)
+(+ 1 2 3)  ; 6
+
+; Префиксная нотация
+(* (+ 1 2) 3)  ; 9
+
+; Defn для функций
+(defn add [a b]
+  (+ a b))
+
+; Type annotations
+(defn add [a b] : Int
+  (+ a b))
+
+; Module declaration
+(module Main)
+
+; Main функция
+(defn main []
+  (println "Hello, Carp!"))
+
+================================================================================
+2. ТИПЫ ДАННЫХ (СТАТИЧЕСКИЕ!)
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Int             │ 1, -10, 1000000                                            │
+│ Float           │ 3.14, -0.5, 2.5e10                                         │
+│ Double          │ 3.14159 (двойная точность)                                 │
+│ Bool            │ true, false                                                │
+│ Char            │ 'a', 'б'                                                   │
+│ String          │ "hello", "привет"                                          │
+│ Array           │ (array 1 2 3)                                              │
+│ Vector          │ (vector 1 2 3)                                             │
+│ StaticArray     │ (static-array Int 3)                                       │
+│ Tuple           │ (tuple 1 "a" true)                                         │
+│ Enum            │ (defenum Color [Red Green Blue])                           │
+│ Struct          │ (defstruct Point [x y])                                    │
+│ Reference       │ (Ref Int)                                                  │
+│ Pointer         │ (Ptr Int)                                                  │
+│ Function        │ (Fn [Int Int] Int)                                         │
+│ Unit            │ () (пустой тип)                                            │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+; Проверка типа (compile-time)
+; Carp имеет статическую типизацию!
+
+; Type annotations
+(def x : Int 5)
+(def y : Float 3.14)
+
+; Type inference
+(def z 5)  ; z : Int (автоматически)
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+; Def (глобальные)
+(def x 5)
+(def name "Carp")
+
+; Let (локальные переменные)
+(let [x 5
+      y 10]
+  (+ x y))  ; 15
+
+; Let с аннотацией
+(let [x : Int 5]
+  x)
+
+; Set! (изменение)
+(def mutable-x 5)
+(set! mutable-x 10)
+
+; Const (константы)
+(defconst PI 3.14159)
+(defconst MAX-SIZE 100)
+
+; Destructuring
+(let [[x y] [1 2]]
+  x)  ; 1
+
+; Shadowing (переопределение)
+(let [x 5]
+  (let [x 10]
+    x))  ; 10
+
+================================================================================
+4. ФУНКЦИИ (DEFN, TYPE SIGNATURES)
+================================================================================
+
+; Базовая функция
+(defn add [a b]
+  (+ a b))
+
+; С аннотацией типа
+(defn add [a b] : Int
+  (+ a b))
+
+; Полная signature
+(defn add : (Fn [Int Int] Int)
+  [a b]
+  (+ a b))
+
+; Анонимная функция
+(fn [x] (+ x 1))
+
+; Частичное применение (curry)
+(def add5 (partial add 5))
+(add5 10)  ; 15
+
+; Default параметры
+(defn greet [name (greeting "Hello")]
+  (str greeting ", " name))
+
+(greet "John")  ; "Hello, John"
+(greet "John" "Hi")  ; "Hi, John"
+
+; Varargs (&rest)
+(defn sum [&rest nums]
+  (reduce + 0 nums))
+
+(sum 1 2 3 4 5)  ; 15
+
+; Замыкания (closures)
+(defn make-adder [n]
+  (fn [x] (+ x n)))
+
+(def add5 (make-adder 5))
+(add5 10)  ; 15
+
+; Рекурсия
+(defn factorial [n]
+  (if (<= n 1)
+    1
+    (* n (factorial (- n 1)))))
+
+; Tail-рекурсия (оптимизирована)
+(defn factorial-tail [n acc]
+  (if (<= n 1)
+    acc
+    (recur (- n 1) (* acc n))))
+
+================================================================================
+5. CONTROL FLOW
+================================================================================
+
+; If/else
+(if (> x 0)
+  (println "positive")
+  (println "non-positive"))
+
+; Cond (множественный выбор)
+(cond
+  [(= x 0) "zero"]
+  [(= x 1) "one"]
+  [true "other"])
+
+; Case (case statement)
+(case x
+  (0 "zero")
+  (1 "one")
+  ("other"))
+
+; When (только если истинно)
+(when (> x 0)
+  (println "positive"))
+
+; Unless (только если ложно)
+(unless (= x 0)
+  (println "not zero"))
+
+; Циклы
+; For
+(for [i (range 1 10)]
+  (println i))
+
+; While
+(while (> n 0)
+  (println n)
+  (set! n (- n 1)))
+
+; Loop/recur (tail-рекурсия)
+(loop [i 0 acc 0]
+  (if (>= i 10)
+    acc
+    (recur (+ i 1) (+ acc i))))
+
+; Do (последовательность)
+(do
+  (println "Hello")
+  (println "World")
+  42)  ; Возвращает 42
+
+================================================================================
+6. MEMORY MANAGEMENT (NO GC!)
+================================================================================
+
+; Carp не имеет garbage collector!
+; Ручное управление памятью через ownership
+
+; Reference (ссылка)
+(def x (ref 5))
+(deref x)  ; 5
+(set! x 10)
+
+; Pointer (указатель)
+(def ptr (malloc (sizeof Int)))
+(ptr-set ptr 5)
+(ptr-get ptr)  ; 5
+(free ptr)
+
+; Array (управляемая память)
+(def arr (array 1 2 3))
+(array-get arr 0)  ; 1
+(array-free arr)
+
+; Ownership (владение)
+; Carp использует систему владения как Rust
+
+(defn take-ownership [x]
+  ; x теперь принадлежит функции
+  (use x))
+
+(def y 5)
+(take-ownership y)
+; y больше не доступен!
+
+; Borrowing (заимствование)
+(defn borrow [x]
+  ; x заимствован, не владеет
+  (println x))
+
+(def z 5)
+(borrow z)
+; z всё ещё доступен!
+
+; Drop (освобождение)
+(def resource (acquire-resource))
+(use resource)
+(drop resource)
+
+================================================================================
+7. ARRAYS И КОЛЛЕКЦИИ
+================================================================================
+
+; Array (динамический)
+(def arr (array 1 2 3))
+(array-push arr 4)
+(array-get arr 0)  ; 1
+(array-length arr)  ; 4
+(array-free arr)
+
+; Static Array (статический)
+(def static-arr (static-array Int 3))
+(static-array-set static-arr 0 1)
+(static-array-get static-arr 0)  ; 1
+
+; Vector (вектор)
+(def vec (vector 1 2 3))
+(vector-push vec 4)
+(vector-get vec 0)  ; 1
+
+; String (строка)
+(def str "hello")
+(string-length str)  ; 5
+(string-append str " world")
+
+; List (связный список)
+(def lst (list 1 2 3))
+(list-cons 0 lst)
+(list-head lst)  ; 1
+(list-tail lst)  ; (2 3)
+
+; Map (словарь)
+(def map (hash-map))
+(hash-map-set map "key" "value")
+(hash-map-get map "key")  ; "value"
+
+; Array операции
+(array-map (fn [x] (* x 2)) arr)
+(array-filter (fn [x] (> x 2)) arr)
+(array-reduce (fn [acc x] (+ acc x)) 0 arr)
+
+================================================================================
+8. C ИНТЕРОПЕРАБЕЛЬНОСТЬ
+================================================================================
+
+; Вызов C функций
+(extern "stdio.h"
+  (defn printf [format &rest args] : Int))
+
+(printf "Hello from C!\n")
+
+; C структуры
+(extern "stdlib.h"
+  (defstruct DivResult [quot rem]))
+
+; C указатели
+(extern "stdlib.h"
+  (defn malloc [size] : (Ptr Void))
+  (defn free [ptr] : Void))
+
+(def ptr (malloc 10))
+(free ptr)
+
+; Inline C
+(inline-c "
+  int add(int a, int b) {
+    return a + b;
+  }
+")
+
+; C макросы
+(extern "stdio.h"
+  (defmacro PRINTF [fmt &rest args]
+    `(printf ,fmt ,@args)))
+
+(PRINTF "Hello\n")
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+; Error
+(error "Something went wrong")
+
+; Try/catch
+(try
+  (risky-operation)
+  (catch [e]
+    (println "Error: " e)))
+
+; Result тип
+(defn divide [a b] : (Result Int String)
+  (if (= b 0)
+    (Error "Division by zero")
+    (Ok (/ a b))))
+
+; Обработка Result
+(case (divide 10 2)
+  [(Ok result) (println "Result: " result)]
+  [(Error msg) (println "Error: " msg)])
+
+; Option тип
+(defn find-user [id] : (Option User)
+  (database-lookup id))
+
+; Обработка Option
+(case (find-user 1)
+  [(Some user) (println (user-name user))]
+  [None (println "User not found")])
+
+; Assert
+(assert (> x 0) "X must be positive")
+
+; Panic
+(panic "Critical error")
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Неправильный type signature
+(defn add [a b] : Int
+  (str a b))  ; ОШИБКА! str вместо +
+
+✓ Решение:
+(defn add [a b] : Int
+  (+ a b))
+
+❌ Ошибка 2: Забыли free память
+(def arr (array 1 2 3))
+; Забыли (array-free arr)! Утечка памяти!
+
+✓ Решение:
+(def arr (array 1 2 3))
+(use arr)
+(array-free arr)
+
+❌ Ошибка 3: Использование после drop
+(def x (ref 5))
+(drop x)
+(deref x)  ; ОШИБКА! Use after free!
+
+✓ Решение:
+(def x (ref 5))
+(def val (deref x))
+(drop x)
+; Использовать val вместо x
+
+❌ Ошибка 4: Неправильный pattern matching
+(case x
+  (0 "zero")
+  (1 "one"))  ; Забыли default case!
+
+✓ Решение:
+(case x
+  (0 "zero")
+  (1 "one")
+  ("other"))
+
+❌ Ошибка 5: Рекурсия без базового случая
+(defn factorial [n]
+  (* n (factorial (- n 1))))  ; Бесконечная рекурсия!
+
+✓ Решение:
+(defn factorial [n]
+  (if (<= n 1)
+    1
+    (* n (factorial (- n 1)))))
+
+❌ Ошибка 6: Неправильный let
+(let [x 5 y 10]  ; OK
+  (+ x y))
+
+(let x 5 y 10  ; ОШИБКА! Нужны скобки
+  (+ x y))
+
+✓ Решение:
+(let [x 5 y 10]
+  (+ x y))
+
+❌ Ошибка 7: Type mismatch
+(def x : Int 5)
+(def x "hello")  ; ОШИБКА! Type mismatch
+
+✓ Решение:
+(def x : Int 5)
+(def y : String "hello")  ; Разные переменные
+
+❌ Ошибка 8: Borrow после ownership
+(defn take [x]
+  (use x))
+
+(def y 5)
+(take y)
+(println y)  ; ОШИБКА! y больше не доступен!
+
+✓ Решение:
+(defn borrow [x]
+  (println x))
+
+(def y 5)
+(borrow y)
+(println y)  ; OK
+
+❌ Ошибка 9: Неправильный extern
+(extern "stdio.h"
+  (defn printf [format] : Int))  ; Забыли &rest args!
+
+✓ Решение:
+(extern "stdio.h"
+  (defn printf [format &rest args] : Int))
+
+❌ Ошибка 10: Игнорирование Result
+(divide 10 0)  ; Игнорируется ошибка!
+
+✓ Решение:
+(case (divide 10 0)
+  [(Ok result) (use result)]
+  [(Error msg) (handle-error msg)])
+
+================================================================================
+11. ПРИМЕРЫ REAL-TIME СТИЛЯ
+================================================================================
+
+Пример 1: Game loop (без GC пауз)
+----------------------------------
+(defn game-loop []
+  (loop [state initial-state]
+    (let [new-state (update state)]
+      (render new-state)
+      (recur new-state))))
+
+; Нет GC пауз = плавная игра!
+
+Пример 2: Audio processing
+--------------------------
+(defn process-audio [buffer]
+  (array-map (fn [sample]
+               (* sample 0.5))
+             buffer))
+
+; Real-time audio без задержек!
+
+Пример 3: Embedded control
+--------------------------
+(extern "hardware.h"
+  (defn read-sensor [] : Int)
+  (defn write-actuator [value] : Void))
+
+(defn control-loop []
+  (loop []
+    (let [sensor-value (read-sensor)]
+      (write-actuator (* sensor-value 2))
+      (recur))))
+
+Пример 4: C integration
+-----------------------
+(extern "opencv.h"
+  (defn cv-load-image [path] : (Ptr Image))
+  (defn cv-process [img] : (Ptr Image))
+  (defn cv-free [img] : Void))
+
+(defn process-image [path]
+  (let [img (cv-load-image path)]
+    (let [processed (cv-process img)]
+      (use processed)
+      (cv-free img)
+      (cv-free processed))))
+
+Пример 5: Zero-cost abstractions
+--------------------------------
+(defn zero-cost-map [f arr]
+  ; Компилируется в C цикл без оверхеда!
+  (array-map f arr))
+
+; Нет runtime оверхеда!
+
+================================================================================
+                         КОНЕЦ SYNTAX_CARP
+================================================================================

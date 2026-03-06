@@ -1,0 +1,570 @@
+================================================================================
+              CLOJURE - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Modern Lisp + JVM + Functional + Immutability
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (Lisp стиль)
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (fn, defn)
+5. Collections (List, Vector, Map, Set)
+6. Control Flow
+7. Functional Programming
+8. Concurrency (atoms, refs, agents)
+9. Macros и метaprogramming
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры functional стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (LISP СТИЛЬ)
+================================================================================
+
+; Комментарии (точка с запятой)
+; Однострочные
+
+(comment
+  Многострочные
+  комментарии
+)
+
+; S-выражения (как в Lisp)
+(+ 1 2 3)  ; 6
+
+; Префиксная нотация
+(* (+ 1 2) 3)  ; 9
+
+; Def для определений
+(def x 5)
+(def name "Clojure")
+
+; Fn для функций
+(fn [x] (+ x 1))
+
+; Quote (цитирование)
+'(1 2 3)  ; (1 2 3) не вычисляется
+
+; Quasiquote (с вычислением)
+(def x 5)
+`(1 2 ~x 4)  ; (1 2 5 4)
+
+; Do (последовательность)
+(do
+  (println "Hello")
+  (println "World")
+  42)  ; Возвращает 42
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ boolean         │ true, false                                                │
+│ char            │ \a, \б                                                     │
+│ string          │ "hello", "привет"                                          │
+│ keyword         │ :name, :age, :user/id                                      │
+│ symbol          │ 'foo, 'bar (идентификаторы)                                │
+│ number          │ 1, -10, 3.14, 2.5e10, 22/7 (rational)                      │
+│ bigint          │ 1000000000000000000N                                       │
+│ bigdec          │ 3.141592653589793M                                         │
+│ list            │ '(1 2 3) (linked list)                                     │
+│ vector          │ [1 2 3] (array-like)                                       │
+│ map             │ {:name "John" :age 25}                                     │
+│ set             │ #{1 2 3} (уникальные)                                      │
+│ nil             │ nil (null/undefined)                                       │
+│ atom            │ (atom 0) (mutable reference)                               │
+│ ref             │ (ref 0) (transactional)                                    │
+│ agent           │ (agent 0) (async)                                          │
+│ future          │ (future (expensive-op))                                    │
+│ delay           │ (delay (expensive-op))                                     │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+; Проверка типа
+(number? x)      ; число?
+(string? x)      ; строка?
+(vector? x)      ; вектор?
+(map? x)         ; map?
+(nil? x)         ; nil?
+
+; Приведение типов
+(str 5)          ; "5"
+(int "5")        ; 5
+(float 5)        ; 5.0
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+; Def (глобальные)
+(def x 5)
+(def name "Clojure")
+
+; Let (локальные переменные)
+(let [x 5
+      y 10]
+  (+ x y))  ; 15
+
+; Defn (функции)
+(defn add [a b]
+  (+ a b))
+
+; Const (константы по соглашению)
+(def PI 3.14159)
+(def MAX-SIZE 100)
+
+; Atom (mutable reference)
+(def counter (atom 0))
+(swap! counter inc)  ; Увеличить
+@counter  ; Прочитать (1)
+
+; Destructuring
+(let [[x y] [1 2]]
+  x)  ; 1
+
+(let [{:keys [name age]} {:name "John" :age 25}]
+  name)  ; "John"
+
+; Shadowing (переопределение)
+(let [x 5]
+  (let [x 10]
+    x))  ; 10
+
+================================================================================
+4. ФУНКЦИИ (FN, DEFN)
+================================================================================
+
+; Базовая функция
+(defn add [a b]
+  (+ a b))
+
+; Fn (анонимная)
+(fn [x] (+ x 1))
+
+; Reader macro (короткий синтаксис)
+#(+ % 1)  ; % = первый аргумент
+#(+ %1 %2)  ; %1, %2 = первый, второй
+
+; Частичное применение (curry)
+(def add5 (partial + 5))
+(add5 10)  ; 15
+
+; Default параметры
+(defn greet [name & [greeting]]
+  (str (or greeting "Hello") ", " name))
+
+(greet "John")  ; "Hello, John"
+(greet "John" "Hi")  ; "Hi, John"
+
+; Varargs
+(defn sum [& nums]
+  (apply + nums))
+
+(sum 1 2 3 4 5)  ; 15
+
+; Замыкания (closures)
+(defn make-adder [n]
+  (fn [x] (+ x n)))
+
+(def add5 (make-adder 5))
+(add5 10)  ; 15
+
+; Рекурсия
+(defn factorial [n]
+  (if (<= n 1)
+    1
+    (* n (recur (- n 1)))))
+
+; Tail-рекурсия (loop/recur)
+(defn factorial-tail [n]
+  (loop [n n acc 1]
+    (if (<= n 1)
+      acc
+      (recur (- n 1) (* acc n)))))
+
+================================================================================
+5. COLLECTIONS (LIST, VECTOR, MAP, SET)
+================================================================================
+
+; List (linked list)
+(def lst '(1 2 3 4 5))
+
+; List операции
+(first lst)      ; 1
+(rest lst)       ; (2 3 4 5)
+(cons 0 lst)     ; (0 1 2 3 4 5)
+(count lst)      ; 5
+(nth lst 2)      ; 3
+
+; Vector (array-like)
+(def vec [1 2 3 4 5])
+
+; Vector операции
+(first vec)      ; 1
+(rest vec)       ; (2 3 4 5)
+(conj vec 6)     ; [1 2 3 4 5 6]
+(count vec)      ; 5
+(nth vec 2)      ; 3
+(assoc vec 2 10) ; [1 2 10 4 5]
+
+; Map (hash map)
+(def m {:name "John" :age 25})
+
+; Map операции
+(get m :name)    ; "John"
+(:name m)        ; "John" (короткий синтаксис)
+(assoc m :age 26) ; {:name "John" :age 26}
+(dissoc m :age)  ; {:name "John"}
+(keys m)         ; (:name :age)
+(vals m)         ; ("John" 25)
+
+; Set (уникальные)
+(def s #{1 2 3 4 5})
+
+; Set операции
+(conj s 6)       ; #{1 2 3 4 5 6}
+(disj s 3)       ; #{1 2 4 5}
+(contains? s 3)  ; true
+(get s 3)        ; 3
+
+; Collection функции
+(map inc [1 2 3])        ; (2 3 4)
+(filter even? [1 2 3 4]) ; (2 4)
+(reduce + 0 [1 2 3])     ; 6
+(every? even? [2 4 6])   ; true
+(some even? [1 3 5])     ; nil
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+; If/else
+(if (> x 0)
+  (println "positive")
+  (println "non-positive"))
+
+; If возвращает значение
+(let [result (if (> x 0) "positive" "non-positive")]
+  (println result))
+
+; When (только если истинно)
+(when (> x 0)
+  (println "positive")
+  (println "greater than zero"))
+
+; When-not (отрицание)
+(when-not (= x 0)
+  (println "not zero"))
+
+; Cond (множественный выбор)
+(cond
+  (= x 0) "zero"
+  (= x 1) "one"
+  :else "other")
+
+; Case (case statement)
+(case x
+  0 "zero"
+  1 "one"
+  "other")
+
+; For (цикл)
+(for [i (range 10)]
+  (println i))
+
+; For с условиями
+(for [i (range 10)
+      :when (even? i)]
+  i)  ; (0 2 4 6 8)
+
+; Doseq (side effects)
+(doseq [i (range 10)]
+  (println i))
+
+; Loop/recur (tail-рекурсия)
+(loop [i 0 acc 0]
+  (if (>= i 10)
+    acc
+    (recur (inc i) (+ acc i))))
+
+================================================================================
+7. FUNCTIONAL PROGRAMMING
+================================================================================
+
+; Pure functions
+(defn pure-add [a b]
+  (+ a b))
+
+; Immutability
+(def v1 [1 2 3])
+(def v2 (conj v1 4))  ; v1 не изменился!
+
+v1  ; [1 2 3]
+v2  ; [1 2 3 4]
+
+; Function composition
+(def add1 #(+ % 1))
+(def double #(* % 2))
+(def add-then-double (comp double add1))
+(add-then-double 5)  ; 12
+
+; Currying
+(defn add [a b] (+ a b))
+(def add5 (partial add 5))
+(add5 10)  ; 15
+
+; Higher-order функции
+(defn apply-twice [f x]
+  (f (f x)))
+
+(apply-twice #(* % 2) 5)  ; 20
+
+; Transducers (эффективные трансформации)
+(def xf (comp
+          (filter even?)
+          (map #(* % 2))))
+
+(transduce xf + 0 [1 2 3 4 5])  ; 24
+
+; Sequence library
+(->> [1 2 3 4 5]
+     (filter even?)
+     (map #(* % 2))
+     (reduce +))  ; 24
+
+================================================================================
+8. CONCURRENCY (ATOMS, REFS, AGENTS)
+================================================================================
+
+; Atom (синхронное, независимое)
+(def counter (atom 0))
+(swap! counter inc)
+@counter  ; 1
+
+; Ref (транзакционное, координированное)
+(def account1 (ref 100))
+(def account2 (ref 200))
+
+(dosync
+  (alter account1 - 50)
+  (alter account2 + 50))
+
+; Agent (асинхронное)
+(def async-counter (agent 0))
+(send async-counter inc)
+@async-counter  ; 1 (eventually)
+
+; Future (асинхронное вычисление)
+(def result (future
+              (Thread/sleep 1000)
+              42))
+@result  ; 42 (ждёт завершения)
+
+; Delay (ленивое вычисление)
+(def lazy-result (delay
+                   (println "Computing...")
+                   42))
+@lazy-result  ; 42 (вычисляется при первом доступе)
+
+; Promise (одноразовое значение)
+(def p (promise))
+(deliver p 42)
+@d p  ; 42
+
+================================================================================
+9. MACROS И METAPROGRAMMING
+================================================================================
+
+; Defmacro (создание макросов)
+(defmacro unless [test & body]
+  `(if (not ~test)
+     (do ~@body)))
+
+(unless false
+  (println "This runs"))
+
+; Syntax quote (цитирование)
+(defmacro when-positive [x]
+  `(if (pos? ~x)
+     (println ~x)))
+
+; Macroexpand (проверка макросов)
+(macroexpand '(unless false (println "test")))
+
+; Defmacro с gensym
+(defmacro with-logging [name & body]
+  `(let [result# (do ~@body)]
+     (println (str ~name ": " result#))
+     result#))
+
+; Thread-first macro (->)
+(-> 5
+    (+ 10)
+    (* 2)
+    (- 5))  ; 25
+
+; Thread-last macro (->>)
+(->> [1 2 3 4 5]
+     (filter even?)
+     (map #(* % 2))
+     (reduce +))  ; 24
+
+; Defmacro для DSL
+(defmacro defrouter [name & routes]
+  `(def ~name
+     (fn [request]
+       (condp = (:path request)
+         ~@routes))))
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable без atom
+(def counter 0)
+(def counter (inc counter))  ; ОШИБКА! Immutable
+
+✓ Решение:
+(def counter (atom 0))
+(swap! counter inc)
+
+❌ Ошибка 2: Неправильный destructuring
+(let [[x y] [1 2 3]]
+  x)  ; OK
+
+(let [{:keys [name age]} {:name "John"}]
+  age)  ; nil (ключ отсутствует)
+
+✓ Решение:
+(let [{:keys [name age] :or {age 0}} {:name "John"}]
+  age)  ; 0 (default)
+
+❌ Ошибка 3: Recur без loop
+(defn factorial [n]
+  (if (<= n 1)
+    1
+    (recur (- n 1) (* n acc))))  ; ОШИБКА! recur вне loop
+
+✓ Решение:
+(defn factorial [n]
+  (loop [n n acc 1]
+    (if (<= n 1)
+      acc
+      (recur (- n 1) (* acc n)))))
+
+❌ Ошибка 4: Не закрывать ресурсы
+(slurp "file.txt")  ; Файл может не закрыться!
+
+✓ Решение:
+(with-open [rdr (clojure.java.io/reader "file.txt")]
+  (slurp rdr))
+
+❌ Ошибка 5: Atom в транзакции
+(def acc (atom 100))
+(dosync
+  (swap! acc - 50))  ; ОШИБКА! Atom не в dosync
+
+✓ Решение:
+(def acc (ref 100))
+(dosync
+  (alter acc - 50))
+
+❌ Ошибка 6: Lazy sequence в REPL
+(range 1000000)  ; Не вычисляется в REPL!
+
+✓ Решение:
+(dorun (range 1000000))  ; Принудительное вычисление
+
+❌ Ошибка 7: Map ключи keywords
+(def m {"name" "John"})
+(:name m)  ; nil (ключ строка, не keyword!)
+
+✓ Решение:
+(def m {:name "John"})
+(:name m)  ; "John"
+
+❌ Ошибка 8: Future без deref
+(def f (future (expensive-op)))
+; Забыли @f!
+
+✓ Решение:
+(def f (future (expensive-op)))
+@f  ; Ждёт завершения
+
+❌ Ошибка 9: Macro без syntax-quote
+(defmacro my-if [test then else]
+  (if test then else))  ; ОШИБКА! Вычисляется сразу
+
+✓ Решение:
+(defmacro my-if [test then else]
+  `(if ~test ~then ~else))
+
+❌ Ошибка 10: Concurrency без атомарности
+(def counter (atom 0))
+(defn increment []
+  (swap! counter inc))  ; OK
+
+(def counter 0)
+(defn increment []
+  (def counter (inc counter)))  ; ОШИБКА! Race condition
+
+================================================================================
+11. ПРИМЕРЫ FUNCTIONAL СТИЛЯ
+================================================================================
+
+Пример 1: Functional pipeline
+-----------------------------
+(defn process-data [data]
+  (->> data
+       (filter :active)
+       (map :value)
+       (reduce +)))
+
+Пример 2: Immutability
+----------------------
+(defn update-user [user updates]
+  (merge user updates))  ; user не изменился!
+
+Пример 3: Core.async pipeline
+-----------------------------
+(require '[clojure.core.async :refer [go chan >! <!]])
+
+(defn async-process [input-ch output-ch]
+  (go
+    (while true
+      (let [value (<! input-ch)]
+        (>! output-ch (process value))))))
+
+Пример 4: Spec validation
+-------------------------
+(require '[clojure.spec.alpha :as s])
+
+(s/def ::name string?)
+(s/def ::age int?)
+(s/def ::user (s/keys :req [::name ::age]))
+
+(s/valid? ::user {::name "John" ::age 25})  ; true
+
+Пример 5: Ring web app
+----------------------
+(require '[ring.adapter.jetty :as jetty])
+
+(defn handler [request]
+  {:status 200
+   :body "Hello, Clojure!"})
+
+(jetty/run-jetty handler {:port 3000})
+
+Пример 6: Transducer
+--------------------
+(def xf (comp
+          (filter even?)
+          (map #(* % 2))))
+
+(transduce xf + 0 [1 2 3 4 5])  ; 24
+
+================================================================================
+                         КОНЕЦ SYNTAX_CLOJURE
+================================================================================

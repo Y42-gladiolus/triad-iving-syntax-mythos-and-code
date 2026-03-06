@@ -1,0 +1,463 @@
+================================================================================
+              EXECLINE - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Minimal Scripting + Init Scripts + No Variables
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Команды и утилиты
+3. Переменные окружения
+4. Control Flow
+5. Error Handling
+6. Фоновые процессы
+7. Логирование
+8. Интеграция с s6/runit
+9. Типичные ошибки (РАСШИРЕНО!)
+10. Примеры system scripting стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+# Shebang (обязательно)
+#!/command/execlineb -S
+
+# -S = strict mode (ошибка останавливает скрипт)
+# -P = сохранить PATH
+
+# Простая команда
+echo "Hello, World!"
+
+# Несколько команд (последовательно)
+echo "First"
+echo "Second"
+echo "Third"
+
+# Комментарии нет!
+# Используйте echo для отладки
+
+# Каждая команда = отдельный процесс
+# Нет shell builtins
+
+================================================================================
+2. КОМАНДЫ И УТИЛИТЫ
+================================================================================
+
+# echo - вывод
+echo "Hello"
+
+# importas - импорт переменных
+importas -u PATH PATH
+
+# posix-chronic - обработка ошибок
+posix-chronic
+command-that-might-fail
+
+# foreground - запуск в фоне
+foreground {
+  long-running-command
+}
+
+# background - запуск в фоне
+background {
+  background-command
+}
+
+# wait - ожидание процессов
+wait
+
+# exit - выход
+exit 0
+
+# importas -u - импорт с проверкой
+importas -u HOME HOME
+
+# define - определение
+define -u VAR value
+
+# envsubst - подстановка переменных
+envsubst
+
+# exec - замена процесса
+exec /usr/bin/command
+
+# pipeline - конвейер
+pipeline {
+  command1
+  command2
+  command3
+}
+
+================================================================================
+3. ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ
+================================================================================
+
+# importas - импорт из окружения
+importas -u PATH PATH
+importas -u HOME HOME
+
+# importas без -u (не обязательно наличие)
+importas USER USER
+
+# define - определение переменной
+define -u MYVAR value
+
+# export - экспорт
+export MYVAR
+
+# unset - удаление
+unset MYVAR
+
+# importas с заменой
+importas -u -i /old/new PATH PATH
+
+# importas множественный
+importas -u PATH HOME USER
+
+# Переменные в командах
+echo ${HOME}
+
+================================================================================
+4. CONTROL FLOW
+================================================================================
+
+# if - условие
+if {
+  test -f /etc/config
+}
+then {
+  echo "Config exists"
+}
+else {
+  echo "Config missing"
+}
+
+# if без else
+if {
+  test -d /var/log
+}
+then {
+  echo "Log dir exists"
+}
+
+# case - множественный выбор
+case {
+  importas -u SERVICE SERVICE
+}
+match "web" {
+  echo "Web service"
+}
+match "db" {
+  echo "Database service"
+}
+default {
+  echo "Unknown service"
+}
+
+# try - попытка (не останавливает при ошибке)
+try {
+  command-that-might-fail
+}
+
+# posix-chronic - игнорировать ошибки
+posix-chronic
+command-that-might-fail
+
+# loop - цикл (через exec)
+# execline не имеет циклов!
+# Используйте внешние скрипты
+
+================================================================================
+5. ERROR HANDLING
+================================================================================
+
+# exit code проверка
+if {
+  test -f /etc/config
+}
+then {
+  exit 0
+}
+else {
+  exit 1
+}
+
+# posix-chronic - игнорировать ошибки
+posix-chronic
+rm -f /tmp/file  # Не остановит скрипт
+
+# try - попытка
+try {
+  command
+}
+
+# foreground с обработкой
+foreground {
+  command
+}
+if {
+  test $? -eq 0
+}
+then {
+  echo "Success"
+}
+else {
+  echo "Failed"
+  exit 1
+}
+
+# exit с кодом
+exit 0   # Успех
+exit 1   # Ошибка
+exit 127 # Команда не найдена
+
+================================================================================
+6. ФОНОВЫЕ ПРОЦЕССЫ
+================================================================================
+
+# background - запуск в фоне
+background {
+  long-running-command
+}
+
+# foreground - ожидание
+foreground {
+  wait-for-command
+}
+
+# wait - ожидание всех фоновых
+wait
+
+# exec - замена процесса
+exec /usr/bin/daemon
+
+# s6-svscan - управление сервисами
+exec s6-svscan /service
+
+# foreground с timeout
+foreground {
+  timeout -t 30 command
+}
+
+# background с логом
+background {
+  command
+  2>&1
+  tee /var/log/service.log
+}
+
+================================================================================
+7. ЛОГИРОВАНИЕ
+================================================================================
+
+# tee - логирование
+command 2>&1 | tee /var/log/service.log
+
+# s6-log - логирование для s6
+exec s6-log -b -- /var/log/service
+
+# logger - syslog
+logger "Service started"
+
+# echo с временем
+date +"%Y-%m-%d %H:%M:%S"
+echo "Service started"
+
+# redirect stderr to stdout
+command 2>&1
+
+# redirect to file
+command > /var/log/output.log 2>&1
+
+# s6-logger - логирование
+exec s6-logger -s 1000000 /var/log/service
+
+================================================================================
+8. ИНТЕГРАЦИЯ С S6/RUNIT
+================================================================================
+
+# s6 сервис структура:
+/etc/s6/sv/service/
+├── run          # Главный скрипт
+├── finish       # Finish скрипт
+├── log/
+│   └── run      # Логирование
+└── env/         # Переменные
+
+# run скрипт
+#!/command/execlineb -S
+importas -u PATH PATH
+cd /var/service
+exec ./service-binary
+
+# finish скрипт
+#!/command/execlineb -S
+importas -u EXITCODE EXITCODE
+logger "Service exited with code ${EXITCODE}"
+
+# log/run скрипт
+#!/command/execlineb -S
+exec s6-log -b -- /var/log/service
+
+# runit структура:
+/etc/sv/service/
+├── run
+└── log/
+    └── run
+
+# systemd интеграция
+# Через s6-rc или напрямую
+
+================================================================================
+9. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Нет shebang
+echo "Hello"  # ОШИБКА! Нужен shebang
+
+✓ Решение:
+#!/command/execlineb -S
+echo "Hello"
+
+❌ Ошибка 2: Переменные как в bash
+MYVAR=value  # ОШИБКА! Нет переменных!
+
+✓ Решение:
+define -u MYVAR value
+export MYVAR
+
+❌ Ошибка 3: Shell builtins
+cd /tmp  # ОШИБКА! Нет builtins!
+
+✓ Решение:
+chdir /tmp
+
+❌ Ошибка 4: Циклы
+for i in 1 2 3; do echo $i; done  # ОШИБКА! Нет циклов!
+
+✓ Решение:
+Использовать внешний скрипт или s6-rc
+
+❌ Ошибка 5: Обработка ошибок
+command-that-fails
+echo "This always runs"  # ОШИБКА! Скрипт остановится!
+
+✓ Решение:
+try {
+  command-that-fails
+}
+echo "This always runs"
+
+❌ Ошибка 6: PATH не импортирован
+command  # ОШИБКА! PATH не известен!
+
+✓ Решение:
+importas -u PATH PATH
+command
+
+❌ Ошибка 7: Фоновый процесс без wait
+background {
+  long-command
+}
+exit 0  # ОШИБКА! Процесс убьётся!
+
+✓ Решение:
+background {
+  long-command
+}
+wait
+exit 0
+
+❌ Ошибка 8: Логирование без redirect
+command  # ОШИБКА! Stderr потеряется!
+
+✓ Решение:
+command 2>&1 | tee /var/log/output.log
+
+❌ Ошибка 9: Неправильный exit code
+exit 1  # ОШИБКА! Это ошибка!
+
+✓ Решение:
+exit 0  # Успех
+exit 1  # Только если ошибка!
+
+❌ Ошибка 10: exec без замены
+exec command
+echo "This never runs"  # ОШИБКА! exec заменяет процесс!
+
+✓ Решение:
+foreground {
+  command
+}
+echo "This runs after"
+
+================================================================================
+10. ПРИМЕРЫ SYSTEM SCRIPTING СТИЛЯ
+================================================================================
+
+Пример 1: Web сервис
+--------------------
+#!/command/execlineb -S
+importas -u PATH PATH
+importas -u PORT PORT
+posix-chronic
+cd /var/www
+exec httpd -f -p ${PORT}
+
+Пример 2: Database сервис
+-------------------------
+#!/command/execlineb -S
+importas -u PATH PATH
+importas -u DB_USER DB_USER
+importas -u DB_PASS DB_PASS
+posix-chronic
+cd /var/db
+exec postgres -D /var/db/data
+
+Пример 3: Cron job
+------------------
+#!/command/execlineb -S
+importas -u PATH PATH
+importas -u HOME HOME
+posix-chronic
+cd /var/jobs
+exec python backup.py
+
+Пример 4: Log rotation
+----------------------
+#!/command/execlineb -S
+importas -u PATH PATH
+posix-chronic
+cd /var/log
+exec s6-log -b -s 1000000 -n 5 service
+
+Пример 5: Health check
+----------------------
+#!/command/execlineb -S
+importas -u PATH PATH
+posix-chronic
+if {
+  curl -f http://localhost:8080/health
+}
+then {
+  exit 0
+}
+else {
+  logger "Health check failed"
+  exit 1
+}
+
+Пример 6: Service supervisor
+----------------------------
+#!/command/execlineb -S
+importas -u PATH PATH
+foreground {
+  s6-svscan /service
+}
+wait
+exit 0
+
+================================================================================
+                         КОНЕЦ SYNTAX_EXECLINE
+================================================================================

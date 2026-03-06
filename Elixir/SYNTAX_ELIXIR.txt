@@ -1,0 +1,584 @@
+================================================================================
+              ELIXIR - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    С расширенными примерами функционального стиля
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Pattern Matching (КРИТИЧНО!)
+5. Функции и модули
+6. Потоки (Streams) и перечисления (Enum)
+7. Процессы и Actor модель
+8. Обработка ошибок
+9. Макросы и метапрограммирование
+10. Протоколы (полиморфизм)
+11. Типичные ошибки (РАСШИРЕНО!)
+12. Примеры функционального стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+# Комментарии (решётка)
+# Однострочные
+
+@moduledoc """
+  Многострочные
+  документация
+"""
+
+# Точка с запятой разделяет выражения (редко используется)
+x = 1; y = 2
+
+# end обязателен для блоков
+if true do
+  IO.puts "Yes"
+end
+
+# do/end однострочно
+if true, do: IO.puts("Yes")
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ integer         │ 1, -10, 1_000_000 (подчёркивания для читаемости)           │
+│ float           │ 3.14, -0.5, 2.5e10                                         │
+│ atom            │ :ok, :error, :name (константы, как символы)                │
+│ boolean         │ true, false (это атомы!)                                   │
+│ string          │ "hello", "привет" (двойные кавычки, UTF-8)                 │
+│ charlist        │ 'hello' (список ASCII кодов, редко)                        │
+│ list            │ [1, 2, 3] (связный список)                                 │
+│ tuple           │ {1, 2, 3} (кортеж, фиксированный размер)                   │
+│ map             │ %{key: "value"} (словарь)                                  │
+│ keyword         │ [key: "value"] (список пар, для параметров)                │
+│ range           │ 1..10 (диапазон)                                           │
+│ pid             │ #PID<0.123.0> (идентификатор процесса)                     │
+│ reference       │ #Reference<0.0.0.123> (уникальная ссылка)                  │
+│ port            │ #Port<0.1234> (внешнее соединение)                         │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+# Проверка типа
+is_integer(5)      # true
+is_atom(:ok)       # true
+is_list([1,2,3])   # true
+is_map(%{})        # true
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+# Присваивание (неизменяемое!)
+x = 5
+# x = 6  # ОШИБКА! Нельзя переassign
+
+# Pattern matching присваивание
+{x, y} = {1, 2}  # x=1, y=2
+
+# _ для неиспользуемых
+{_x, y} = {1, 2}  # y=2, x игнорируется
+
+# Pin оператор (зафиксировать значение)
+x = 5
+^x = 5  # OK
+^x = 6  # ОШИБКА! x уже 5
+
+# Область видимости
+defmodule MyModule do
+  @module_var "module scope"  # Константа модуля
+  
+  def func do
+    local_var = "local scope"  # Локальная переменная
+  end
+end
+
+================================================================================
+4. PATTERN MATCHING (КРИТИЧНО ВАЖНО!)
+================================================================================
+
+# ⚡ Pattern matching — основа Elixir!
+
+# Базовый match
+{a, b, c} = {1, 2, 3}
+# a=1, b=2, c=3
+
+# Match с list
+[head | tail] = [1, 2, 3, 4, 5]
+# head=1, tail=[2,3,4,5]
+
+# Match с map
+%{name: name, age: age} = %{name: "John", age: 25}
+# name="John", age=25
+
+# Match в функциях (вместо if/else!)
+def describe(0), do: "zero"
+def describe(1), do: "one"
+def describe(n) when n > 1, do: "greater than 1"
+
+# Match с guard (условие)
+def classify(n) when n < 0, do: "negative"
+def classify(0), do: "zero"
+def classify(n) when n > 0, do: "positive"
+
+# Match в case
+case x do
+  1 -> "one"
+  2 -> "two"
+  _ -> "other"  # wildcard
+end
+
+# Match в cond (по условиям)
+cond do
+  x > 10 -> "big"
+  x > 5 -> "medium"
+  true -> "small"  # default
+end
+
+# Match с tuple для ошибок
+case result do
+  {:ok, value} -> value
+  {:error, reason} -> raise reason
+end
+
+================================================================================
+5. ФУНКЦИИ И МОДУЛИ
+================================================================================
+
+# Модуль (первая буква заглавная!)
+defmodule Math do
+  @moduledoc "Математические функции"
+  
+  # Публичная функция
+  def add(a, b) do
+    a + b
+  end
+  
+  # Частная функция (defp)
+  defp helper(x) do
+    x * 2
+  end
+  
+  # Однострочная функция
+  def square(x), do: x * x
+  
+  # Функция с guard
+  def divide(a, b) when b != 0, do: a / b
+  def divide(_, _), do: {:error, "division by zero"}
+  
+  # Функция с pattern matching
+  def greet(:en, name), do: "Hello, #{name}"
+  def greet(:ru, name), do: "Привет, #{name}"
+  def greet(_, name), do: "Hi, #{name}"
+end
+
+# Вызов
+Math.add(2, 3)           # 5
+Math.square(5)           # 25
+Math.greet(:ru, "Юрий")  # "Привет, Юрий"
+
+# Анонимные функции
+square = fn x -> x * x end
+square.(5)  # 25 (точка обязательна!)
+
+# Короткий синтаксис
+square = &(&1 * &1)
+square.(5)  # 25
+
+# Функции высшего порядка
+[1, 2, 3] |> Enum.map(&(&1 * 2))  # [2, 4, 6]
+
+================================================================================
+6. ПОТОКИ (STREAMS) И ПЕРЕЧИСЛЕНИЯ (ENUM)
+================================================================================
+
+# ⚡ Enum = eager (сразу вычисляет)
+# ⚡ Stream = lazy (лениво, по требованию)
+
+# Enum (сразу в память)
+[1, 2, 3, 4, 5]
+|> Enum.map(&(&1 * 2))
+|> Enum.filter(&(&1 > 5))
+|> Enum.sum()  # 24
+
+# Stream (лениво, для больших данных)
+1..1_000_000
+|> Stream.map(&(&1 * 2))
+|> Stream.filter(&(&1 > 5))
+|> Enum.take(10)  # Берёт только 10 элементов!
+
+# Разница:
+# Enum: [1,2,3] |> map |> filter |> sum  # 3 прохода по данным
+# Stream: один проход!
+
+# Common Enum функции
+Enum.map(list, fn)      # Map
+Enum.filter(list, fn)   # Filter
+Enum.reduce(list, acc, fn)  # Fold
+Enum.sum(list)          # Сумма
+Enum.max(list)          # Максимум
+Enum.min(list)          # Минимум
+Enum.sort(list)         # Сортировка
+Enum.uniq(list)         # Уникальные
+Enum.group_by(list, fn) # Группировка
+
+# Common Stream функции
+Stream.map(enumerable, fn)
+Stream.filter(enumerable, fn)
+Stream.take(enumerable, n)
+Stream.drop(enumerable, n)
+Stream.cycle(enumerable)  # Бесконечный цикл
+Stream.iterate(start, fn) # Итерация
+
+================================================================================
+7. ПРОЦЕССЫ И ACTOR МОДЕЛЬ
+================================================================================
+
+# ⚡ Elixir процессы = легковесные потоки (не OS threads!)
+# ⚡ Можно создать миллионы процессов!
+
+# Создание процесса
+pid = spawn(fn -> 
+  receive do
+    {:msg, text} -> IO.puts(text)
+  end
+end)
+
+# Отправка сообщения
+send(pid, {:msg, "Hello"})
+
+# Process с состоянием (GenServer)
+defmodule Counter do
+  use GenServer
+  
+  # Client API
+  def start_link(initial), do: GenServer.start_link(__MODULE__, initial)
+  def inc(pid), do: GenServer.cast(pid, :inc)
+  def get(pid), do: GenServer.call(pid, :get)
+  
+  # Server callbacks
+  def init(initial), do: {:ok, initial}
+  def handle_cast(:inc, state), do: {:noreply, state + 1}
+  def handle_call(:get, _from, state), do: {:reply, state, state}
+end
+
+# Использование
+{:ok, pid} = Counter.start_link(0)
+Counter.inc(pid)
+Counter.get(pid)  # 1
+
+# Ссылка между процессами (для supervision)
+link(pid)  # Если pid умрёт, текущий процесс тоже
+monitor(pid)  # Получить сообщение если pid умрёт
+
+# Task (асинхронная задача)
+task = Task.async(fn -> expensive_operation() end)
+result = Task.await(task, 5000)  # Таймаут 5 сек
+
+# Agent (простое состояние)
+{:ok, agent} = Agent.start_link(fn -> [] end)
+Agent.update(agent, &(&1 ++ [1]))
+Agent.get(agent, &length/1)
+
+================================================================================
+8. ОБРАБОТКА ОШИБОК
+================================================================================
+
+# try/rescue (для исключений)
+try do
+  risky_operation()
+rescue
+  ArgumentError -> IO.puts("Bad argument")
+  e -> IO.puts("Unknown error: #{inspect(e)}")
+end
+
+# try/after (всегда выполняется)
+try do
+  file = File.open!("file.txt")
+  # работа с файлом
+after
+  File.close(file)  # Всегда закроется
+end
+
+# with (для цепочки {:ok, value})
+with {:ok, file} <- File.open("file.txt"),
+     {:ok, content} <- IO.read(file, :all),
+     {:ok, parsed} <- parse(content) do
+  {:ok, parsed}
+else
+  {:error, reason} -> {:error, reason}
+end
+
+# raise (создать исключение)
+raise "Something went wrong"
+raise ArgumentError, "Invalid argument"
+
+# throw/catch (редко, для не-исключений)
+try do
+  throw(:early_exit)
+catch
+  :early_exit -> IO.puts("Early exit")
+end
+
+# exit (для процессов)
+spawn(fn -> exit(:normal) end)
+
+================================================================================
+9. МАКРОСЫ И МЕТАПРОГРАММИРОВАНИЕ
+================================================================================
+
+# ⚡ Elixir макросы = код который генерирует код
+
+# Базовый макрос
+defmacro unless(condition, do: block) do
+  quote do
+    if !unquote(condition), do: unquote(block)
+  end
+end
+
+# Использование
+unless false do
+  IO.puts("This runs")
+end
+
+# quote/unquote
+quote do
+  x = 1 + 2
+end
+
+# unquote в quote
+value = 5
+quote do
+  x = unquote(value)
+end
+
+# Macro.expand (для отладки)
+Macro.expand(quote(do: unless(false, do: :ok)), __ENV__)
+
+# AST (Abstract Syntax Tree)
+{:def, _, [ {:add, _, [a, b]}, [do: {: +, _, [a, b]}] ]}
+
+# Module attributes как макросы
+@before_callback fn module -> 
+  IO.puts("Before compiling #{inspect(module)}")
+end
+
+================================================================================
+10. ПРОТОКОЛЫ (ПОЛИМОРФИЗМ)
+================================================================================
+
+# Протокол = интерфейс для разных типов
+defprotocol Stringable do
+  def to_string(data)
+end
+
+# Реализация для разных типов
+defimpl Stringable, for: Integer do
+  def to_string(n), do: Integer.to_string(n)
+end
+
+defimpl Stringable, for: List do
+  def to_string(list), do: inspect(list)
+end
+
+defimpl Stringable, for: Atom do
+  def to_string(atom), do: Atom.to_string(atom)
+end
+
+# Использование
+Stringable.to_string(5)      # "5"
+Stringable.to_string([1,2])  # "[1, 2]"
+Stringable.to_string(:ok)    # "ok"
+
+# Встроенные протоколы
+Inspect    # inspect/1
+Enumerable # Enum функции
+Collectable # into/2
+Access     # доступ через []
+
+================================================================================
+11. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Забыть точку для анонимной функции
+square = fn x -> x * x end
+square(5)  # ОШИБКА!
+
+✓ Решение:
+square.(5)  # Точка обязательна!
+
+❌ Ошибка 2: Pattern matching в присваивании
+x = 5
+x = 6  # ОШИБКА! Нельзя переassign
+
+✓ Решение:
+x = 5
+x = 6  # В Elixir это pattern matching, не присваивание!
+# Используйте разные имена или pin оператор
+
+❌ Ошибка 3: Изменение списка
+list = [1, 2, 3]
+Enum.map(list, &(&1 * 2))
+list  # [1, 2, 3] (не изменился!)
+
+✓ Решение:
+list = [1, 2, 3]
+new_list = Enum.map(list, &(&1 * 2))
+new_list  # [2, 4, 6]
+
+❌ Ошибка 4: Неправильный pipe
+[1, 2, 3]
+|> Enum.map * 2  # ОШИБКА!
+
+✓ Решение:
+[1, 2, 3]
+|> Enum.map(&(&1 * 2))
+
+❌ Ошибка 5: case без wildcard
+case x do
+  1 -> "one"
+  2 -> "two"
+end  # ОШИБКА если x не 1 или 2!
+
+✓ Решение:
+case x do
+  1 -> "one"
+  2 -> "two"
+  _ -> "other"  # wildcard
+end
+
+❌ Ошибка 6: Process без receive
+pid = spawn(fn -> 
+  # Забыл receive!
+end)
+send(pid, {:msg, "hello"})  # Сообщение потеряно
+
+✓ Решение:
+pid = spawn(fn ->
+  receive do
+    {:msg, text} -> IO.puts(text)
+  end
+end)
+
+❌ Ошибка 7: GenServer без handle_*
+defmodule MyServer do
+  use GenServer
+  def call(pid, msg), do: GenServer.call(pid, msg)
+end  # ОШИБКА! Нет handle_call
+
+✓ Решение:
+defmodule MyServer do
+  use GenServer
+  def call(pid, msg), do: GenServer.call(pid, msg)
+  def handle_call(msg, _from, state), do: {:reply, msg, state}
+end
+
+❌ Ошибка 8: Stream без Enum
+1..1000
+|> Stream.map(&(&1 * 2))  # Ничего не вычислится!
+
+✓ Решение:
+1..1000
+|> Stream.map(&(&1 * 2))
+|> Enum.take(10)  # Trigger вычисления
+
+❌ Ошибка 9: Неправильный with
+with {:ok, file} <- File.open("file.txt")
+  {:ok, content} <- IO.read(file, :all) do  # ОШИБКА! Нет <-
+  content
+end
+
+✓ Решение:
+with {:ok, file} <- File.open("file.txt"),
+     {:ok, content} <- IO.read(file, :all) do
+  content
+end
+
+❌ Ошибка 10: Игнорирование warnings
+warning: variable x is unused
+x = 5  # x не используется!
+
+✓ Решение:
+_x = 5  # _ префикс для неиспользуемых
+
+================================================================================
+12. ПРИМЕРЫ ФУНКЦИОНАЛЬНОГО СТИЛЯ
+================================================================================
+
+Пример 1: Обработка данных (pipeline)
+-------------------------------------
+def process_data(data) do
+  data
+  |> Enum.filter(&(&1.active))
+  |> Enum.map(&(&1.name))
+  |> Enum.sort()
+  |> Enum.join(", ")
+end
+
+Пример 2: Рекурсия вместо цикла
+-------------------------------
+def sum([]), do: 0
+def sum([head | tail]), do: head + sum(tail)
+
+# Или с Enum:
+def sum(list), do: Enum.sum(list)
+
+Пример 3: Pattern matching для парсинга
+---------------------------------------
+def parse_response({:ok, %{body: body}}), do: {:ok, body}
+def parse_response({:error, reason}), do: {:error, reason}
+def parse_response(_), do: {:error, :unknown}
+
+Пример 4: GenServer для состояния
+---------------------------------
+defmodule Cache do
+  use GenServer
+  
+  def start_link, do: GenServer.start_link(__MODULE__, %{})
+  
+  def get(pid, key), do: GenServer.call(pid, {:get, key})
+  def put(pid, key, value), do: GenServer.cast(pid, {:put, key, value})
+  
+  def handle_call({:get, key}, _from, state),
+    do: {:reply, Map.get(state, key), state}
+  
+  def handle_cast({:put, key, value}, state),
+    do: {:noreply, Map.put(state, key, value)}
+end
+
+Пример 5: Task для параллелизма
+-------------------------------
+tasks = for url <- urls do
+  Task.async(fn -> fetch_url(url) end)
+end
+
+results = Task.await_many(tasks, 5000)
+
+Пример 6: Supervisor для отказоустойчивости
+------------------------------------------
+defmodule MyApp.Supervisor do
+  use Supervisor
+  
+  def start_link do
+    Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+  end
+  
+  def init(_) do
+    children = [
+      worker(MyApp.Cache, []),
+      worker(MyApp.Worker, []),
+      supervisor(MyApp.SubSupervisor, [])
+    ]
+    
+    supervise(children, strategy: :one_for_one)
+  end
+end
+
+================================================================================
+                         КОНЕЦ SYNTAX_ELIXIR
+================================================================================

@@ -1,0 +1,563 @@
+================================================================================
+              JAVASCRIPT - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    ES6+ + Функциональный стиль + Асинхронность
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (стрелочные, async)
+5. Объекты и классы
+6. Деструктуризация
+7. Массивы и методы
+8. Promise и async/await
+9. Модули (import/export)
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры функционального стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Точка с запятой опциональна (но рекомендуется)
+let x = 5;
+let y = 10;
+
+// console.log для вывода
+console.log("Hello, JavaScript!");
+
+// Строгий режим
+"use strict";
+
+// Импорт/Экспорт (ES6 модули)
+import { value } from './module.js';
+export const value = 5;
+export default function main() {}
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ number          │ 1, -10, 3.14, Infinity, NaN                                │
+│ bigint          │ 100n (целые произвольной точности)                         │
+│ string          │ "hello", 'привет', `template ${value}`                     │
+│ boolean         │ true, false                                                │
+│ null            │ null (намеренное отсутствие)                               │
+│ undefined       │ undefined (не инициализировано)                            │
+│ symbol          │ Symbol('id') (уникальный идентификатор)                    │
+│ object          │ { key: "value" }                                           │
+│ array           │ [1, 2, 3]                                                  │
+│ function        │ function() {}, () => {}                                    │
+│ Map             │ new Map([["key", "value"]])                                │
+│ Set             │ new Set([1, 2, 3])                                         │
+│ Promise         │ new Promise((resolve, reject) => {})                       │
+│ Error           │ new Error("message")                                       │
+│ RegExp          │ /pattern/g                                                 │
+│ Date            │ new Date()                                                 │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Проверка типа
+typeof x              // "number", "string", "boolean", "object", "function"
+Array.isArray(x)      // true/false
+x === null            // true/false
+x instanceof Date     // true/false
+
+// Приведение типов
+Number("5")           // 5
+String(5)             // "5"
+Boolean(1)            // true
++"5"                  // 5 (унарный плюс)
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// var - устаревший (function scope)
+var x = 5;  // Избегайте!
+
+// let - изменяемый (block scope)
+let y = 10;
+y = 15;  // OK
+
+// const - неизменяемый (block scope)
+const z = 20;
+// z = 25;  // ОШИБКА!
+
+// Вывод типа (автоматический)
+let a = 5;        // number
+let b = "hello";  // string
+
+// Destructuring
+const [first, second] = [1, 2];
+const { name, age } = { name: "John", age: 25 };
+
+// Spread оператор
+const arr1 = [1, 2, 3];
+const arr2 = [...arr1, 4, 5];  // [1, 2, 3, 4, 5]
+
+const obj1 = { a: 1 };
+const obj2 = { ...obj1, b: 2 };  // { a: 1, b: 2 }
+
+// Rest параметры
+function sum(...numbers) {
+  return numbers.reduce((a, b) => a + b, 0);
+}
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+function add(a, b) {
+  return a + b;
+}
+
+// Стрелочная функция (ES6+)
+const multiply = (a, b) => a * b;
+
+// Одно выражение (неявный return)
+const square = x => x * x;
+
+// Параметры по умолчанию
+function greet(name, greeting = "Hello") {
+  return `${greeting}, ${name}!`;
+}
+
+// Деструктуризация параметров
+function printUser({ name, age }) {
+  console.log(`${name} is ${age} years old`);
+}
+
+// Async функция
+async function fetchData() {
+  const response = await fetch('/api/data');
+  return response.json();
+}
+
+// IIFE (Immediately Invoked Function Expression)
+(function() {
+  console.log("Executed immediately");
+})();
+
+// Generator функция
+function* countUp(to) {
+  for (let i = 1; i <= to; i++) {
+    yield i;
+  }
+}
+
+// Callback функция
+array.forEach(item => console.log(item));
+
+================================================================================
+5. ОБЪЕКТЫ И КЛАССЫ
+================================================================================
+
+// Объект литерал
+const person = {
+  name: "John",
+  age: 25,
+  greet() {
+    console.log(`Hello, I'm ${this.name}`);
+  }
+};
+
+// Доступ к свойствам
+person.name;
+person["age"];
+
+// Деструктуризация объекта
+const { name, age } = person;
+
+// Классы (ES6+)
+class Person {
+  constructor(name, age) {
+    this.name = name;
+    this.age = age;
+  }
+  
+  greet() {
+    console.log(`Hello, I'm ${this.name}`);
+  }
+  
+  static createAdult(name) {
+    return new Person(name, 18);
+  }
+}
+
+// Наследование
+class Employee extends Person {
+  constructor(name, age, company) {
+    super(name, age);
+    this.company = company;
+  }
+  
+  greet() {
+    super.greet();
+    console.log(`I work at ${this.company}`);
+  }
+}
+
+// Getters/Setters
+class Circle {
+  constructor(radius) {
+    this._radius = radius;
+  }
+  
+  get radius() {
+    return this._radius;
+  }
+  
+  set radius(value) {
+    if (value < 0) throw new Error("Radius must be positive");
+    this._radius = value;
+  }
+}
+
+// Private поля (ES2022+)
+class Counter {
+  #count = 0;
+  
+  increment() {
+    this.#count++;
+  }
+  
+  getCount() {
+    return this.#count;
+  }
+}
+
+================================================================================
+6. ДЕСТРУКТУРИЗАЦИЯ
+================================================================================
+
+// Массивы
+const [a, b, c] = [1, 2, 3];
+const [first, ...rest] = [1, 2, 3, 4, 5];  // first=1, rest=[2,3,4,5]
+
+// Объекты
+const { name, age, email = "none" } = person;  // Default значение
+
+// Переименование
+const { name: userName, age: userAge } = person;
+
+// Вложенная деструктуризация
+const { user: { name, address: { city } } } = data;
+
+// В параметрах функции
+function printUser({ name, age }) {
+  console.log(`${name} is ${age}`);
+}
+
+// В catch (ES2019+)
+try {
+  // ...
+} catch ({ message, stack }) {
+  console.error(message);
+}
+
+================================================================================
+7. МАССИВЫ И МЕТОДЫ
+================================================================================
+
+// Создание
+const arr = [1, 2, 3, 4, 5];
+
+// Основные методы
+arr.map(x => x * 2);           // [2, 4, 6, 8, 10]
+arr.filter(x => x > 2);        // [3, 4, 5]
+arr.reduce((sum, x) => sum + x, 0);  // 15
+arr.find(x => x > 3);          // 4
+arr.findIndex(x => x > 3);     // 3
+arr.some(x => x > 3);          // true
+arr.every(x => x > 0);         // true
+arr.includes(3);               // true
+
+// Цепочки
+const result = arr
+  .filter(x => x % 2 === 0)
+  .map(x => x * 2)
+  .reduce((sum, x) => sum + x, 0);
+
+// Spread/Rest
+const newArr = [...arr, 6, 7];
+const [first, ...rest] = arr;
+
+// Array.from
+const arrFrom = Array.from("hello");  // ['h', 'e', 'l', 'l', 'o']
+
+// Array.of
+const arrOf = Array.of(1, 2, 3);  // [1, 2, 3]
+
+// Flat/FlatMap
+const nested = [1, [2, 3], [4, [5, 6]]];
+nested.flat();        // [1, 2, 3, 4, [5, 6]]
+nested.flat(2);       // [1, 2, 3, 4, 5, 6]
+nested.flatMap(x => [x, x * 2]);
+
+================================================================================
+8. PROMISE И ASYNC/AWAIT
+================================================================================
+
+// Promise
+const promise = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve("Success!");
+  }, 1000);
+});
+
+// then/catch
+promise
+  .then(result => console.log(result))
+  .catch(error => console.error(error));
+
+// async/await
+async function fetchData() {
+  try {
+    const response = await fetch('/api/data');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+// Promise.all (параллельное выполнение)
+const [data1, data2, data3] = await Promise.all([
+  fetch('/api/1'),
+  fetch('/api/2'),
+  fetch('/api/3')
+]);
+
+// Promise.race (первый завершённый)
+const result = await Promise.race([
+  fetch('/api/fast'),
+  new Promise((_, reject) => 
+    setTimeout(() => reject("Timeout"), 5000)
+  )
+]);
+
+// Promise.allSettled (все результаты)
+const results = await Promise.allSettled([
+  fetch('/api/1'),
+  fetch('/api/2')
+]);
+
+// Async generator
+async function* countUp(to) {
+  for (let i = 1; i <= to; i++) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    yield i;
+  }
+}
+
+================================================================================
+9. МОДУЛИ (IMPORT/EXPORT)
+================================================================================
+
+// Export
+export const value = 5;
+export function func() {}
+export class MyClass {}
+export default function main() {}
+
+// Import
+import { value, func } from './module.js';
+import MyClass from './module.js';  // Default
+import * as Module from './module.js';  // Namespace
+import { value as v } from './module.js';  // Alias
+
+// Dynamic import
+const module = await import('./module.js');
+
+// Re-export
+export { value } from './module.js';
+export * from './module.js';
+
+// CommonJS (старый стиль, Node.js)
+const module = require('./module');
+module.exports = { value, func };
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: var вместо let/const
+var x = 5;  // function scope, устарел!
+
+✓ Решение:
+let x = 5;  // block scope
+const y = 5;  // неизменяемый
+
+❌ Ошибка 2: this в стрелочных функциях
+const obj = {
+  name: "John",
+  greet: () => {
+    console.log(this.name);  // undefined!
+  }
+};
+
+✓ Решение:
+const obj = {
+  name: "John",
+  greet() {
+    console.log(this.name);  // "John"
+  }
+};
+
+❌ Ошибка 3: async без await
+async function fetchData() {
+  const result = fetch(url);  // Забыли await!
+  return result;  // Promise, не результат!
+}
+
+✓ Решение:
+async function fetchData() {
+  const result = await fetch(url);
+  return result;
+}
+
+❌ Ошибка 4: Мутация в reduce
+const sum = arr.reduce((acc, x) => {
+  acc.push(x);  // Мутация!
+  return acc;
+}, []);
+
+✓ Решение:
+const sum = arr.reduce((acc, x) => [...acc, x], []);
+
+❌ Ошибка 5: Сравнение с ==
+if (x == "5") {  // Неправильное сравнение!
+  // ...
+}
+
+✓ Решение:
+if (x === 5) {  // Строгое сравнение
+  // ...
+}
+
+❌ Ошибка 6: Игнорирование Promise
+fetch(url);  // Забыли обработать!
+
+✓ Решение:
+fetch(url).then(response => response.json());
+// Или:
+await fetch(url);
+
+❌ Ошибка 7: Мутация состояния
+state.items.push(newItem);  // Мутация!
+
+✓ Решение:
+state.items = [...state.items, newItem];
+
+❌ Ошибка 8: Callback hell
+getData(function(a) {
+  getMoreData(a, function(b) {
+    getEvenMoreData(b, function(c) {
+      // ...
+    });
+  });
+});
+
+✓ Решение:
+const a = await getData();
+const b = await getMoreData(a);
+const c = await getEvenMoreData(b);
+
+❌ Ошибка 9: Не закрыт ресурс
+const stream = fs.createReadStream('file.txt');
+// Забыли close!
+
+✓ Решение:
+stream.on('end', () => stream.close());
+
+❌ Ошибка 10: Игнорирование ошибок
+try {
+  riskyOperation();
+} catch (e) {
+  // Пустой catch!
+}
+
+✓ Решение:
+try {
+  riskyOperation();
+} catch (e) {
+  console.error(e);
+  throw e;  // Или обработать
+}
+
+================================================================================
+11. ПРИМЕРЫ ФУНКЦИОНАЛЬНОГО СТИЛЯ
+================================================================================
+
+Пример 1: Pipeline обработка данных
+------------------------------------
+const result = data
+  .filter(x => x.active)
+  .map(x => x.value * 2)
+  .reduce((sum, x) => sum + x, 0);
+
+Пример 2: Композиция функций
+-----------------------------
+const compose = (...fns) => x => 
+  fns.reduceRight((acc, fn) => fn(acc), x);
+
+const add1 = x => x + 1;
+const double = x => x * 2;
+const addThenDouble = compose(double, add1);
+addThenDouble(5);  // 12
+
+Пример 3: Currying
+------------------
+const curry = fn => 
+  const curried = (...args) => 
+    args.length >= fn.length 
+      ? fn(...args) 
+      : (...more) => curried(...args, ...more);
+
+const add = (a, b, c) => a + b + c;
+const add5 = curry(add)(5);
+add5(3, 2);  // 10
+
+Пример 4: Immutable обновления
+------------------------------
+// Вместо:
+state.user.name = "New Name";
+
+// Используйте:
+state = {
+  ...state,
+  user: {
+    ...state.user,
+    name: "New Name"
+  }
+};
+
+Пример 5: Async функциональный стиль
+------------------------------------
+const processUsers = async users =>
+  users
+    .filter(u => u.active)
+    .map(async u => await fetchProfile(u.id))
+    .reduce(async (acc, profilePromise) => {
+      const profile = await profilePromise;
+      return [...await acc, profile];
+    }, Promise.resolve([]));
+
+================================================================================
+                         КОНЕЦ SYNTAX_JAVASCRIPT
+================================================================================

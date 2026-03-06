@@ -1,0 +1,599 @@
+================================================================================
+              V - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Simple + Fast + Safe + Go-like Syntax
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Structs и interfaces
+6. Control Flow
+7. Error handling
+8. Concurrency (spawn)
+9. C interop
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры systems programming стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (двойной слэш)
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Package declaration
+module main
+
+// Import
+import os
+import io
+
+// Main функция
+fn main() {
+  println('Hello, V!')
+}
+
+// Semicolons не нужны
+x := 5
+y := 10
+
+// No parentheses (опционально)
+println 'Hello'
+println('Hello')
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ i8, i16, i32    │ 1, -10, 1000 (целые со знаком)                             │
+│ i64, i128       │ Большие целые                                              │
+│ u8, u16, u32    │ 0, 10, 1000 (беззнаковые)                                  │
+│ u64, u128       │ Большие беззнаковые                                        │
+│ f32, f64        │ 3.14, -0.5 (вещественные)                                  │
+│ bool            │ true, false                                                │
+│ string          │ "hello", "привет"                                          │
+│ rune            │ Unicode character                                          │
+│ byte            │ alias for u8                                               │
+│ int             │ platform-dependent                                         │
+│ usize           │ platform-dependent unsigned                                │
+│ array           │ [1, 2, 3]                                                  │
+│ slice           │ []int                                                      │
+│ map             │ map[string]int                                             │
+│ struct          │ struct Point { x int }                                     │
+│ interface       │ interface Reader { read() }                                │
+│ enum            │ enum Color { red green blue }                              │
+│ optional        │ ?string (может быть error)                                 │
+│ result          │ !string (может быть error)                                 │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Type annotations
+x : int = 5
+y : f64 = 3.14
+
+// Type inference
+z := 10  // V выводит int
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// := - declaration with inference
+x := 5
+y := "hello"
+
+// mutable - mutable переменная
+mut z := 10
+z = 15  // OK
+
+// const - compile-time constant
+const PI = 3.14159
+
+// Immutable by default
+a := 5
+// a = 10  // ОШИБКА! Immutable
+
+// Multiple assignment
+a, b := 1, 2
+a, b = b, a  // Swap
+
+// Destructuring
+point := Point{3, 4}
+x := point.x
+y := point.y
+
+// Optional variables
+name : ?string = none
+name = some("John")
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+fn add(a int, b int) int {
+  return a + b
+}
+
+// Multiple return values (через result)
+fn divide(a int, b int) !int {
+  if b == 0 {
+    return error("Division by zero")
+  }
+  return a / b
+}
+
+// Default параметры (нет, использовать overloading)
+fn greet(name string) {
+  println('Hello, ${name}')
+}
+
+// Variadic функции
+fn sum(...nums int) int {
+  mut total := 0
+  for n in nums {
+    total += n
+  }
+  return total
+}
+
+// Recursive функции
+fn factorial(n int) int {
+  if n <= 1 {
+    return 1
+  }
+  return n * factorial(n - 1)
+}
+
+// Function pointers
+AddFn := fn (int, int) int
+func_ptr : AddFn = add
+
+// Methods в structs
+struct Point {
+  x int
+  y int
+}
+
+fn (p Point) distance() f64 {
+  return math.sqrt(p.x * p.x + p.y * p.y)
+}
+
+================================================================================
+5. STRUCTS И INTERFACES
+================================================================================
+
+// Struct
+struct Point {
+  x int
+  y int
+}
+
+// Struct initialization
+p := Point{
+  x: 3
+  y: 4
+}
+
+// Access struct fields
+x := p.x
+y := p.y
+
+// Struct methods
+fn (p Point) distance() f64 {
+  return math.sqrt(p.x * p.x + p.y * p.y)
+}
+
+// Interface
+interface Reader {
+  read() string
+}
+
+// Interface implementation
+struct FileReader {
+  path string
+}
+
+fn (f FileReader) read() string {
+  return os.read_file(f.path) or { return '' }
+}
+
+// Enum
+enum Color {
+  red
+  green
+  blue
+}
+
+// Enum usage
+c := Color.red
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+// If/else
+if x > 5 {
+  println('greater')
+} else {
+  println('less or equal')
+}
+
+// If с initialization
+if n := 10; n > 5 {
+  println(n)
+}
+
+// Match (switch)
+match value {
+  1 {
+    println('one')
+  }
+  2 {
+    println('two')
+  }
+  else {
+    println('other')
+  }
+}
+
+// For loop
+for i := 0; i < 10; i++ {
+  println(i)
+}
+
+// For with range
+for i in 0..10 {
+  println(i)
+}
+
+// For each
+for n in nums {
+  println(n)
+}
+
+// While loop
+mut x := 10
+for x > 0 {
+  println(x)
+  x--
+}
+
+// Break/continue
+for i in 0..10 {
+  if i == 5 {
+    continue
+  }
+  if i == 8 {
+    break
+  }
+  println(i)
+}
+
+================================================================================
+7. ERROR HANDLING
+================================================================================
+
+// Optional return
+fn find_user(id int) ?User {
+  if id == 0 {
+    return none
+  }
+  return some(User{id: id})
+}
+
+// Handling optional
+user := find_user(1) or {
+  println('User not found')
+  return
+}
+
+// Result return
+fn divide(a int, b int) !int {
+  if b == 0 {
+    return error('Division by zero')
+  }
+  return a / b
+}
+
+// Handling result
+result := divide(10, 2) or {
+  println('Error: ${err}')
+  return
+}
+
+// Defer (автоматическая очистка)
+fn process() {
+  file := os.open('file.txt') or { return }
+  defer file.close()
+  // Use file
+  // Automatically closed on scope exit
+}
+
+// Assertions
+assert(x > 0, 'x must be positive')
+
+================================================================================
+8. CONCURRENCY (SPAWN)
+================================================================================
+
+// Spawn fiber
+spawn fn() {
+  println('Running in fiber')
+}()
+
+// Channel
+ch := chan int{}
+spawn fn() {
+  ch <- 5
+}()
+value := <-ch
+println(value)  // 5
+
+// Buffered channel
+ch := chan int{capacity: 10}
+ch <- 5  // Не блокирует
+
+// Select
+select {
+  ch1 <- value {
+    // Handle ch1
+  }
+  value := <- ch2 {
+    // Handle ch2
+  }
+}
+
+// Sleep
+time.sleep(1 * time.second)
+
+// Async/await
+async fn fetch_data() string {
+  return http.get('https://api.example.com').body or { return '' }
+}
+
+data := await fetch_data()
+
+================================================================================
+9. C INTEROP
+================================================================================
+
+// Import C library
+#flag -lc
+#include <stdio.h>
+
+// Call C functions
+unsafe {
+  C.printf('Hello from C\n')
+}
+
+// C types
+mut c_int : C.int
+mut c_float : C.float
+
+// C struct mapping
+struct CFile {
+  _ C.FILE
+}
+
+// Memory compatibility
+// V и C могут делиться памятью
+
+// C strings
+c_string := C.CString('Hello')
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable immutable
+x := 5
+x = 10  // ОШИБКА! Immutable
+
+✓ Решение:
+mut x := 5
+x = 10  // OK
+
+❌ Ошибка 2: Забыли or handle
+file := os.open('file.txt')
+// Забыли or { }!
+
+✓ Решение:
+file := os.open('file.txt') or {
+  println('Failed to open file')
+  return
+}
+
+❌ Ошибка 3: Null pointer без проверки
+name : ?string = none
+println(name.len)  // ОШИБКА!
+
+✓ Решение:
+if name {
+  println(name.len)
+}
+
+❌ Ошибка 4: Array out of bounds
+arr := [1, 2, 3]
+x := arr[10]  // ОШИБКА!
+
+✓ Решение:
+if index < arr.len {
+  x := arr[index]
+}
+
+❌ Ошибка 5: Match без else
+match value {
+  1 { println('one') }
+  2 { println('two') }
+  // Забыли else!
+}
+
+✓ Решение:
+match value {
+  1 { println('one') }
+  2 { println('two') }
+  else { println('other') }
+}
+
+❌ Ошибка 6: Channel без receive
+ch := chan int{}
+ch <- 5  // Блокирует навсегда!
+
+✓ Решение:
+spawn fn() {
+  ch <- 5
+}()
+value := <-ch
+
+❌ Ошибка 7: Struct без инициализации
+struct Point {
+  x int
+  y int
+}
+p := Point{}  // OK но поля не инициализированы
+
+✓ Решение:
+p := Point{
+  x: 3
+  y: 4
+}
+
+❌ Ошибка 8: Wrong type in struct
+p := Point{
+  x: 3.0  // ОШИБКА! x должен быть int
+  y: 4
+}
+
+✓ Решение:
+p := Point{
+  x: 3
+  y: 4
+}
+
+❌ Ошибка 9: No module declaration
+// Забыли module main!
+fn main() { println('Hello') }
+
+✓ Решение:
+module main
+fn main() { println('Hello') }
+
+❌ Ошибка 10: C interop без unsafe
+C.printf('Hello')  // ОШИБКА! Нужно unsafe
+
+✓ Решение:
+unsafe {
+  C.printf('Hello')
+}
+
+================================================================================
+11. ПРИМЕРЫ SYSTEMS PROGRAMMING СТИЛЯ
+================================================================================
+
+Пример 1: File I/O
+------------------
+import os
+
+fn read_file(path string) string {
+  return os.read_file(path) or {
+    println('Failed to read file')
+    return ''
+  }
+}
+
+Пример 2: HTTP server
+---------------------
+import vweb
+
+struct App {
+  vweb.Context
+}
+
+fn (mut app App) index() vweb.Result {
+  return app.text('Hello, V!')
+}
+
+fn main() {
+  vweb.run<App>(8080)
+}
+
+Пример 3: JSON parsing
+----------------------
+import json
+
+struct User {
+  name string
+  age  int
+}
+
+fn main() {
+  json_str := '{"name": "John", "age": 25}'
+  user := json.decode(User, json_str) or {
+    println('Failed to decode JSON')
+    return
+  }
+  println(user.name)
+}
+
+Пример 4: Database access
+-------------------------
+import db
+import db.sqlite
+
+struct User {
+  id   int
+  name string
+}
+
+fn main() {
+  mut db := sqlite.connect('users.db') or {
+    println('Failed to connect to database')
+    return
+  }
+  users := db.query[User]('SELECT * FROM users') or { return }
+}
+
+Пример 5: CLI tool
+------------------
+import os
+
+fn main() {
+  args := os.args
+  if args.len < 2 {
+    println('Usage: program <name>')
+    return
+  }
+  name := args[1]
+  println('Hello, ${name}!')
+}
+
+Пример 6: Concurrent processing
+-------------------------------
+fn main() {
+  ch := chan int{}
+  
+  for i in 0..10 {
+    spawn fn(i int, ch chan int) {
+      ch <- i * 2
+    }(i, ch)
+  }
+  
+  for i in 0..10 {
+    println(<-ch)
+  }
+}
+
+================================================================================
+                         КОНЕЦ SYNTAX_V
+================================================================================

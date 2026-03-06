@@ -1,0 +1,595 @@
+================================================================================
+              FACTOR - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Modern Stack-based + Rich Libraries + Practical
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (стек)
+2. Типы данных
+3. Переменные и присваивание
+4. Слова (функции)
+5. Control Flow
+6. Stack операции
+7. Sequences и коллекции
+8. Object-oriented (классы)
+9. Error Handling
+10. Modules и импорты
+11. Типичные ошибки (РАСШИРЕНО!)
+12. Примеры practical stack-based стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (СТЕК)
+================================================================================
+
+! Комментарии (восклицательный знак)
+! Однострочные
+
+/* Многострочные
+   комментарии */
+
+! Постфиксная нотация (как Forth)
+2 2 +    ! 4 (сначала операнды, потом оператор)
+
+! Стек растёт вверх
+! TOS = Top Of Stack
+
+! Просмотр стека
+.   ! Напечатать верх стека
+.s  ! Показать весь стек
+
+! Выход из REPL
+bye
+
+! Stack notation: ( -- ) или ( a b -- c )
+! ( вход -- выход )
+
+! Словарь (namespace)
+IN: scratchpad    ! Текущий словарь
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ integer         │ 1, -10, 1000000                                            │
+│ float           │ 3.14, -0.5, 2.5e10                                         │
+│ boolean         │ t, f (true, false)                                         │
+│ char            │ 'a', 'б'                                                   │
+│ string          │ "hello", "привет"                                          │
+│ array           │ V{ 1 2 3 } (изменяемый массив)                             │
+│ vector          │ V{ 1 2 3 } (динамический массив)                           │
+│ list            │ L{ 1 2 3 } (связный список)                                │
+│ assoc           │ H{ { "key" "value" } } (ассоциативный массив)              │
+│ tuple           │ TUPLE: point x y ; (структура)                             │
+│ class           │ CLASS: MyClass (класс)                                     │
+│ quotation       │ [ 2 + ] (анонимная функция)                                │
+│ word            │ Функция/команда                                            │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+! Проверка типа (runtime)
+integer?    ! ( x -- ? )
+string?     ! ( x -- ? )
+array?      ! ( x -- ? )
+
+! Приведение типов
+>integer    ! ( x -- n )
+>string     ! ( x -- s )
+>float      ! ( x -- f )
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+! Глобальные переменные
+SYMBOL: count
+5 count set    ! Записать значение
+count get .    ! Прочитать значение
+
+! Константы
+CONSTANT: PI 3.14159
+CONSTANT: MAX-SIZE 100
+
+! Переменные словаря
+: set-count ( n -- ) count set ;
+: get-count ( -- n ) count get ;
+
+! Local variables (в словах)
+: example ( a b -- c )
+    [ a b + ] keep
+    [ a b * ] dip
+    + ;
+
+! Dynamic variables
+SYMBOL: *config*
+H{ { "key" "value" } } *config* set
+
+! Accessors для tuple
+TUPLE: person name age ;
+: get-name ( person -- name ) name>> ;
+: set-age ( age person -- ) age>> set ;
+
+================================================================================
+4. СЛОВА (ФУНКЦИИ)
+================================================================================
+
+! Определение слова
+: add ( a b -- c )
+    + ;
+
+! Использование
+5 3 add .    ! 8
+
+! Анонимные функции (quotation)
+[ 2 + ]    ! quotation
+
+! Вызов quotation
+5 [ 2 + ] call    ! 7
+
+! Слова могут вызывать другие слова
+: double ( n -- 2n )
+    2 * ;
+
+: quadruple ( n -- 4n )
+    double double ;
+
+! Рекурсия
+: factorial ( n -- n! )
+    dup 1 <= [
+        drop 1
+    ] [
+        dup 1 - factorial *
+    ] if ;
+
+! Tail-рекурсия (оптимизирована)
+: factorial-tail ( n -- n! )
+    [ 1 ] dip
+    [ dup 0 > ] [
+        [ over * ] dip
+        [ 1 - ] dip
+    ] while
+    drop ;
+
+! Слова с переменным числом аргументов
+: sum ( n -- sum )
+    0 swap [ + ] reduce ;
+
+! Combinators (функции высшего порядка)
+: apply-all ( seq quot -- )
+    [ call ] each ;
+
+! Inline слова
+INLINE: fast-add ( a b -- c )
+    + ;
+
+================================================================================
+5. CONTROL FLOW
+================================================================================
+
+! If/else
+: abs ( n -- |n| )
+    dup 0 < [ negate ] when ;
+
+: max ( a b -- max )
+    2dup < [ swap ] when drop ;
+
+: describe ( n -- )
+    dup 0 = [
+        drop "zero" print
+    ] [
+        dup 0 < [
+            drop "negative" print
+        ] [
+            drop "positive" print
+        ] if
+    ] if ;
+
+! Case (множественный выбор)
+: day-name ( n -- )
+    {
+        { 1 [ "Monday" ] }
+        { 2 [ "Tuesday" ] }
+        { 3 [ "Wednesday" ] }
+        { 4 [ "Thursday" ] }
+        { 5 [ "Friday" ] }
+        { 6 [ "Saturday" ] }
+        { 7 [ "Sunday" ] }
+    } case print ;
+
+! Циклы
+! times (счётчик)
+: print-stars ( n -- )
+    [ "*" print ] times ;
+
+! each (для каждого элемента)
+{ 1 2 3 } [ . ] each ;
+
+! map (преобразование)
+{ 1 2 3 } [ 2 * ] map .    ! { 2 4 6 }
+
+! reduce (свёртка)
+{ 1 2 3 } 0 [ + ] reduce .    ! 6
+
+! while (пре-условие)
+: count-down ( n -- )
+    [ dup 0 > ] [
+        dup . 1 -
+    ] while drop ;
+
+! loop (бесконечный)
+: forever ( -- )
+    [ "Looping" print ] loop ;
+
+================================================================================
+6. STACK ОПЕРАЦИИ
+================================================================================
+
+! Базовые операции
+dup      ! ( a -- a a ) дублировать верх
+drop     ! ( a -- ) удалить верх
+swap     ! ( a b -- b a ) поменять местами
+over     ! ( a b -- a b a ) скопировать второй
+rot      ! ( a b c -- b c a ) ротация
+nip      ! ( a b -- b ) удалить второй
+tuck     ! ( a b -- b a b ) вставить копию под верх
+2dup     ! ( a b -- a b a b ) дублировать два
+2drop    ! ( a b -- ) удалить два
+2swap    ! ( a b c d -- c d a b ) поменять два
+
+! Арифметика
++        ! ( a b -- a+b )
+-        ! ( a b -- a-b )
+*        ! ( a b -- a*b )
+/        ! ( a b -- a/b )
+mod      ! ( a b -- a%b )
+/mod     ! ( a b -- rem quot )
+1+       ! ( n -- n+1 )
+1-       ! ( n -- n-1 )
+2*       ! ( n -- n*2 )
+2/       ! ( n -- n/2 )
+
+! Сравнение
+=        ! ( a b -- ? ) равно
+<>       ! ( a b -- ? ) не равно
+<        ! ( a b -- ? ) меньше
+>        ! ( a b -- ? ) больше
+<=       ! ( a b -- ? ) меньше или равно
+>=       ! ( a b -- ? ) больше или равно
+zero?    ! ( n -- ? ) равно нулю
+negative? ! ( n -- ? ) меньше нуля
+positive? ! ( n -- ? ) больше нуля
+
+! Логика
+and      ! ( a b -- a&b )
+or       ! ( a b -- a|b )
+xor      ! ( a b -- a^b )
+not      ! ( a -- ~a )
+
+! Пример сложной stack манипуляции
+: quadratic ( a b c -- root1 root2 )
+    ! Вычисляет корни квадратного уравнения
+    swap 2*          ! a c 2b
+    rot rot          ! 2b a c
+    over over        ! 2b a c a c
+    * 4 *            ! 2b a c 4ac
+    rot dup *        ! 2b 4ac b^2
+    swap -           ! 2b b^2-4ac
+    sqrt             ! 2b sqrt(disc)
+    rot neg          ! -2b sqrt(disc)
+    over +           ! -2b sqrt+neg
+    rot /            ! root1
+    rot rot          ! root1 -2b sqrt
+    swap -           ! root1 -2b-sqrt
+    rot /            ! root1 root2
+;
+
+================================================================================
+7. SEQUENCES И КОЛЛЕКЦИИ
+================================================================================
+
+! Arrays (изменяемые)
+V{ 1 2 3 }    ! vector
+V{ } clone    ! пустой vector
+
+! List (связный список)
+L{ 1 2 3 }    ! list
+
+! Assoc (ассоциативный массив)
+H{ { "key" "value" } }    ! hash-associative
+A{ { "key" "value" } }    ! array-associative
+
+! Sequence операции
+length     ! ( seq -- n ) длина
+nth        ! ( seq n -- x ) элемент по индексу
+set-nth    ! ( x seq n -- ) установить элемент
+push       ! ( x seq -- ) добавить в конец
+pop        ! ( seq -- x ) удалить последний
+remove-nth ! ( seq n -- ) удалить по индексу
+
+! Map операции
+assoc-at   ! ( assoc key -- value )
+assoc-set  ! ( value assoc key -- )
+assoc-keys ! ( assoc -- keys )
+assoc-values ! ( assoc -- values )
+
+! Sequence transformation
+map        ! ( seq quot -- seq )
+filter     ! ( seq quot -- seq )
+reduce     ! ( seq init quot -- result )
+each       ! ( seq quot -- )
+select     ! ( seq quot -- seq )
+reject     ! ( seq quot -- seq )
+
+! Пример
+{ 1 2 3 4 5 } [ even? ] filter .    ! { 2 4 }
+{ 1 2 3 } [ 2 * ] map .             ! { 2 4 6 }
+{ 1 2 3 } 0 [ + ] reduce .          ! 6
+
+================================================================================
+8. OBJECT-ORIENTED (КЛАССЫ)
+================================================================================
+
+! Tuple (простая структура)
+TUPLE: point x y ;
+
+! Создание
+TUPLE: point x y ;
+3 4 point boa    ! создать point
+
+! Accessors
+: get-x ( point -- x ) x>> ;
+: set-y ( y point -- ) y>> set ;
+
+! Class (полноценный класс)
+CLASS: MyClass
+    { name }
+    { age }
+;
+
+! Методы
+: greet ( MyClass -- )
+    name>> "Hello, " write write ;
+
+! Наследование
+SUPERCLASS: MyClass < SuperClass ;
+
+! Generic слова (полиморфизм)
+GENERIC: describe ( object -- )
+
+M: MyClass describe
+    "This is MyClass" print ;
+
+! Instance
+: create-person ( name age -- person )
+    person boa ;
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+! Throw exception
+"Error message" throw
+
+! Catch exception
+[ risky-operation ] [
+    "Error occurred" print
+] recover
+
+! Assert
+{ 1 2 3 } length 3 assert=
+
+! Error words
+error       ! создать ошибку
+throw       ! бросить ошибку
+recover     ! поймать ошибку
+retry       ! повторить операцию
+
+! Custom error
+: check-positive ( n -- )
+    0 > [
+        "Must be positive" throw
+    ] unless ;
+
+! Try/finally
+[
+    open-file
+    [ process-file ]
+] [
+    close-file
+] finally
+
+================================================================================
+10. MODULES И ИМПОРТЫ
+================================================================================
+
+! Словарь (модуль)
+IN: my-project
+
+! Импорт слов
+USING: kernel math io strings ;
+
+! Импорт конкретных слов
+FROM: math => + - * / ;
+
+! Экспорт слов
+EXPORT: add subtract ;
+
+! Private слова (не экспортируются)
+: private-helper ( x -- y )
+    x 2 * ;
+
+! Public слова (экспортируются)
+: public-func ( x -- y )
+    private-helper ;
+
+! Require другой словарь
+REQUIRES: my-other-project
+
+! Vocabulary (библиотека)
+VOCABULARY: my-vocab
+IN: my-vocab
+
+! Загрузка словаря
+USE: my-vocab
+
+================================================================================
+11. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Stack imbalance
+: bad ( a b -- c )
+    + drop    ! Забыли результат!
+;
+
+✓ Решение:
+: good ( a b -- c )
+    +    ! Оставляем результат на стеке
+;
+
+❌ Ошибка 2: Неправильный порядок операндов
+: subtract ( a b -- a-b )
+    -    ! ОШИБКА! Factor вычитает TOS из второго
+;
+
+✓ Решение:
+: subtract ( a b -- a-b )
+    swap -    ! Меняем местами перед вычитанием
+;
+
+❌ Ошибка 3: Забыли drop
+: print-sum ( a b -- )
+    + .    ! OK
+;
+
+: bad-print ( a b -- )
+    +    ! Забыли . или drop! Стек растёт!
+;
+
+✓ Решение:
+: good-print ( a b -- )
+    + . drop    ! Или просто + .
+;
+
+❌ Ошибка 4: Рекурсия без базового случая
+: infinite ( n -- )
+    infinite    ! Бесконечная рекурсия!
+;
+
+✓ Решение:
+: finite ( n -- )
+    dup 0 = [
+        drop
+    ] [
+        1 - recurse
+    ] if ;
+
+❌ Ошибка 5: Неправильное использование tuple
+TUPLE: point x y ;
+3 point boa    ! ОШИБКА! Нужно 2 значения!
+
+✓ Решение:
+3 4 point boa    ! OK
+
+❌ Ошибка 6: Забыли ; в определении
+: add ( a b -- c )
+    +    ! Забыли ; !
+
+✓ Решение:
+: add ( a b -- c )
+    + ;
+
+❌ Ошибка 7: Неправильное использование quotation
+5 [ 2 + ]    ! quotation не вызван!
+
+✓ Решение:
+5 [ 2 + ] call    ! Или: 5 [ 2 + ] dip
+
+❌ Ошибка 8: Stack underflow
+: bad ( -- )
+    drop    ! Стек пуст!
+;
+
+✓ Решение:
+: good ( a -- )
+    drop    ! Проверяем что что-то есть на стеке
+;
+
+❌ Ошибка 9: Неправильный accessors
+TUPLE: point x y ;
+: get-x ( point -- x )
+    x    ! ОШИБКА! Нужно x>>
+;
+
+✓ Решение:
+: get-x ( point -- x )
+    x>>    ! Правильный accessor
+;
+
+❌ Ошибка 10: Игнорирование ошибок
+risky-operation    ! Может бросить ошибку!
+
+✓ Решение:
+[ risky-operation ] [
+    "Error occurred" print
+] recover
+
+================================================================================
+12. ПРИМЕРЫ PRACTICAL STACK-BASED СТИЛЯ
+================================================================================
+
+Пример 1: Конвейерная обработка
+--------------------------------
+: process-data ( -- )
+    read-file
+    parse-json
+    [ valid? ] filter
+    [ transform ] map
+    [ sum ] reduce
+    print ;
+
+! Чтение как: read-file() |> parse-json() |> filter() |> map() |> reduce() |> print
+
+Пример 2: Type-safe API
+-----------------------
+TUPLE: user id name ;
+
+: get-user ( id -- user )
+    database-lookup
+    [ drop "User not found" throw ] unless ;
+
+Пример 3: State management
+--------------------------
+SYMBOL: *state*
+
+: init-state ( -- )
+    H{ } *state* set ;
+
+: update-state ( key value -- )
+    *state* get assoc-set *state* set ;
+
+: get-state ( key -- value )
+    *state* get assoc-at ;
+
+Пример 4: Web server
+--------------------
+USING: http.server http.server.responses ;
+
+: handle-request ( request -- response )
+    drop "Hello, Factor!" text/plain respond ;
+
+: start-server ( -- )
+    8080 [ handle-request ] http-server ;
+
+Пример 5: Unit tests
+--------------------
+USING: tools.test ;
+
+{ 4 } [ 2 2 + ] unit-test
+{ 8 } [ 5 3 add ] unit-test
+{ 120 } [ 5 factorial ] unit-test
+
+================================================================================
+                         КОНЕЦ SYNTAX_FACTOR
+================================================================================

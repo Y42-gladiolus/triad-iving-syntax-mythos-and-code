@@ -1,0 +1,652 @@
+================================================================================
+              RUBY - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Developer Happiness + Elegant Syntax + Metaprogramming
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции и методы
+5. Classes и modules
+6. Control Flow
+7. Blocks и Procs
+8. Error handling
+9. Metaprogramming
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры Ruby-like стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+# Комментарии (решётка)
+# Однострочные
+
+=begin
+    Многострочные
+    комментарии
+=end
+
+# Semicolons опционально
+x = 5
+y = 10
+
+# Semicolons разрешены
+z = 15;
+
+# No parentheses (опционально)
+puts "Hello"
+puts("Hello")
+
+# Main execution
+puts "Hello, Ruby!"
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Integer         │ 1, -10, 1_000_000 (подчёркивания)                          │
+│ Float           │ 3.14, -0.5, 2.5e10                                         │
+│ String          │ "hello", 'привет', %{interpolation}                        │
+│ Symbol          │ :name, :age (immutable)                                    │
+│ Boolean         │ true, false                                                │
+│ Nil             │ nil (единственное ложное кроме false)                      │
+│ Array           │ [1, 2, 3]                                                  │
+│ Hash            │ {key: "value", name: "John"}                               │
+│ Range           │ 1..10 (inclusive), 1...10 (exclusive)                      │
+│ Regexp          │ /pattern/, %r{pattern}                                     │
+│ Proc            │ ->(x) { x * 2 }                                            │
+│ Lambda          │ lambda { |x| x * 2 }                                       │
+│ Class           │ class MyClass; end                                         │
+│ Module          │ module MyModule; end                                       │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+# Проверка типа
+x.is_a?(Integer)
+x.class
+
+# Преобразование
+x.to_s      # to string
+x.to_i      # to integer
+x.to_f      # to float
+x.to_sym    # to symbol
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+# Локальные переменные (строчные)
+name = "John"
+age = 25
+
+# Instance переменные (@)
+@name = "John"
+
+# Class переменные (@@)
+@@count = 0
+
+# Global переменные ($)
+$global = "global"
+
+# Constants (заглавные)
+PI = 3.14159
+MAX_SIZE = 100
+
+# Shadowing (переопределение)
+x = 5
+x = 10  # OK
+
+# Multiple assignment
+a, b = 1, 2
+a, b = b, a  # Swap
+
+# Destructuring
+point = [3, 4]
+x, y = point
+
+# Parallel assignment
+x, y, z = 1, 2, 3
+
+# Splats
+first, *rest = [1, 2, 3, 4, 5]
+# first = 1, rest = [2, 3, 4, 5]
+
+================================================================================
+4. ФУНКЦИИ И МЕТОДЫ
+================================================================================
+
+# Функция (def)
+def add(a, b)
+  a + b
+end
+
+# С return type (Ruby 3+)
+def add(a : Integer, b : Integer) : Integer
+  a + b
+end
+
+# Default параметры
+def greet(name, greeting = "Hello")
+  "#{greeting}, #{name}!"
+end
+
+# Variadic функции
+def sum(*nums)
+  nums.sum
+end
+
+# Keyword arguments
+def create(name:, age:)
+  {name, age}
+end
+create(name: "John", age: 25)
+
+# Block arguments
+def twice
+  yield
+  yield
+end
+
+twice { puts "Hello" }
+
+# Methods в классах
+class Person
+  attr_reader :name, :age
+  
+  def initialize(name, age)
+    @name = name
+    @age = age
+  end
+  
+  def greet
+    "Hello, #{@name}!"
+  end
+end
+
+# Class methods
+class Person
+  def self.create(name, age)
+    new(name, age)
+  end
+end
+
+# Private/protected методы
+class Person
+  private
+  
+  def secret
+    "secret"
+  end
+end
+
+================================================================================
+5. CLASSES И MODULES
+================================================================================
+
+# Class
+class Person
+  attr_accessor :name, :age
+  
+  def initialize(name, age)
+    @name = name
+    @age = age
+  end
+  
+  def greet
+    "Hello, #{@name}!"
+  end
+end
+
+# Inheritance
+class Employee < Person
+  attr_accessor :salary
+  
+  def initialize(name, age, salary)
+    super(name, age)
+    @salary = salary
+  end
+end
+
+# Module (mixins)
+module Comparable
+  def >(other)
+    self <=> other > 0
+  end
+end
+
+class Person
+  include Comparable
+end
+
+# Abstract class (через NotImplementedError)
+class Shape
+  def area
+    raise NotImplementedError
+  end
+end
+
+class Circle < Shape
+  def initialize(radius)
+    @radius = radius
+  end
+  
+  def area
+    Math::PI * @radius ** 2
+  end
+end
+
+# Module как namespace
+module Math
+  def self.add(a, b)
+    a + b
+  end
+end
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+# If/elsif/else
+if x > 5
+  puts "greater"
+elsif x == 5
+  puts "equal"
+else
+  puts "less"
+end
+
+# If как выражение
+result = if x > 5
+  "greater"
+else
+  "less"
+end
+
+# Unless (отрицание)
+unless x > 5
+  puts "less or equal"
+end
+
+# Case (switch)
+case x
+when 1
+  puts "one"
+when 2
+  puts "two"
+else
+  puts "other"
+end
+
+# While
+while x > 0
+  puts x
+  x -= 1
+end
+
+# Until (отрицание while)
+until x == 0
+  puts x
+  x -= 1
+end
+
+# For (редко используется)
+for i in 1..10
+  puts i
+end
+
+# Each (предпочтительно)
+(1..10).each do |i|
+  puts i
+end
+
+# Break/next
+(1..10).each do |i|
+  next if i == 5
+  break if i == 8
+  puts i
+end
+
+================================================================================
+7. BLOCKS И PROCS
+================================================================================
+
+# Block (do-end)
+[1, 2, 3].each do |x|
+  puts x
+end
+
+# Block ({})
+[1, 2, 3].each { |x| puts x }
+
+# Proc (явный)
+proc = ->(x) { x * 2 }
+proc.call(5)  # 10
+
+# Lambda
+lambda = lambda { |x| x * 2 }
+lambda.call(5)  # 10
+
+# Стаб vs lambda
+# Lambda проверяет аргументы
+# Proc более гибкий
+
+# Yield
+def twice
+  yield
+  yield
+end
+
+twice { puts "Hello" }
+
+# Yield с аргументами
+def repeat(n)
+  n.times { yield }
+end
+
+repeat(3) { puts "Hello" }
+
+# Block capture
+def &block
+  block.call
+end
+
+# Method as block
+[1, 2, 3].map(&:to_s)
+
+================================================================================
+8. ERROR HANDLING
+================================================================================
+
+# Raise exception
+raise "Error message"
+raise ArgumentError.new("Invalid argument")
+
+# Custom exception
+class DivisionByZero < StandardError
+end
+
+# Begin/rescue/ensure
+begin
+  risky_operation
+rescue ArgumentError => e
+  puts "Argument error: #{e.message}"
+rescue => e
+  puts "Other error: #{e.message}"
+ensure
+  puts "Always executed"
+end
+
+# Rescue modifier
+risky_operation rescue puts "Failed"
+
+# Retry
+begin
+  risky_operation
+rescue
+  retry  # Повторить
+end
+
+# Else (если нет ошибки)
+begin
+  risky_operation
+rescue
+  handle_error
+else
+  puts "No error occurred"
+end
+
+================================================================================
+9. METAPROGRAMMING
+================================================================================
+
+# Open classes
+class String
+  def reverse_words
+    split.reverse.join(" ")
+  end
+end
+
+# Define method dynamically
+define_method :greet do |name|
+  "Hello, #{name}!"
+end
+
+# Method missing
+class Dynamic
+  def method_missing(name, *args)
+    "Called #{name} with #{args.inspect}"
+  end
+end
+
+# Send (вызов метода по имени)
+obj.send(:method_name, arg1, arg2)
+
+# Eval (выполнение кода)
+eval("puts 'Hello'")
+
+# Class eval
+class_eval do
+  def new_method
+    "new"
+  end
+end
+
+# Instance eval
+obj.instance_eval do
+  @instance_var = "value"
+end
+
+# Attr accessors
+attr_reader :name
+attr_writer :name
+attr_accessor :name
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable strings
+str = "hello"
+str2 = str
+str2 << " world"
+puts str  # "hello world" (изменился!)
+
+✓ Решение:
+str = "hello"
+str2 = str.dup
+str2 << " world"
+puts str  # "hello"
+
+❌ Ошибка 2: Symbol vs String
+hash = {"name" => "John"}
+hash[:name]  # nil!
+
+✓ Решение:
+hash = {name: "John"}  # Symbols
+hash[:name]  # "John"
+
+❌ Ошибка 3: Nil без проверки
+name = nil
+puts name.upcase  # ОШИБКА!
+
+✓ Решение:
+if name
+  puts name.upcase
+end
+# Или
+puts name&.upcase  # Safe navigation
+
+❌ Ошибка 4: Block без check
+def process
+  yield if block_given?
+end
+
+❌ Ошибка 5: Global variables
+$global = "global"  # Избегайте!
+
+✓ Решение:
+Используйте constants или modules
+
+❌ Ошибка 6: Monkey patching опасно
+class String
+  def to_i  # Перезаписываем встроенный метод!
+  end
+end
+
+✓ Решение:
+class String
+  def custom_to_i
+    # Новый метод
+  end
+end
+
+❌ Ошибка 7: Rescue без типа
+begin
+  risky_operation
+rescue
+  # Ловит ВСЕ exceptions включая SystemExit!
+end
+
+✓ Решение:
+begin
+  risky_operation
+rescue StandardError => e
+  # Ловит только StandardError
+end
+
+❌ Ошибка 8: For вместо each
+for i in 1..10  # Избегать!
+  puts i
+end
+
+✓ Решение:
+(1..10).each do |i|
+  puts i
+end
+
+❌ Ошибка 9: Putc вместо puts
+putc "Hello"  # Выводит по буквам!
+
+✓ Решение:
+puts "Hello"
+
+❌ Ошибка 10: Forget to require
+require 'json'  # Забыли!
+JSON.parse('{}')  # ОШИБКА!
+
+✓ Решение:
+require 'json'
+JSON.parse('{}')
+
+================================================================================
+11. ПРИМЕРЫ RUBY-LIKE СТИЛЯ
+================================================================================
+
+Пример 1: Web server (Sinatra)
+-------------------------------
+require 'sinatra'
+
+get '/' do
+  "Hello, Ruby!"
+end
+
+get '/users/:id' do
+  "User #{params[:id]}"
+end
+
+Пример 2: Rails controller
+--------------------------
+class UsersController < ApplicationController
+  def index
+    @users = User.all
+  end
+  
+  def show
+    @user = User.find(params[:id])
+  end
+  
+  def create
+    @user = User.new(user_params)
+    if @user.save
+      redirect_to @user
+    else
+      render :new
+    end
+  end
+  
+  private
+  
+  def user_params
+    params.require(:user).permit(:name, :email)
+  end
+end
+
+Пример 3: RSpec tests
+---------------------
+require 'rspec'
+
+describe User do
+  it "is valid with valid attributes" do
+    user = User.new(name: "John", email: "john@example.com")
+    expect(user).to be_valid
+  end
+  
+  it "is invalid without email" do
+    user = User.new(name: "John")
+    expect(user).to_not be_valid
+  end
+end
+
+Пример 4: Metaprogramming DSL
+-----------------------------
+class Config
+  def self.setting(name, default = nil)
+    define_method(name) do
+      @settings[name] || default
+    end
+    
+    define_method("#{name}=") do |value|
+      @settings[name] = value
+    end
+  end
+end
+
+Пример 5: Enumerator
+--------------------
+def fibonacci
+  a, b = 0, 1
+  loop do
+    yield a
+    a, b = b, a + b
+  end
+end
+
+fibonacci.take(10).each { |n| puts n }
+
+Пример 6: Chainable methods
+---------------------------
+class Query
+  def initialize
+    @conditions = []
+  end
+  
+  def where(condition)
+    @conditions << condition
+    self  # Для chain
+  end
+  
+  def execute
+    @conditions.join(" AND ")
+  end
+end
+
+Query.new.where("age > 18").where("active = true").execute
+
+================================================================================
+                         КОНЕЦ SYNTAX_RUBY
+================================================================================

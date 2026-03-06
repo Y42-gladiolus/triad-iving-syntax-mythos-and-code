@@ -1,0 +1,625 @@
+================================================================================
+              SCALA - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    JVM + OOP + Functional + Type Inference + 20+ лет
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Классы и ООП
+6. Case Classes и Pattern Matching
+7. Collections
+8. Functional Programming
+9. Implicits и Type Classes
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры functional стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+/**
+  * Scaladoc (документация)
+  * @param x параметр
+  * @return возвращаемое значение
+  */
+
+// Точка с запятой опциональна
+val x = 5
+val y = 10
+
+// Object (singleton)
+object Main {
+  def main(args: Array[String]): Unit = {
+    println("Hello, Scala!")
+  }
+}
+
+// Package
+package com.example
+
+// Import
+import scala.collection.mutable
+import scala.collection.mutable.{HashMap, ArrayBuffer}
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Boolean         │ true, false                                                │
+│ Byte            │ 1: Byte (8-bit)                                            │
+│ Short           │ 1: Short (16-bit)                                          │
+│ Int             │ 1 (32-bit)                                                 │
+│ Long            │ 1L (64-bit)                                                │
+│ Float           │ 1.0f (32-bit float)                                        │
+│ Double          │ 1.0 (64-bit float)                                         │
+│ Char            │ 'a', 'б' (16-bit Unicode)                                  │
+│ String          │ "hello", "привет"                                          │
+│ Unit            │ () (как void)                                              │
+│ Any             │ Базовый тип для всех (как Object)                          │
+│ AnyVal          │ Базовый тип для value types                                │
+│ AnyRef          │ Базовый тип для reference types                            │
+│ Nothing         │ Подтип всех типов (для исключений)                         │
+│ Null            │ Подтип всех AnyRef (null)                                  │
+│ Option[T]       │ Some(value), None                                          │
+│ Either[L, R]    │ Left(error), Right(value)                                  │
+│ Tuple           │ (1, "a", true)                                             │
+│ List[T]         │ List(1, 2, 3)                                              │
+│ Map[K, V]       │ Map("key" -> "value")                                      │
+│ Set[T]          │ Set(1, 2, 3)                                               │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Type inference
+val x = 5          // Int
+val y = 3.14       // Double
+val z = "hello"    // String
+
+// Explicit types
+val a: Int = 5
+val b: Double = 3.14
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// val (immutable)
+val x = 5
+// x = 6  // ОШИБКА!
+
+// var (mutable)
+var y = 10
+y = 15  // OK
+
+// Type annotation
+val z: Int = 5
+
+// Lazy evaluation
+lazy val lazyVal = {
+  println("Computing...")
+  42
+}
+
+// Pattern matching в присваивании
+val (a, b) = (1, 2)
+val List(x, y, z) = List(1, 2, 3)
+
+// Interpolation
+val name = "John"
+val age = 25
+println(s"Hello, $name! You are $age years old.")
+println(s"Next year you will be ${age + 1}")
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+def add(a: Int, b: Int): Int = {
+  a + b
+}
+
+// Однострочная (без {})
+def multiply(a: Int, b: Int): Int = a * b
+
+// Без возвращаемого типа (Unit)
+def printHello(): Unit = {
+  println("Hello")
+}
+
+// Default параметры
+def greet(name: String, greeting: String = "Hello"): String = {
+  s"$greeting, $name!"
+}
+
+// Named параметры
+greet(name = "John", greeting = "Hi")
+
+// Varargs
+def sum(nums: Int*): Int = nums.sum
+
+// Функция как значение
+val add: (Int, Int) => Int = (a, b) => a + b
+
+// Анонимная функция
+val multiply = (a: Int, b: Int) => a * b
+
+// Частичное применение
+def add(a: Int)(b: Int): Int = a + b
+val add5 = add(5)_
+add5(10)  // 15
+
+// Каррирование
+def curry(f: (Int, Int) => Int): Int => Int => Int =
+  a => b => f(a, b)
+
+// Рекурсия
+def factorial(n: Int): Int = {
+  if (n <= 1) 1 else n * factorial(n - 1)
+}
+
+// Tail recursion
+import scala.annotation.tailrec
+
+@tailrec
+def factorialTail(n: Int, acc: Int = 1): Int = {
+  if (n <= 1) acc else factorialTail(n - 1, acc * n)
+}
+
+// Higher-order функции
+def applyTwice(f: Int => Int, x: Int): Int = {
+  f(f(x))
+}
+
+================================================================================
+5. КЛАССЫ И ООП
+================================================================================
+
+// Class
+class Person(val name: String, var age: Int) {
+  def greet(): String = s"Hello, I'm $name"
+}
+
+// Primary constructor
+class Person(name: String, age: Int) {
+  // Secondary constructor
+  def this(name: String) = this(name, 0)
+}
+
+// Abstract class
+abstract class Animal {
+  def sound: String
+}
+
+// Trait (interface с реализацией)
+trait Flyable {
+  def fly(): Unit = println("Flying")
+}
+
+trait Swimmable {
+  def swim(): Unit
+}
+
+// Inheritance
+class Bird extends Animal with Flyable {
+  def sound: String = "Chirp"
+  def fly(): Unit = println("Bird flying")
+}
+
+// Object (singleton)
+object MathUtils {
+  def add(a: Int, b: Int): Int = a + b
+}
+
+// Companion object
+class Counter {
+  private var count = 0
+  def increment(): Unit = count += 1
+}
+
+object Counter {
+  def apply(): Counter = new Counter()
+}
+
+// Sealed trait (ограниченная иерархия)
+sealed trait Result
+case class Success(value: Int) extends Result
+case class Failure(error: String) extends Result
+
+================================================================================
+6. CASE CLASSES И PATTERN MATCHING
+================================================================================
+
+// Case class (immutable, с pattern matching)
+case class Person(name: String, age: Int)
+
+val person = Person("John", 25)
+val name = person.name  // Accessor
+val person2 = person.copy(age = 26)  // Copy with modification
+
+// Pattern matching
+person match {
+  case Person("John", age) => println(s"John is $age")
+  case Person(name, age) => println(s"$name is $age")
+}
+
+// Match expression
+val result = age match {
+  case n if n < 18 => "Minor"
+  case n if n < 65 => "Adult"
+  case _ => "Senior"
+}
+
+// Option pattern matching
+val opt: Option[Int] = Some(5)
+opt match {
+  case Some(value) => println(s"Value: $value")
+  case None => println("No value")
+}
+
+// Either pattern matching
+val either: Either[String, Int] = Right(5)
+either match {
+  case Right(value) => println(s"Value: $value")
+  case Left(error) => println(s"Error: $error")
+}
+
+// Extractor objects
+object Even {
+  def unapply(n: Int): Option[Int] = {
+    if (n % 2 == 0) Some(n / 2) else None
+  }
+}
+
+5 match {
+  case Even(half) => println(s"Half: $half")
+  case _ => println("Odd")
+}
+
+================================================================================
+7. COLLECTIONS
+================================================================================
+
+import scala.collection.mutable
+import scala.collection.immutable
+
+// List (immutable, linked list)
+val list = List(1, 2, 3, 4, 5)
+val head = list.head  // 1
+val tail = list.tail  // List(2, 3, 4, 5)
+
+// Vector (immutable, random access)
+val vector = Vector(1, 2, 3, 4, 5)
+val elem = vector(2)  // 3
+
+// Map (immutable)
+val map = Map("one" -> 1, "two" -> 2)
+val value = map("one")  // 1
+
+// Set (immutable)
+val set = Set(1, 2, 3, 3)  // Set(1, 2, 3)
+
+// Mutable collections
+val mutableList = mutable.ListBuffer(1, 2, 3)
+mutableList += 4
+mutableList -= 2
+
+val mutableMap = mutable.HashMap("key" -> "value")
+mutableMap("key") = "new value"
+
+// Collection operations
+val list = List(1, 2, 3, 4, 5)
+
+// Map
+list.map(_ * 2)  // List(2, 4, 6, 8, 10)
+
+// Filter
+list.filter(_ % 2 == 0)  // List(2, 4)
+
+// FlatMap
+List(1, 2, 3).flatMap(x => List(x, x))  // List(1, 1, 2, 2, 3, 3)
+
+// Fold
+list.foldLeft(0)(_ + _)  // 15
+
+// Reduce
+list.reduce(_ + _)  // 15
+
+// For comprehension
+for {
+  x <- list
+  if x % 2 == 0
+  y <- List(x, x * 2)
+} yield y
+
+================================================================================
+8. FUNCTIONAL PROGRAMMING
+================================================================================
+
+// Pure functions
+def pureAdd(a: Int, b: Int): Int = a + b
+
+// Immutability
+val list = List(1, 2, 3)
+val newList = list :+ 4  // Original list unchanged
+
+// Function composition
+val f: Int => Int = _ + 1
+val g: Int => Int = _ * 2
+val h = f compose g  // f(g(x))
+val h2 = f andThen g  // g(f(x))
+
+// Monads (Option)
+val opt: Option[Int] = Some(5)
+opt.map(_ * 2)  // Some(10)
+opt.flatMap(x => Some(x * 2))  // Some(10)
+opt.filter(_ > 3)  // Some(5)
+
+// Monads (Either)
+val either: Either[String, Int] = Right(5)
+either.map(_ * 2)  // Right(10)
+either.left.map(err => s"Error: $err")  // Right(5)
+
+// For comprehension with Option
+val result = for {
+  a <- Some(5)
+  b <- Some(10)
+} yield a + b  // Some(15)
+
+// Try (exception handling)
+import scala.util.{Try, Success, Failure}
+
+val result = Try {
+  10 / 0
+}
+
+result match {
+  case Success(value) => println(s"Value: $value")
+  case Failure(ex) => println(s"Error: ${ex.getMessage}")
+}
+
+================================================================================
+9. IMPLICITS И TYPE CLASSES
+================================================================================
+
+// Implicit values
+implicit val defaultName: String = "John"
+
+def greet(implicit name: String): String = s"Hello, $name!"
+greet  // "Hello, John!"
+
+// Implicit conversions
+implicit def intToString(x: Int): String = x.toString
+val s: String = 5  // "5"
+
+// Type classes
+trait Show[T] {
+  def show(value: T): String
+}
+
+implicit val intShow: Show[Int] = new Show[Int] {
+  def show(value: Int): String = value.toString
+}
+
+def printShow[T](value: T)(implicit show: Show[T]): Unit = {
+  println(show.show(value))
+}
+
+// Context bounds
+def printShow[T: Show](value: T): Unit = {
+  println(implicitly[Show[T]].show(value))
+}
+
+// Extension methods (Scala 3)
+extension (x: Int) {
+  def square: Int = x * x
+}
+
+5.square  // 25
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable вместо immutable
+var list = List(1, 2, 3)
+list = list :+ 4  // ОШИБКА! Создаётся новый список
+
+✓ Решение:
+val list = List(1, 2, 3)
+val newList = list :+ 4  // OK
+
+❌ Ошибка 2: Null вместо Option
+def getName(): String = null  // ОШИБКА!
+
+✓ Решение:
+def getName(): Option[String] = None
+
+❌ Ошибка 3: Exception вместо Either/Try
+def divide(a: Int, b: Int): Int = {
+  if (b == 0) throw new Exception("Division by zero")
+  a / b
+}
+
+✓ Решение:
+def divide(a: Int, b: Int): Either[String, Int] = {
+  if (b == 0) Left("Division by zero")
+  else Right(a / b)
+}
+
+❌ Ошибка 4: Pattern matching без default
+value match {
+  case 1 => "one"
+  case 2 => "two"
+  // Забыли default!
+}
+
+✓ Решение:
+value match {
+  case 1 => "one"
+  case 2 => "two"
+  case _ => "other"
+}
+
+❌ Ошибка 5: Side effects в pure functions
+var counter = 0
+def increment(): Int = {
+  counter += 1  // Side effect!
+  counter
+}
+
+✓ Решение:
+def increment(counter: Int): Int = counter + 1
+
+❌ Ошибка 6: Not using tailrec
+def factorial(n: Int): Int = {
+  if (n <= 1) 1 else n * factorial(n - 1)  // Stack overflow!
+}
+
+✓ Решение:
+@tailrec
+def factorial(n: Int, acc: Int = 1): Int = {
+  if (n <= 1) acc else factorial(n - 1, acc * n)
+}
+
+❌ Ошибка 7: Using var вместо val
+var x = 5
+x = 6  // Избегайте!
+
+✓ Решение:
+val x = 5  // Immutable
+
+❌ Ошибка 8: Not using Option methods
+val opt: Option[Int] = Some(5)
+opt match {
+  case Some(value) => value
+  case None => 0
+}
+
+✓ Решение:
+opt.getOrElse(0)  // Проще!
+
+❌ Ошибка 9: Using return в функциях
+def find(x: Int): Int = {
+  if (x > 0) return x  // ОШИБКА!
+  0
+}
+
+✓ Решение:
+def find(x: Int): Int = {
+  if (x > 0) x
+  else 0
+}
+
+❌ Ошибка 10: Not using for comprehension
+List(1, 2, 3).flatMap(x =>
+  List(4, 5, 6).map(y =>
+    (x, y)
+  )
+)
+
+✓ Решение:
+for {
+  x <- List(1, 2, 3)
+  y <- List(4, 5, 6)
+} yield (x, y)
+
+================================================================================
+11. ПРИМЕРЫ FUNCTIONAL СТИЛЯ
+================================================================================
+
+Пример 1: Functional error handling
+-----------------------------------
+sealed trait Error
+case class ValidationError(msg: String) extends Error
+case class DatabaseError(msg: String) extends Error
+
+def validate(input: String): Either[ValidationError, Int] = {
+  Try(input.toInt).toEither
+    .left.map(_ => ValidationError("Invalid number"))
+}
+
+def save(value: Int): Either[DatabaseError, Unit] = {
+  // Database operation
+  Right(())
+}
+
+val result = for {
+  validated <- validate("42")
+  _ <- save(validated)
+} yield validated
+
+Пример 2: Functional data processing
+------------------------------------
+case class User(name: String, age: Int, active: Boolean)
+
+val users = List(
+  User("Alice", 25, true),
+  User("Bob", 30, false),
+  User("Charlie", 35, true)
+)
+
+val result = users
+  .filter(_.active)
+  .filter(_.age > 30)
+  .map(_.name)
+  .headOption  // Option[String]
+
+Пример 3: Type class pattern
+----------------------------
+trait JsonEncoder[T] {
+  def encode(value: T): String
+}
+
+implicit val intEncoder: JsonEncoder[Int] = _.toString
+implicit val stringEncoder: JsonEncoder[String] = s => s""""$s""""
+
+def toJson[T: JsonEncoder](value: T): String = {
+  implicitly[JsonEncoder[T]].encode(value)
+}
+
+toJson(42)  // "42"
+toJson("hello")  // ""hello""
+
+Пример 4: Actor model (Akka)
+----------------------------
+import akka.actor._
+
+class MyActor extends Actor {
+  def receive: Receive = {
+    case "hello" => sender() ! "world"
+    case _ => sender() ! "unknown"
+  }
+}
+
+val system = ActorSystem("MySystem")
+val actor = system.actorOf(Props[MyActor])
+
+Пример 5: Cats library (functional programming)
+-----------------------------------------------
+import cats._
+import cats.implicits._
+
+val list = List(1, 2, 3)
+list.sum  // 6 (using Monoid)
+
+val opt1: Option[Int] = Some(5)
+val opt2: Option[Int] = Some(10)
+(opt1, opt2).mapN(_ + _)  // Some(15)
+
+================================================================================
+                         КОНЕЦ SYNTAX_SCALA
+================================================================================

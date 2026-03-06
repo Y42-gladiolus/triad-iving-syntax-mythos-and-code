@@ -1,0 +1,561 @@
+================================================================================
+              ODIN - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Modern Systems + Explicit + Performance + Simplicity
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Structs и enums
+6. Control Flow
+7. Memory management
+8. SIMD и SoA
+9. C interop
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры systems programming стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (двойной слэш)
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Package declaration
+package main
+
+// Import
+import "core:fmt"
+import "core:os"
+
+// Main функция
+main :: proc() {
+  fmt.println("Hello, Odin!")
+}
+
+// Semicolons опционально
+x := 5
+y := 10
+
+// Semicolons разрешены
+z := 15;
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ i8, i16, i32    │ 1, -10, 1000 (целые со знаком)                             │
+│ i64, i128       │ Большие целые                                              │
+│ u8, u16, u32    │ 0, 10, 1000 (беззнаковые)                                  │
+│ u64, u128       │ Большие беззнаковые                                        │
+│ f16, f32, f64   │ 3.14, -0.5 (вещественные)                                  │
+│ complex32/64/128│ Комплексные числа                                          │
+│ bool            │ true, false                                                │
+│ byte            │ 8-bit unsigned                                             │
+│ rune            │ 32-bit Unicode character                                   │
+│ string          │ "hello", "привет"                                          │
+│ cstring         │ C-style null-terminated string                             │
+│ rawptr          │ Unsafe pointer                                             │
+│ any             │ Any type (для generics)                                    │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Type annotations
+x: int = 5
+y: f64 = 3.14
+
+// Type inference
+z := 10  // Odin выводит int
+
+// Distinct types
+UserId :: distinct int
+user_id: UserId = 123
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// := - declaration with inference
+x := 5
+y := "hello"
+
+// : - declaration with explicit type
+z: int = 10
+
+// = - assignment (после объявления)
+x = 15
+
+// Multiple assignment
+a, b := 1, 2
+
+// Swap
+a, b = b, a
+
+// Const (compile-time constant)
+PI :: 3.14159
+
+// Mutable by default
+var x: int = 5
+x = 10  // OK
+
+// Shadowing (переопределение)
+x := 5
+{
+  x := 10  // OK в новом scope
+}
+
+// Destructuring
+a, b := {1, 2}
+
+// Tuple
+point := {3, 4}
+x := point.0
+y := point.1
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+add :: proc(a: int, b: int) -> int {
+  return a + b
+}
+
+// Multiple return values
+divide :: proc(a: int, b: int) -> (int, bool) {
+  if b == 0 {
+    return 0, false
+  }
+  return a / b, true
+}
+
+// Usage
+result, ok := divide(10, 2)
+if ok {
+  fmt.println(result)
+}
+
+// Default параметры (нет, использовать overloading)
+greet :: proc(name: string) {
+  fmt.println("Hello, " + name)
+}
+
+// Variadic функции
+sum :: proc(nums: ..int) -> int {
+  total := 0
+  for n in nums {
+    total += n
+  }
+  return total
+}
+
+// Recursive функции
+factorial :: proc(n: int) -> int {
+  if n <= 1 {
+    return 1
+  }
+  return n * factorial(n - 1)
+}
+
+// Function pointers
+AddProc :: proc(int, int) -> int
+func_ptr: AddProc = add
+
+================================================================================
+5. STRUCTS И ENUMS
+================================================================================
+
+// Struct
+Point :: struct {
+  x: f64,
+  y: f64,
+}
+
+// Struct methods
+distance :: proc(p: Point) -> f64 {
+  return math.sqrt(p.x * p.x + p.y * p.y)
+}
+
+// Struct initialization
+p := Point{3.0, 4.0}
+p2 := Point{x = 3.0, y = 4.0}
+
+// Access struct fields
+x := p.x
+y := p.y
+
+// Enum
+Color :: enum {
+  Red,
+  Green,
+  Blue,
+}
+
+// Enum usage
+c: Color = Color.Red
+
+// Bit sets
+Flags :: bit_set[Color]
+f: Flags = {Color.Red, Color.Green}
+
+// Union
+Number :: union {
+  int,
+  f64,
+}
+
+// Tagged union
+TaggedNumber :: struct {
+  tag: enum { Int, Float },
+  value: Number,
+}
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+// If/else
+if x > 5 {
+  fmt.println("greater")
+} else {
+  fmt.println("less or equal")
+}
+
+// If с initialization
+if n := 10; n > 5 {
+  fmt.println(n)
+}
+
+// Switch
+switch value {
+case 1:
+  fmt.println("one")
+case 2:
+  fmt.println("two")
+case:
+  fmt.println("other")
+}
+
+// For loop
+for i := 0; i < 10; i += 1 {
+  fmt.println(i)
+}
+
+// For with range
+for i in 0..<10 {
+  fmt.println(i)
+}
+
+// For each
+for n in nums {
+  fmt.println(n)
+}
+
+// While loop
+for x > 0 {
+  fmt.println(x)
+  x -= 1
+}
+
+// Break/continue
+for i in 0..<10 {
+  if i == 5 {
+    continue
+  }
+  if i == 8 {
+    break
+  }
+  fmt.println(i)
+}
+
+================================================================================
+7. MEMORY MANAGEMENT
+================================================================================
+
+// Stack allocation (по умолчанию)
+x: int = 5
+arr: [10]int
+
+// Heap allocation
+ptr := new(int)
+defer delete(ptr)
+
+// Dynamic arrays
+slice := make([]int, 10)
+defer delete(slice)
+
+// Append to dynamic array
+append(&slice, 5)
+
+// Slice operations
+sub := slice[0..5]
+
+// Pointer
+ptr := &x
+value := ptr^
+
+// Nullable pointer
+nullable: ^int = nil
+if nullable != nil {
+  value := nullable^
+}
+
+// Defer (автоматическая очистка)
+fn process() {
+  ptr := new(int)
+  defer delete(ptr)
+  // Use ptr
+  // Automatically freed on scope exit
+}
+
+================================================================================
+8. SIMD И SOA
+================================================================================
+
+// SIMD types
+import "core:simd"
+
+v4 := simd.f32x4{1.0, 2.0, 3.0, 4.0}
+result := v4 + v4  // SIMD addition
+
+// SoA (Struct of Arrays)
+Particles :: struct {
+  x: [1000]f32,
+  y: [1000]f32,
+  z: [1000]f32,
+}
+
+// Cache-friendly access
+update_particles :: proc(p: ^Particles) {
+  for i in 0..<1000 {
+    p.x[i] += 0.1
+    p.y[i] += 0.1
+    p.z[i] += 0.1
+  }
+}
+
+// auto_vectorize hint
+// Odin compiler может векторизовать автоматически
+
+================================================================================
+9. C INTEROP
+================================================================================
+
+// Import C library
+import "core:c"
+
+// Call C functions
+c.printf("Hello from C\n")
+
+// C types
+c_int: c.int
+c_float: c.float
+
+// Foreign procedure interface
+foreign "kernel32" {
+  GetTickCount :: proc() -> c.uint
+}
+
+// C struct mapping
+foreign struct Win32Point {
+  x: c.long,
+  y: c.long,
+}
+
+// Memory compatibility
+// Odin и C могут делиться памятью
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable immutable
+x := 5
+x = 10  // OK (mutable по умолчанию)
+
+// Для immutable использовать const
+PI :: 3.14159
+// PI = 3  // ОШИБКА!
+
+❌ Ошибка 2: Забыли defer
+ptr := new(int)
+// Забыли delete!
+
+✓ Решение:
+ptr := new(int)
+defer delete(ptr)
+
+❌ Ошибка 3: Null pointer без проверки
+ptr: ^int = nil
+value := ptr^  // ОШИБКА!
+
+✓ Решение:
+if ptr != nil {
+  value := ptr^
+}
+
+❌ Ошибка 4: Array out of bounds
+arr: [5]int
+x := arr[10]  // ОШИБКА!
+
+✓ Решение:
+if index < len(arr) {
+  x := arr[index]
+}
+
+❌ Ошибка 5: Switch без default
+switch value {
+case 1: fmt.println("one")
+case 2: fmt.println("two")
+// Забыли default!
+}
+
+✓ Решение:
+switch value {
+case 1: fmt.println("one")
+case 2: fmt.println("two")
+case: fmt.println("other")
+}
+
+❌ Ошибка 6: Multiple return без проверки
+result, ok := divide(10, 0)
+fmt.println(result)  // ОШИБКА! если ok == false
+
+✓ Решение:
+result, ok := divide(10, 0)
+if !ok {
+  return
+}
+fmt.println(result)
+
+❌ Ошибка 7: Use после defer
+defer delete(ptr)
+use(ptr)  // OK но ptr будет freed после
+
+✓ Решение:
+use(ptr)
+defer delete(ptr)
+
+❌ Ошибка 8: Wrong type in struct
+p := Point{3, 4}  // ОШИБКА! x, y должны быть f64
+
+✓ Решение:
+p := Point{3.0, 4.0}
+
+❌ Ошибка 9: No package declaration
+// Забыли package main!
+main :: proc() { fmt.println("Hello") }
+
+✓ Решение:
+package main
+main :: proc() { fmt.println("Hello") }
+
+❌ Ошибка 10: Wrong import
+fmt.println("Hello")  // ОШИБКА! Нет import
+
+✓ Решение:
+import "core:fmt"
+fmt.println("Hello")
+
+================================================================================
+11. ПРИМЕРЫ SYSTEMS PROGRAMMING СТИЛЯ
+================================================================================
+
+Пример 1: Data processing
+-------------------------
+process_data :: proc(data: []int) -> int {
+  total := 0
+  for n in data {
+    if n > 0 {
+      total += n * 2
+    }
+  }
+  return total
+}
+
+Пример 2: File I/O
+------------------
+import "core:os"
+import "core:io"
+
+read_file :: proc(path: string) -> ([]u8, bool) {
+  f, err := os.open(path, os.O_RDONLY)
+  if err != os.ERROR_NONE {
+    return nil, false
+  }
+  defer os.close(f)
+  
+  info, _ := os.fstat(f)
+  data := make([]u8, info.size)
+  _, err = io.read_file(f, data)
+  return data, err == os.ERROR_NONE
+}
+
+Пример 3: SIMD processing
+-------------------------
+import "core:simd"
+
+process_simd :: proc(data: []f32) -> []f32 {
+  result := make([]f32, len(data))
+  for i := 0; i < len(data); i += 4 {
+    v := simd.load(&data[i])
+    v = v * simd.splat(2.0)
+    simd.store(&result[i], v)
+  }
+  return result
+}
+
+Пример 4: Error handling
+------------------------
+safe_divide :: proc(a: int, b: int) -> (int, bool) {
+  if b == 0 {
+    return 0, false
+  }
+  return a / b, true
+}
+
+Пример 5: Memory pool
+---------------------
+Pool :: struct {
+  data: ^u8,
+  size: usize,
+}
+
+pool_create :: proc(size: usize) -> Pool {
+  data := new([size]u8)
+  return Pool{data, size}
+}
+
+pool_destroy :: proc(p: Pool) {
+  delete(p.data)
+}
+
+Пример 6: SoA for particles
+---------------------------
+Particles :: struct {
+  x: []f32,
+  y: []f32,
+  z: []f32,
+}
+
+update_particles :: proc(p: ^Particles, dt: f32) {
+  for i in 0..<len(p.x) {
+    p.x[i] += dt
+    p.y[i] += dt
+    p.z[i] += dt
+  }
+}
+
+================================================================================
+                         КОНЕЦ SYNTAX_ODIN
+================================================================================

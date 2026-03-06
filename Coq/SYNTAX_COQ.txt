@@ -1,0 +1,936 @@
+================================================================================
+              COQ - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ И ДОКАЗАТЕЛЬСТВАМ
+                    С максимальным расширением тактик доказательства
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и определения
+4. Функции (Fixpoint)
+5. Inductive типы
+6. Тактики доказательства (МАКСИМАЛЬНО РАСШИРЕНО!)
+7. Стратегии доказательства (РАСШИРЕНО!)
+8. Records и Classes
+9. Модули
+10. Программирование с доказательствами
+11. Типичные ошибки (РАСШИРЕНО!)
+12. Примеры доказательств
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+(* Комментарии в Coq *)
+(* Многострочные
+   комментарии *)
+
+(* Точка обязательна в конце каждой команды *)
+Definition x : nat := 5.
+
+(* Объявление типа *)
+Definition add (a b : nat) : nat := a + b.
+
+(* Проверка типа в REPL: *)
+(* Check 5. *)
+(* Check nat. *)
+(* Check add. *)
+
+(* Unicode символы работают *)
+Definition α : nat := 5.
+Definition β : nat := 10.
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ nat             │ 0, 1, 2, ... (натуральные числа, Peano)                    │
+│ Z               │ -10, 0, 10 (целые со знаком)                               │
+│ Q               │ 1/2, 3/4 (рациональные)                                    │
+│ R               │ 3.14, √2 (вещественные, в Reals)                           │
+│ bool            │ true, false                                                │
+│ char            │ "a"%char                                                   │
+│ string          │ "hello"                                                    │
+│ list A          │ nil, cons, [1; 2; 3]                                       │
+│ option A        │ None, Some 5                                               │
+│ prod A B        │ (a, b), A * B                                              │
+│ sum A B         │ inl a, inr b, A + B                                        │
+│ eq A            │ x = y (равенство)                                          │
+│ False           │ Противоречие (нет конструкторов)                           │
+│ True            │ Тривиальная истина (один конструктор I)                    │
+│ Empty_set       │ Пустое множество                                           │
+│ unit            │ tt (единственное значение)                                 │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+(* Проверка типа: *)
+Check nat.           (* nat : Set *)
+Check 5.             (* 5 : nat *)
+Check true.          (* true : bool *)
+Check (1, 2).        (* (1, 2) : nat * nat *)
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ОПРЕДЕЛЕНИЯ
+================================================================================
+
+(* Definition - определение *)
+Definition x : nat := 5.
+
+(* Let - локальное определение *)
+Definition add_let (a b : nat) : nat :=
+  let sum := a + b in
+  sum * 2.
+
+(* Variable - переменная в контексте *)
+Section MySection.
+  Variable n : nat.
+  Definition double := n * 2.
+End MySection.
+
+(* Axiom - аксиома (без доказательства!) *)
+Axiom choice : forall A : Type, inhabited A -> A.
+
+(* Parameter - параметр (как аксиома) *)
+Parameter pi : R.
+
+(* Const - константа *)
+Const e : R.
+
+(* Theorem/Lemma/Corollary - утверждения *)
+Theorem add_comm : forall n m : nat, n + m = m + n.
+Proof. (* Доказательство *) Qed.
+
+Lemma add_assoc : forall n m p : nat, (n + m) + p = n + (m + p).
+Proof. (* Доказательство *) Qed.
+
+(* Example - пример без имени *)
+Example test : 2 + 2 = 4.
+Proof. reflexivity. Qed.
+
+(* Goal - временная цель *)
+Goal forall n : nat, n = n.
+Proof. intros. reflexivity. Qed.
+
+================================================================================
+4. ФУНКЦИИ (FIXPOINT)
+================================================================================
+
+(* Fixpoint - рекурсивная функция *)
+Fixpoint factorial (n : nat) : nat :=
+  match n with
+  | O => 1
+  | S n' => n * factorial n'
+  end.
+
+(* Fixpoint с несколькими аргументами *)
+Fixpoint add (n m : nat) : nat :=
+  match n with
+  | O => m
+  | S n' => S (add n' m)
+  end.
+
+(* Fixpoint с measure (для сложной рекурсии) *)
+Fixpoint div (x y : nat) {measure x} : nat :=
+  match x with
+  | O => O
+  | S x' => if y <=? S x' then S (div (x' - y + 1) y) else O
+  end.
+
+(* Function (из библиотеки Equations) *)
+(* Более продвинутый синтаксис для рекурсии *)
+
+(* Анонимные функции *)
+Definition square := fun x => x * x.
+
+(* Частичное применение *)
+Definition add5 := add 5.
+
+================================================================================
+5. INDUCTIVE ТИПЫ
+================================================================================
+
+(* Простой индуктивный тип *)
+Inductive Color : Type :=
+  | red : Color
+  | green : Color
+  | blue : Color.
+
+(* Индуктивный тип с параметрами *)
+Inductive option (A : Type) : Type :=
+  | None : option A
+  | Some : A -> option A.
+
+(* Индуктивный тип с индексами *)
+Inductive vect (A : Type) : nat -> Type :=
+  | vnil : vect A 0
+  | vcons : forall n, A -> vect A n -> vect A (S n).
+
+(* Индуктивное определение отношений *)
+Inductive even : nat -> Prop :=
+  | even_O : even 0
+  | even_S : forall n, even n -> even (S (S n)).
+
+(* Взаимно индуктивные типы *)
+Inductive even_mut : nat -> Prop :=
+  | even_O_mut : even_mut 0
+  | even_S_mut : forall n, odd_mut n -> even_mut (S n)
+with odd_mut : nat -> Prop :=
+  | odd_S_mut : forall n, even_mut n -> odd_mut (S n).
+
+(* Индуктивное определение списков *)
+Inductive list (A : Type) : Type :=
+  | nil : list A
+  | cons : A -> list A -> list A.
+
+(* Синтаксический сахар: *)
+(* [] = nil *)
+(* [1; 2; 3] = cons 1 (cons 2 (cons 3 nil)) *)
+
+================================================================================
+6. ТАКТИКИ ДОКАЗАТЕЛЬСТВА (МАКСИМАЛЬНО РАСШИРЕНО!)
+================================================================================
+
+(* ⚡ ТАКТИКИ = команды для построения доказательств *)
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* БАЗОВЫЕ ТАКТИКИ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 1. reflexivity - доказывает a = a *)
+Theorem refl_example : 2 + 2 = 4.
+Proof.
+  reflexivity.  (* Или: reflexivity. *)
+Qed.
+
+(* 2. simpl - упрощение выражений *)
+Theorem simpl_example : (fun x => x + 1) 5 = 6.
+Proof.
+  simpl.
+  reflexivity.
+Qed.
+
+(* 3. compute - полное вычисление *)
+Theorem compute_example : factorial 5 = 120.
+Proof.
+  compute.
+  reflexivity.
+Qed.
+
+(* 4. intro/intros - ввести переменную из forall *)
+Theorem intro_example : forall n : nat, n = n.
+Proof.
+  intros n.  (* Ввести n в контекст *)
+  reflexivity.
+Qed.
+
+(* 5. apply - применить лемму *)
+Lemma my_lemma : forall n, n = n.
+Proof. intros. reflexivity. Qed.
+
+Theorem apply_example : forall n : nat, n = n.
+Proof.
+  intros n.
+  apply my_lemma.
+Qed.
+
+(* 6. exact - точное доказательство *)
+Theorem exact_example : forall n : nat, n = n.
+Proof.
+  intros n.
+  exact eq_refl.  (* eq_refl : forall x, x = x *)
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* ТАКТИКИ ПЕРЕПИСЫВАНИЯ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 7. rewrite - переписать с равенством *)
+Theorem rewrite_example : forall n m : nat, n + m = m + n.
+Proof.
+  intros n m.
+  rewrite Nat.add_comm.  (* Переписать с теоремой *)
+  reflexivity.
+Qed.
+
+(* 8. rewrite <- - переписать в обратную сторону *)
+Theorem rewrite_back_example : forall n : nat, n + 0 = n.
+Proof.
+  intros n.
+  rewrite <- Nat.add_0_r.  (* Обратное направление *)
+  reflexivity.
+Qed.
+
+(* 9. replace - заменить выражение *)
+Theorem replace_example : forall n : nat, n + 0 = n.
+Proof.
+  intros n.
+  replace (n + 0) with n.
+  - reflexivity.
+  - apply Nat.add_0_r.
+Qed.
+
+(* 10. subst - подставить равенство *)
+Theorem subst_example : forall n m : nat, n = m -> m = n.
+Proof.
+  intros n m H.
+  subst n.  (* Заменить n на m везде *)
+  reflexivity.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* ТАКТИКИ РАЗБОРА СЛУЧАЕВ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 11. destruct - разбор случаев *)
+Theorem destruct_example : forall n : nat, n = 0 \/ S (pred n) = n.
+Proof.
+  intros n.
+  destruct n as [| n'].  (* Два случая: 0 или S n' *)
+  - left. reflexivity.
+  - right. simpl. reflexivity.
+Qed.
+
+(* 12. case - аналог destruct *)
+Theorem case_example : forall b : bool, b = true \/ b = false.
+Proof.
+  intros b.
+  case b.
+  - left. reflexivity.
+  - right. reflexivity.
+Qed.
+
+(* 13. induction - индукция *)
+Theorem induction_example : forall n : nat, n + 0 = n.
+Proof.
+  intros n.
+  induction n as [| n' IH].
+  - (* Базовый случай: n = 0 *)
+    simpl. reflexivity.
+  - (* Индуктивный шаг: n = S n' *)
+    simpl. rewrite IH. reflexivity.
+Qed.
+
+(* 14. case_eq - разбор с сохранением равенства *)
+Theorem case_eq_example : forall n : nat, n = 0 \/ n > 0.
+Proof.
+  intros n.
+  case_eq n.
+  - intros H. left. assumption.
+  - intros n' H. right. omega.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* ТАКТИКИ ДЛЯ ЦЕЛЕЙ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 15. split - разделить конъюнкцию *)
+Theorem split_example : forall n : nat, n = n /\ n = n.
+Proof.
+  intros n.
+  split.
+  - reflexivity.
+  - reflexivity.
+Qed.
+
+(* 16. left/right - выбрать дизъюнкт *)
+Theorem left_example : forall n : nat, n = n \/ n = n + 1.
+Proof.
+  intros n.
+  left.  (* Выбрать левую часть *)
+  reflexivity.
+Qed.
+
+(* 17. exists - предъявить свидетеля *)
+Theorem exists_example : exists n : nat, n > 0.
+Proof.
+  exists 1.  (* Предъявить свидетеля *)
+  simpl. reflexivity.
+Qed.
+
+(* 18. unfold - развернуть определение *)
+Definition my_add n m := n + m.
+
+Theorem unfold_example : forall n m, my_add n m = n + m.
+Proof.
+  intros n m.
+  unfold my_add.  (* Развернуть определение *)
+  reflexivity.
+Qed.
+
+(* 19. fold - свернуть определение *)
+Theorem fold_example : forall n m, n + m = my_add n m.
+Proof.
+  intros n m.
+  unfold my_add.
+  fold my_add.  (* Свернуть обратно *)
+  reflexivity.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* ТАКТИКИ ДЛЯ ГИПОТЕЗ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 20. clear - удалить гипотезу *)
+Theorem clear_example : forall n m : nat, n = n -> m = m.
+Proof.
+  intros n m H.
+  clear H.  (* Удалить H *)
+  split; reflexivity.
+Qed.
+
+(* 21. rename - переименовать гипотезу *)
+Theorem rename_example : forall n : nat, n = n.
+Proof.
+  intros H.
+  rename H into n.
+  reflexivity.
+Qed.
+
+(* 22. assert - добавить промежуточную лемму *)
+Theorem assert_example : forall n : nat, n + n = 2 * n.
+Proof.
+  intros n.
+  assert (H : n + n = 2 * n).
+  - (* Доказательство H *)
+    rewrite Nat.add_comm.
+    rewrite Nat.mul_comm.
+    reflexivity.
+  - (* Использование H *)
+    assumption.
+Qed.
+
+(* 23. specialize - применить гипотезу к аргументу *)
+Theorem specialize_example : 
+  (forall n : nat, n = n) -> 5 = 5.
+Proof.
+  intros H.
+  specialize (H 5).  (* Применить H к 5 *)
+  assumption.
+Qed.
+
+(* 24. generalize - обобщить гипотезу *)
+Theorem generalize_example : forall n : nat, n = n.
+Proof.
+  intro n.
+  generalize n.  (* Обобщить n *)
+  intros m.
+  reflexivity.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* ТАКТИКИ АВТОМАТИЗАЦИИ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 25. auto - автоматическое доказательство *)
+Theorem auto_example : forall n : nat, n = n.
+Proof.
+  intros.
+  auto.  (* Автоматически находит proof *)
+Qed.
+
+(* 26. eauto - auto с существованием *)
+Theorem eauto_example : exists n : nat, n = 5.
+Proof.
+  eauto.  (* Автоматически находит свидетеля *)
+Qed.
+
+(* 27. omega - арифметика Пресбургера *)
+Theorem omega_example : forall n m : nat, n < m -> n + 1 <= m.
+Proof.
+  intros.
+  omega.  (* Автоматически для линейной арифметики *)
+Qed.
+
+(* 28. ring - кольца и поля *)
+Theorem ring_example : forall n m : nat, (n + m) * (n + m) = n*n + 2*n*m + m*m.
+Proof.
+  intros.
+  ring.  (* Автоматически для алгебры *)
+Qed.
+
+(* 29. field - поля (R, Q) *)
+Require Import Reals.
+Theorem field_example : forall x y : R, x <> 0 -> x * (y / x) = y.
+Proof.
+  intros.
+  field.  (* Автоматически для полей *)
+  assumption.
+Qed.
+
+(* 30. lia - линейная целочисленная арифметика *)
+Require Import Lia.
+Theorem lia_example : forall n m : Z, n < m -> n + 1 <= m.
+Proof.
+  intros.
+  lia.  (* Как omega но для Z *)
+Qed.
+
+(* 31. nia - нелинейная целочисленная арифметика *)
+Theorem nia_example : forall n : nat, n * n >= n.
+Proof.
+  intros.
+  nia.  (* Нелинейная арифметика *)
+Qed.
+
+(* 32. congruence - доказательство конгруэнтности *)
+Theorem congruence_example : forall n m : nat, n = m -> S n = S m.
+Proof.
+  intros.
+  congruence.  (* Автоматически *)
+Qed.
+
+(* 33. discriminate - доказательство неравенства конструкторов *)
+Theorem discriminate_example : forall n : nat, 0 <> S n.
+Proof.
+  intros n H.
+  discriminate H.  (* 0 и S n - разные конструкторы *)
+Qed.
+
+(* 34. injection - инъективность конструкторов *)
+Theorem injection_example : forall n m : nat, S n = S m -> n = m.
+Proof.
+  intros n m H.
+  injection H.  (* S инъективен *)
+  intros.
+  assumption.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* ТАКТИКИ ДЛЯ РАБОТЫ С ПАМЯТЬЮ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 35. remember - запомнить выражение *)
+Theorem remember_example : forall n : nat, (n + 1) - 1 = n.
+Proof.
+  intros n.
+  remember (n + 1) as m.  (* Запомнить n+1 как m *)
+  destruct m.
+  - subst. omega.
+  - simpl. omega.
+Qed.
+
+(* 36. revert - вернуть переменную в цель *)
+Theorem revert_example : forall n : nat, n = n.
+Proof.
+  intros n.
+  revert n.  (* Вернуть n в forall *)
+  intros m.
+  reflexivity.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* ТАКТИКИ ДЛЯ РАБОТЫ С СУЩЕСТВОВАНИЕМ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 37. destruct с существованием *)
+Theorem destruct_exists : (exists n, n > 0) -> True.
+Proof.
+  intros H.
+  destruct H as [n Hn].  (* Получить свидетеля и доказательство *)
+  trivial.
+Qed.
+
+(* 38. eexists - существование с отложенным выбором *)
+Theorem eexists_example : exists n : nat, n = n.
+Proof.
+  eexists.  (* Отложить выбор свидетеля *)
+  reflexivity.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* ТАКТИКИ ДЛЯ РАБОТЫ С РАВЕНСТВОМ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 39. symmetry - симметрия равенства *)
+Theorem symmetry_example : forall n m : nat, n = m -> m = n.
+Proof.
+  intros n m H.
+  symmetry.  (* Перевернуть цель *)
+  assumption.
+Qed.
+
+(* 40. transitivity - транзитивность *)
+Theorem transitivity_example : forall n m p : nat, n = m -> m = p -> n = p.
+Proof.
+  intros n m p H1 H2.
+  transitivity m.  (* Ввести промежуточный терм *)
+  - assumption.
+  - assumption.
+Qed.
+
+(* 41. f_equal - равенство функций *)
+Theorem f_equal_example : forall n m : nat, n = m -> S n = S m.
+Proof.
+  intros n m H.
+  f_equal.  (* Применить f к обеим частям *)
+  assumption.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* ТАКТИКИ ДЛЯ ОТЛАДКИ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 42. Show Proof. - показать текущее доказательство *)
+Theorem show_proof_example : forall n : nat, n = n.
+Proof.
+  intros n.
+  Show Proof.  (* Показать текущий proof term *)
+  reflexivity.
+Qed.
+
+(* 43. inspect - посмотреть значение с доказательством *)
+Require Import Eqdep.
+Theorem inspect_example : forall n : nat, n = n.
+Proof.
+  intros n.
+  inspect n.  (* Сохранить значение и доказательство *)
+  reflexivity.
+Qed.
+
+(* 44. Timeout - ограничить время тактики *)
+Theorem timeout_example : forall n : nat, n = n.
+Proof.
+  intros.
+  Timeout 1 auto.  (* Максимум 1 секунда *)
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* ТАКТИКИ ДЛЯ РАБОТЫ С ЦЕЛЯМИ *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+(* 45. all: - применить ко всем подцелям *)
+Theorem all_example : forall n : nat, n = n /\ n = n.
+Proof.
+  intros n. split.
+  all: reflexivity.  (* Применить ко всем целям *)
+Qed.
+
+(* 46. ; - последовательное применение *)
+Theorem seq_example : forall n : nat, n = n /\ n = n.
+Proof.
+  intros n. split; reflexivity.  (* split; затем reflexivity *)
+Qed.
+
+(* 47. try - попробовать (не ошибиться если не сработает *)
+Theorem try_example : forall n : nat, n = n.
+Proof.
+  intros.
+  try omega.  (* Попробовать omega *)
+  reflexivity.
+Qed.
+
+(* 48. repeat - повторять пока возможно *)
+Theorem repeat_example : forall n : nat, n = n.
+Proof.
+  intros.
+  repeat (try reflexivity).  (* Повторять reflexivity *)
+Qed.
+
+(* 49. first - первая успешная *)
+Theorem first_example : forall n : nat, n = n.
+Proof.
+  intros.
+  first [reflexivity | omega].  (* Попробовать по порядку *)
+Qed.
+
+(* 50. solve - решить все подцели *)
+Theorem solve_example : forall n : nat, n = n.
+Proof.
+  intros.
+  solve [reflexivity].  (* Решить все цели *)
+Qed.
+
+================================================================================
+7. СТРАТЕГИИ ДОКАЗАТЕЛЬСТВА (РАСШИРЕНО!)
+================================================================================
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* СТРАТЕГИЯ 1: Индукция + Упрощение *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+Theorem sum_formula : forall n : nat, 
+  2 * (sum_n n) = n * (n + 1).
+Proof.
+  intros n.
+  induction n as [| n' IH].
+  - (* Базовый случай *)
+    simpl. ring.
+  - (* Индуктивный шаг *)
+    simpl. rewrite IH. ring.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* СТРАТЕГИЯ 2: От противного *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+Theorem not_even_and_odd : forall n : nat, ~(even n /\ odd n).
+Proof.
+  intros n [Heven Hodd].
+  induction Heven as [| n' IH].
+  - (* n = 0 *)
+    inversion Hodd.  (* 0 не может быть odd *)
+  - (* n = S (S n') *)
+    inversion Hodd as [| n'' Hodd'].
+    + (* n'' = 0 *)
+      apply IH in Hodd'.
+      contradiction.
+    + (* n'' = S n''' *)
+      apply IH.
+      apply Hodd'.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* СТРАТЕГИЯ 3: Цепочка равенств (calc) *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+Theorem calc_example : forall n : nat, (n + 1) * (n + 1) = n*n + 2*n + 1.
+Proof.
+  intros n.
+  calc
+    (n + 1) * (n + 1) = n * n + n + n + 1 : by ring
+    _ = n * n + 2 * n + 1 : by ring.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* СТРАТЕГИЯ 4: Двойная индукция *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+Theorem double_induction : forall n m : nat, n + m = m + n.
+Proof.
+  intros n.
+  induction n as [| n' IH].
+  - (* n = 0 *)
+    intros m.
+    simpl.
+    induction m as [| m' IHm].
+    + reflexivity.
+    + simpl. rewrite IHm. reflexivity.
+  - (* n = S n' *)
+    intros m.
+    simpl.
+    rewrite IH.
+    reflexivity.
+Qed.
+
+(* ───────────────────────────────────────────────────────────────────────────── *)
+(* СТРАТЕГИЯ 5: Леммы в леммах *)
+(* ───────────────────────────────────────────────────────────────────────────── *)
+
+Theorem complex_proof : forall n : nat, n * (n + 1) / 2 = sum_n n.
+Proof.
+  intros n.
+  assert (H : 2 * sum_n n = n * (n + 1)).
+  { (* Доказательство леммы *)
+    induction n as [| n' IH].
+    - simpl. ring.
+    - simpl. rewrite IH. ring.
+  }
+  (* Использование леммы *)
+  apply Nat.div_unique with (n * (n + 1)).
+  - split; omega.
+  - assumption.
+Qed.
+
+================================================================================
+8. RECORDS И CLASSES
+================================================================================
+
+(* Record - структура *)
+Record Point : Type := mkPoint {
+  x : nat;
+  y : nat
+}.
+
+(* Создание *)
+Definition p : Point := mkPoint 3 4.
+
+(* Доступ *)
+Compute (x p).  (* 3 *)
+Compute (y p).  (* 4 *)
+
+(* Обновление *)
+Definition p2 : Point := {| x := 5; y := y p |}.
+
+(* Class - тип класс *)
+Class Eq (A : Type) := {
+  eq : A -> A -> Prop;
+  eq_refl : forall x, eq x x;
+  eq_sym : forall x y, eq x y -> eq y x;
+  eq_trans : forall x y z, eq x y -> eq y z -> eq x z
+}.
+
+(* Instance *)
+Instance Eq_nat : Eq nat := {
+  eq := @eq nat;
+  eq_refl := @eq_refl nat;
+  eq_sym := @eq_sym nat;
+  eq_trans := @eq_trans nat
+}.
+
+================================================================================
+9. МОДУЛИ
+================================================================================
+
+(* Module - модуль *)
+Module MyModule.
+  Definition x : nat := 5.
+  Definition y : nat := 10.
+End MyModule.
+
+(* Использование *)
+Check MyModule.x.
+
+(* Import *)
+Import MyModule.
+Check x.  (* Теперь доступно без префикса *)
+
+(* Functor - модуль над модулем *)
+Module Type MY_SIG.
+  Parameter n : nat.
+End MY_SIG.
+
+Module MakeDouble (M : MY_SIG).
+  Definition double := M.n * 2.
+End MakeDouble.
+
+================================================================================
+10. ПРОГРАММИРОВАНИЕ С ДОКАЗАТЕЛЬСТВАМИ
+================================================================================
+
+(* Program - определение с обязательствами *)
+Program Definition safe_div (x y : nat) (H : y > 0) : nat :=
+  x / y.
+Next Obligation.
+  (* Доказательство что y > 0 *)
+  assumption.
+Qed.
+
+(* Extraction - извлечение кода *)
+Require Import Extraction.
+Extraction Language OCaml.
+Extraction "extracted.ml" factorial.
+
+(* Verified C код *)
+(* См. VST (Verifiable C) *)
+
+================================================================================
+11. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Забыть Qed
+Theorem test : 2 + 2 = 4.
+Proof.
+  reflexivity.
+(* Забыли Qed! *)
+
+✓ Решение:
+Theorem test : 2 + 2 = 4.
+Proof.
+  reflexivity.
+Qed.
+
+❌ Ошибка 2: Неполная индукция
+Theorem wrong_induction : forall n : nat, n = n.
+Proof.
+  intros n.
+  induction n.
+  - reflexivity.
+(* Забыли второй случай! *)
+
+✓ Решение:
+Theorem correct_induction : forall n : nat, n = n.
+Proof.
+  intros n.
+  induction n as [| n' IH].
+  - reflexivity.
+  - reflexivity.
+Qed.
+
+❌ Ошибка 3: Неправильный rewrite
+Theorem wrong_rewrite : forall n m : nat, n + m = m + n.
+Proof.
+  intros n m.
+  rewrite n.  (* ОШИБКА: n не равенство! *)
+
+✓ Решение:
+Theorem correct_rewrite : forall n m : nat, n + m = m + n.
+Proof.
+  intros n m.
+  rewrite Nat.add_comm.
+  reflexivity.
+Qed.
+
+❌ Ошибка 4: destruct без cases
+Theorem wrong_destruct : forall n : nat, n = 0 \/ S (pred n) = n.
+Proof.
+  intros n.
+  destruct n.
+(* Забыли обработать случаи! *)
+
+✓ Решение:
+Theorem correct_destruct : forall n : nat, n = 0 \/ S (pred n) = n.
+Proof.
+  intros n.
+  destruct n as [| n'].
+  - left. reflexivity.
+  - right. simpl. reflexivity.
+Qed.
+
+❌ Ошибка 5: omega для нелинейной арифметики
+Theorem wrong_omega : forall n : nat, n * n >= n.
+Proof.
+  intros.
+  omega.  (* ОШИБКА: omega только для линейной! *)
+
+✓ Решение:
+Theorem correct_omega : forall n : nat, n * n >= n.
+Proof.
+  intros.
+  nia.  (* Или: induction n. *)
+Qed.
+
+================================================================================
+12. ПРИМЕРЫ ДОКАЗАТЕЛЬСТВ
+================================================================================
+
+(* Пример 1: Коммутативность сложения *)
+Theorem add_comm : forall n m : nat, n + m = m + n.
+Proof.
+  intros n m.
+  induction n as [| n' IH].
+  - (* n = 0 *)
+    simpl.
+    rewrite Nat.add_0_r.
+    reflexivity.
+  - (* n = S n' *)
+    simpl.
+    rewrite IH.
+    rewrite Nat.add_succ_r.
+    reflexivity.
+Qed.
+
+(* Пример 2: Ассоциативность умножения *)
+Theorem mul_assoc : forall n m p : nat, (n * m) * p = n * (m * p).
+Proof.
+  intros n m p.
+  induction n as [| n' IH].
+  - simpl. reflexivity.
+  - simpl. rewrite IH. reflexivity.
+Qed.
+
+(* Пример 3: Длина append *)
+Theorem app_length : forall A : Type (l1 l2 : list A),
+  length (app l1 l2) = length l1 + length l2.
+Proof.
+  intros A l1 l2.
+  induction l1 as [| x xs IH].
+  - simpl. reflexivity.
+  - simpl. rewrite IH. reflexivity.
+Qed.
+
+================================================================================
+                         КОНЕЦ SYNTAX_COQ
+================================================================================

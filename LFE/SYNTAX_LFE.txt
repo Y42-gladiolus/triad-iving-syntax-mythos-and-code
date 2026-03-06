@@ -1,0 +1,559 @@
+================================================================================
+              LFE - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Lisp Syntax + Erlang VM + Actor Model + Concurrency
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (Lisp стиль)
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (defun)
+5. Pattern Matching
+6. Concurrency (processes, message passing)
+7. OTP (gen_server, gen_fsm)
+8. Macros и метaprogramming
+9. Error Handling
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры distributed стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (LISP СТИЛЬ)
+================================================================================
+
+; Комментарии (точка с запятой)
+; Однострочные
+
+#|
+    Многострочные
+    комментарии
+|#
+
+; S-выражения (как в Lisp)
+(+ 1 2 3)  ; 6
+
+; Префиксная нотация
+(* (+ 1 2) 3)  ; 9
+
+; Defmodule (модуль)
+(defmodule my_module
+  (export all))
+
+; Defun (функции)
+(defun add (a b)
+  (+ a b))
+
+; Атом (как keyword в Clojure)
+'atom
+'hello
+
+; Tuple (кортеж)
+#(1 2 3)
+
+; List (список)
+'(1 2 3)
+(list 1 2 3)
+
+; Map (Erlang map)
+#M{key => value}
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ integer         │ 1, -10, 1000000                                            │
+│ float           │ 3.14, -0.5, 2.5e10                                         │
+│ atom            │ 'hello, 'world, 'ok                                        │
+│ string          │ "hello", "привет"                                          │
+│ binary          │ <<"hello">>, <<1,2,3>>                                     │
+│ list            │ '(1 2 3), [1, 2, 3]                                        │
+│ tuple           │ #(1 2 3), {1, 2, 3}                                        │
+│ map             │ #M{key => value}                                           │
+│ pid             │ <0.123.0> (process ID)                                     │
+│ port            │ #Port<0.123>                                               │
+│ reference       │ #Ref<0.123.456.789>                                        │
+│ fun             │ (lambda (x) (+ x 1))                                       │
+│ nil             │ '() (пустой список)                                        │
+│ boolean         │ 'true, 'false                                              │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+; Проверка типа
+(is_integer 5)      ; 'true
+(is_float 3.14)     ; 'true
+(is_atom 'hello)    ; 'true
+(is_list '(1 2 3))  ; 'true
+(is_tuple #(1 2 3)) ; 'true
+
+; Преобразование
+(atom_to_string 'hello)  ; "hello"
+(string_to_atom "hello") ; 'hello
+(integer_to_string 5)    ; "5"
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+; Bind (однократное присваивание)
+(let ((x 5)
+      (y 10))
+  (+ x y))  ; 15
+
+; Set (изменение, только в REPL)
+(set x 5)
+
+; Match (pattern matching)
+(let (#(x y) #(1 2))
+  x)  ; 1
+
+; Match с list
+(let ((head . tail) '(1 2 3))
+  head)  ; 1
+
+; Match с map
+(let (#M{key := value} #M{key => 5})
+  value)  ; 5
+
+; Global variables (в модуле)
+(defmodule my_module
+  (export all)
+  (defmacro VERSION () 1))
+
+; Module attributes
+(defmodule my_module
+  (export all)
+  (doc "Module documentation")
+  (author "John Doe"))
+
+================================================================================
+4. ФУНКЦИИ (DEFUN)
+================================================================================
+
+; Базовая функция
+(defun add (a b)
+  (+ a b))
+
+; Функция с guard
+(defun divide (a b)
+  (when (=/= b 0)
+    (/ a b)))
+
+; Функция с pattern matching
+(defun greet ('John)
+  "Hello, John!")
+(defun greet (name)
+  (io:format "Hello, ~s!~n" (list name)))
+
+; Анонимная функция
+(funcall (lambda (x) (+ x 1)) 5)  ; 6
+
+; Частичное применение
+(let ((add5 (lambda (x) (+ 5 x))))
+  (funcall add5 10))  ; 15
+
+; Рекурсия
+(defun factorial (n)
+  (if (=< n 1)
+    1
+    (* n (factorial (- n 1)))))
+
+; Tail recursion
+(defun factorial-tail (n)
+  (factorial-helper n 1))
+
+(defun factorial-helper (n acc)
+  (if (=< n 1)
+    acc
+    (factorial-helper (- n 1) (* acc n))))
+
+; Variadic функции
+(defun sum (&rest nums)
+  (lists:sum nums))
+
+(sum 1 2 3 4 5)  ; 15
+
+================================================================================
+5. PATTERN MATCHING
+================================================================================
+
+; Match в let
+(let ((#(x y) #(1 2)))
+  x)  ; 1
+
+; Match в function head
+(defun process ('ok value)
+  value)
+(defun process ('error reason)
+  (io:format "Error: ~p~n" (list reason)))
+
+; Match с list
+(defun process-list ((cons head tail))
+  (io:format "Head: ~p, Tail: ~p~n" (list head tail)))
+
+; Match с tuple
+(defun process-tuple (#(name age))
+  (io:format "~s is ~p years old~n" (list name age)))
+
+; Match с map
+(defun process-map (#M{name := name, age := age})
+  (io:format "~s is ~p~n" (list name age)))
+
+; Match с guard
+(defun classify (n)
+  (cond
+    ((< n 0) 'negative)
+    ((== n 0) 'zero)
+    ((> n 0) 'positive)))
+
+; Case expression
+(defun case-example (x)
+  (case x
+    (1 'one)
+    (2 'two)
+    (_ 'other)))
+
+================================================================================
+6. CONCURRENCY (PROCESSES, MESSAGE PASSING)
+================================================================================
+
+; Spawn process
+(let ((pid (spawn (lambda ()
+  (receive
+    (msg)
+      (io:format "Received: ~p~n" (list msg))
+  )))))
+  (send pid 'hello))
+
+; Receive message
+(receive
+  (msg)
+    (io:format "Received: ~p~n" (list msg))
+  (after 5000
+    (io:format "Timeout~n")))
+
+; Link processes
+(let ((pid (spawn (lambda ()
+  (link self)
+  (receive
+    (die)
+      (exit 'died)
+  )))))
+  (send pid 'die))
+
+; Monitor process
+(let ((ref (monitor 'process pid)))
+  (receive
+    ({'DOWN, ref, 'process, pid, reason})
+      (io:format "Process died: ~p~n" (list reason))
+  ))
+
+; Register process
+(register 'my_process (self))
+(whereis 'my_process)  ; Get PID
+(unregister 'my_process)
+
+; Process dictionary
+(put 'key 'value)
+(get 'key)  ; 'value
+(erase 'key)
+
+================================================================================
+7. OTP (GEN_SERVER, GEN_FSM)
+================================================================================
+
+; gen_server behaviour
+(defmodule my_server
+  (behaviour gen_server)
+  (export all))
+
+; Callbacks
+(defun init (args)
+  {ok, args})
+
+(defun handle_call (request _from state)
+  {reply, ok, state})
+
+(defun handle_cast (msg state)
+  {noreply, state})
+
+(defun handle_info (info state)
+  {noreply, state})
+
+(defun terminate (reason state)
+  ok)
+
+(defun code_change (old_vsn state extra)
+  {ok, state})
+
+; Start server
+(gen_server:start_link {local, 'my_server} 'my_server [] [])
+
+; Call server
+(gen_server:call 'my_server 'request)
+
+; Cast server
+(gen_server:cast 'my_server 'message)
+
+; gen_fsm (finite state machine)
+(defmodule my_fsm
+  (behaviour gen_fsm)
+  (export all))
+
+(defun init (args)
+  {ok, 'initial_state, []})
+
+(defun initial_state (event state)
+  {next_state, 'new_state, state})
+
+================================================================================
+8. MACROS И METAPROGRAMMING
+================================================================================
+
+; Defmacro
+(defmacro unless (test &body body)
+  `(if (not ,test)
+    (progn ,@body)))
+
+(unless (> 5 3)
+  (io:format "This won't print~n"))
+
+; Syntax quote
+(defmacro when-positive (x)
+  `(if (> ,x 0)
+    (io:format "Positive: ~p~n" (list ,x))))
+
+; Macroexpand
+(macroexpand '(unless 'false (io:format "test~n")))
+
+; Gensym (generate unique symbol)
+(defmacro with-temp (var value &body body)
+  (let ((temp-var (gensym)))
+    `(let ((,temp-var ,value))
+      (let ((,var ,temp-var))
+        ,@body))))
+
+; Reader macros
+; 'quote
+; `quasiquote
+; ,unquote
+; ,@unquote-splicing
+
+; Compile-time evaluation
+(eval-when-compile
+  (io:format "Compiling...~n"))
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+; Try/catch
+(try
+  (risky_operation)
+(catch
+  (exit reason)
+    (io:format "Exit: ~p~n" (list reason))
+  (error reason)
+    (io:format "Error: ~p~n" (list reason))
+  (throw term)
+    (io:format "Throw: ~p~n" (list term))))
+
+; Throw/catch
+(throw 'error_term)
+
+; Exit
+(exit 'normal)
+(exit 'error_reason)
+
+; Trap exit
+(process_flag 'trap_exit 'true)
+
+; Link and monitor
+(link pid)
+(monitor 'process pid)
+
+; Supervisor (OTP)
+(defmodule my_supervisor
+  (behaviour supervisor)
+  (export all))
+
+(defun init (args)
+  (let ((child_specs
+    [{my_worker, {my_worker, 'start_link, []},
+      'permanent, 5000, 'worker, [my_worker]}]))
+    {ok, {{'one_for_one, 3, 10}, child_specs}}))
+
+(supervisor:start_link {local, 'my_supervisor} 'my_supervisor [])
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: = вместо ==
+(if (= x 5)  ; ОШИБКА! = это match, не comparison
+  'ok)
+
+✓ Решение:
+(if (== x 5)  ; OK
+  'ok)
+
+❌ Ошибка 2: Забыли quote
+(let ((x hello))  ; ОШИБКА! hello как переменная
+  x)
+
+✓ Решение:
+(let ((x 'hello))  ; OK
+  x)
+
+❌ Ошибка 3: Неправильный pattern matching
+(defun process ((x y))  ; ОШИБКА! Это list, не tuple
+  x)
+
+✓ Решение:
+(defun process (#(x y))  ; OK (tuple)
+  x)
+
+❌ Ошибка 4: Send to dead process
+(send pid 'message)  ; ОШИБКА! Если pid мёртв
+
+✓ Решение:
+(is_process_alive pid)
+  (send pid 'message)
+  'ok)
+
+❌ Ошибка 5: Receive без timeout
+(receive
+  (msg)
+    msg)  ; Может ждать вечно!
+
+✓ Решение:
+(receive
+  (msg)
+    msg
+  (after 5000
+    'timeout))
+
+❌ Ошибка 6: Gen_server без callbacks
+(defmodule my_server
+  (behaviour gen_server))
+; Забыли реализовать callbacks!
+
+✓ Решение:
+Реализовать все required callbacks:
+init, handle_call, handle_cast, handle_info, terminate, code_change
+
+❌ Ошибка 7: Link без trap_exit
+(link pid)
+(receive
+  ({'EXIT, pid, reason})  ; Никогда не получит!
+    reason)
+
+✓ Решение:
+(process_flag 'trap_exit 'true)
+(link pid)
+
+❌ Ошибка 8: Macro без syntax-quote
+(defmacro my-if (test then else)
+  (if test then else))  ; ОШИБКА! Вычисляется сразу
+
+✓ Решение:
+(defmacro my-if (test then else)
+  `(if ,test ,then ,else))
+
+❌ Ошибка 9: Hot code reload без version
+; Забыли code_change callback!
+
+✓ Решение:
+(defun code_change (old_vsn state extra)
+  {ok, state})
+
+❌ Ошибка 10: Memory leak в process
+; Process накапливает сообщения без обработки!
+
+✓ Решение:
+(receive
+  (msg)
+    process(msg)
+  (after 0
+    'ok)  ; Process mailbox
+)
+
+================================================================================
+11. ПРИМЕРЫ DISTRIBUTED СТИЛЯ
+================================================================================
+
+Пример 1: Chat server
+---------------------
+(defmodule chat_server
+  (behaviour gen_server)
+  (export all))
+
+(defun init (args)
+  {ok, []})
+
+(defun handle_call ({'join, name} _from state)
+  (io:format "~s joined~n" (list name))
+  {reply, ok, (lists:append state [name])})
+
+(defun handle_cast ({'message, from, msg} state)
+  (lists:foreach
+    (lambda (name)
+      (io:format "~s: ~s~n" (list from msg)))
+    state)
+  {noreply, state})
+
+Пример 2: Worker pool
+---------------------
+(defmodule worker_pool
+  (behaviour supervisor)
+  (export all))
+
+(defun init (args)
+  (let ((workers
+    (lists:map
+      (lambda (i)
+        {list_to_atom (io_lib:format "worker_~p" (list i))},
+        {worker, {worker, 'start_link, []},
+        'permanent, 5000, 'worker, [worker]})
+      (lists:seq 1, 5))))
+    {ok, {{'one_for_one, 3, 10}, workers}}))
+
+Пример 3: Distributed task
+--------------------------
+(defun run_distributed (nodes task)
+  (lists:map
+    (lambda (node)
+      spawn(node, (lambda ()
+        (task))))
+    nodes))
+
+Пример 4: Hot code reload
+-------------------------
+(defun code_change (old_vsn state extra)
+  (io:format "Upgrading from ~p~n" (list old_vsn))
+  {ok, state})
+
+Пример 5: Event bus
+-------------------
+(defmodule event_bus
+  (behaviour gen_server)
+  (export all))
+
+(defun init (args)
+  {ok, []})
+
+(defun handle_call ({'subscribe, topic, pid} _from state)
+  {reply, ok, (lists:append state [{topic, pid}])})
+
+(defun handle_cast ({'publish, topic, msg} state)
+  (lists:foreach
+    (lambda ({t, pid})
+      (when (== t topic)
+        (send pid {event, msg})))
+    state)
+  {noreply, state})
+
+================================================================================
+                         КОНЕЦ SYNTAX_LFE
+================================================================================

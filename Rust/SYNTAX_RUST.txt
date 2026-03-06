@@ -1,0 +1,783 @@
+================================================================================
+                    RUST - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                         От основ до продвинутых техник
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Владение (Ownership) - КРИТИЧЕСКИ ВАЖНО!
+5. Заимствование (Borrowing) и ссылки
+6. Структуры и перечисления
+7. Функции
+8. Управление потоком
+9. Обработка ошибок (Result, Option)
+10. Коллекции (Vec, HashMap, String)
+11. Трейты (Traits) и обобщения (Generics)
+12. Жизни (Lifetimes)
+13. Параллельные вычисления
+14. Частые ошибки и оптимизация
+15. Примеры быстрых решений
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (как в C/Java)
+let x = 5;  // Присваивание
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Точка с запятой обязательна для инструкций
+let x = 5;
+let y = 10;
+
+// Последнее выражение в блоке возвращает значение (без ;)
+fn add(a: i32, b: i32) -> i32 {
+    a + b  // Нет точки с запятой = возврат значения
+}
+
+// Регистр ВАЖЕН!
+let x = 1;
+let X = 2;  // Другая переменная
+
+// snake_case для переменных и функций
+let my_var = 5;
+fn my_function() {}
+
+// PascalCase для типов
+struct MyStruct {}
+enum MyEnum {}
+
+// SCREAMING_SNAKE_CASE для констант
+const MAX_SIZE: i32 = 100;
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ i8, i16, i32    │ -100, 0, 1000 (знаковые целые)                             │
+│ i64, i128       │ Большие целые числа                                        │
+│ isize           │ Целое размером с указатель (зависит от архитектуры)        │
+│ u8, u16, u32    │ 0, 100, 1000 (беззнаковые целые)                           │
+│ u64, u128       │ Большие беззнаковые                                        │
+│ usize           │ Беззнаковое размером с указатель (для индексов!)           │
+│ f32, f64        │ 3.14, -0.5 (вещественные, f64 по умолчанию)                │
+│ bool            │ true, false                                                │
+│ char            │ 'a', 'б', '😀' (4 байта, Unicode)                          │
+│ String          │ "hello".to_string() (владеющая строка)                     │
+│ &str            │ "hello" (строковый срез, ссылка)                           │
+│ Vec<T>          │ vec![1, 2, 3] (вектор, динамический массив)                │
+│ [T; N]          │ [1, 2, 3] (массив фиксированного размера)                  │
+│ HashMap<K, V>   │ HashMap::new() (хэш-таблица)                               │
+│ Option<T>       │ Some(5), None (может быть ничего)                          │
+│ Result<T, E>    │ Ok(5), Err(error) (результат с ошибкой)                    │
+│ Tuple           │ (1, "a", true) (кортеж)                                    │
+│ Array           │ [i32; 5] (массив)                                          │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Проверка типа:
+let x: i32 = 5;  // Явное указание типа
+
+// Вывод типа (компилятор определяет сам):
+let y = 10;  // i32 по умолчанию
+
+// Приведение типов:
+let a: i32 = 5;
+let b: f64 = a as f64;  // Явное приведение
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// let - неизменяемая переменная (по умолчанию)
+let x = 5;
+// x = 6;  // ОШИБКА!
+
+// mut - изменяемая переменная
+let mut y = 10;
+y = 15;  // OK
+
+// const - константа (всегда неизменяемая, должна иметь тип)
+const MAX_SIZE: i32 = 100;
+
+// static - глобальная переменная (редко используется)
+static LANGUAGE: &str = "Rust";
+
+// Shadowing (переопределение переменной)
+let x = 5;
+let x = x + 1;  // Новая переменная с тем же именем
+let x = "строка";  // Можно изменить тип!
+
+// ⚡ Shadowing полезно для трансформации данных:
+let input = "  42  ";
+let input = input.trim();  // &str
+let input: i32 = input.parse().unwrap();  // i32
+
+================================================================================
+4. ВЛАДЕНИЕ (OWNERSHIP) - КРИТИЧЕСКИ ВАЖНО!
+================================================================================
+
+// ⚠️ ЭТО ГЛАВНАЯ ФИШКА RUST! Понимание ownership обязательно!
+
+// Правило 1: Каждое значение имеет владельца (variable)
+let s1 = String::from("hello");  // s1 владеет строкой
+
+// Правило 2: Только один владелец в момент времени
+let s2 = s1;  // Владение ПЕРЕДАНО s1 больше недействителен!
+// println!("{}", s1);  // ОШИБКА! s1 больше не владеет данными
+
+// Правило 3: Когда владелец выходит из области видимости, значение удаляется
+{
+    let s = String::from("hello");
+}  // s выходит из области, память освобождается
+
+// Клонирование (глубокая копия)
+let s1 = String::from("hello");
+let s2 = s1.clone();  // s1 и s2 независимы
+println!("{}", s1);  // OK!
+
+// Copy типы (не String, не Vec!)
+let x = 5;  // i32 implements Copy
+let y = x;  // Копирование, не перемещение!
+println!("{}", x);  // OK! i32 всё ещё действителен
+
+// Какие типы реализуют Copy?
+// Все целые, bool, char, f32, f64, ссылки, кортежи из Copy типов
+
+================================================================================
+5. ЗАИМСТВОВАНИЕ (BORROWING) И ССЫЛКИ
+================================================================================
+
+// Ссылка (&) - заимствование без владения
+fn print_length(s: &String) {  // Заимствуем, не забираем владение!
+    println!("{}", s.len());
+}
+
+let s1 = String::from("hello");
+print_length(&s1);  // Передаём ссылку
+println!("{}", s1);  // OK! s1 всё ещё владеет данными
+
+// Изменяемая ссылка (&mut)
+fn modify(s: &mut String) {
+    s.push_str(" world");
+}
+
+let mut s = String::from("hello");
+modify(&mut s);
+
+// ⚠️ ПРАВИЛА ЗАИМСТВОВАНИЯ:
+// 1. ИЛИ одна изменяемая ссылка
+// 2. ИЛИ сколько угодно неизменяемых ссылок
+// 3. Но не оба одновременно!
+
+// let r1 = &s;
+// let r2 = &mut s;  // ОШИБКА! Нельзя пока есть неизменяемые ссылки
+
+// Deref - автоматическое разыменование
+fn print_str(s: &str) {  // Принимает срез
+    println!("{}", s);
+}
+
+let s = String::from("hello");
+print_str(&s);  // &String автоматически deref к &str
+
+// Slice (срез)
+let s = String::from("hello world");
+let hello = &s[0..5];  // "hello"
+let world = &s[6..11];  // "world"
+
+================================================================================
+6. СТРУКТУРЫ И ПЕРЕЧИСЛЕНИЯ
+================================================================================
+
+// Struct (структура)
+struct User {
+    username: String,
+    email: String,
+    active: bool,
+    login_count: u64,
+}
+
+// Создание
+let user1 = User {
+    username: String::from("john"),
+    email: String::from("john@example.com"),
+    active: true,
+    login_count: 1,
+};
+
+// Доступ
+println!("{}", user1.username);
+
+// Изменение (нужен mut!)
+let mut user2 = User {
+    username: String::from("jane"),
+    email: String::from("jane@example.com"),
+    active: true,
+    login_count: 1,
+};
+user2.email = String::from("new@example.com");
+
+// Update syntax
+let user3 = User {
+    email: String::from("another@example.com"),
+    ..user2  // Остальные поля из user2
+};
+
+// Tuple struct
+struct Color(i32, i32, i32);
+struct Point(i32, i32, i32);
+
+let black = Color(0, 0, 0);
+let origin = Point(0, 0, 0);
+
+// Unit-like struct (без полей)
+struct AlwaysEqual;
+
+// Enum (перечисление) - МОЩНАЯ фишка Rust!
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(i32, i32, i32),
+}
+
+let m1 = Message::Quit;
+let m2 = Message::Move { x: 10, y: 20 };
+let m3 = Message::Write(String::from("hello"));
+
+// Option<T> - enum для nullable значений
+let some_number: Option<i32> = Some(5);
+let absent_number: Option<i32> = None;
+
+// Result<T, E> - enum для обработки ошибок
+let result: Result<i32, String> = Ok(5);
+let error: Result<i32, String> = Err("Ошибка".to_string());
+
+================================================================================
+7. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+fn add(a: i32, b: i32) -> i32 {
+    a + b  // Возврат без ;
+}
+
+// Функция без возврата (возвращает ())
+fn print_hello() {
+    println!("Hello!");
+}
+
+// Несколько возвращаемых значений (tuple)
+fn min_max(numbers: &[i32]) -> (i32, i32) {
+    let mut min = numbers[0];
+    let mut max = numbers[0];
+    for &n in numbers {
+        if n < min { min = n; }
+        if n > max { max = n; }
+    }
+    (min, max)
+}
+
+let (min, max) = min_max(&[3, 1, 4, 1, 5]);
+
+// Параметры по умолчанию НЕ поддерживаются!
+// Используйте Option или перегрузку через трейты
+
+// Методы (impl для struct)
+impl User {
+    // Конструктор (по соглашению new)
+    fn new(username: String, email: String) -> Self {
+        User {
+            username,
+            email,
+            active: true,
+            login_count: 1,
+        }
+    }
+    
+    // Метод экземпляра (&self)
+    fn get_username(&self) -> &str {
+        &self.username
+    }
+    
+    // Метод с изменением (&mut self)
+    fn increment_login(&mut self) {
+        self.login_count += 1;
+    }
+    
+    // Ассоциированная функция (без self)
+    fn is_valid_email(email: &str) -> bool {
+        email.contains('@')
+    }
+}
+
+================================================================================
+8. УПРАВЛЕНИЕ ПОТОКОМ
+================================================================================
+
+// if-else (возвращает значение!)
+let number = 3;
+let message = if number < 5 {
+    "small"
+} else {
+    "large"
+};
+
+// for цикл (наиболее используемый)
+for i in 0..5 {  // 0, 1, 2, 3, 4
+    println!("{}", i);
+}
+
+for i in (1..4).rev() {  // 3, 2, 1
+    println!("{}", i);
+}
+
+let arr = [1, 2, 3, 4, 5];
+for element in arr.iter() {
+    println!("{}", element);
+}
+
+for (index, value) in arr.iter().enumerate() {
+    println!("{}: {}", index, value);
+}
+
+// while цикл
+let mut counter = 0;
+while counter < 5 {
+    counter += 1;
+}
+
+// loop (бесконечный цикл с break)
+let mut counter = 0;
+let result = loop {
+    counter += 1;
+    if counter == 10 {
+        break counter * 2;  // Возвращает значение
+    }
+};
+
+// continue
+for i in 0..10 {
+    if i % 2 == 0 {
+        continue;  // Пропустить чётные
+    }
+    println!("{}", i);
+}
+
+// match (мощнее switch!)
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter,
+}
+
+fn value_in_cents(coin: Coin) -> u8 {
+    match coin {
+        Coin::Penny => 1,
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter => 25,
+    }
+}
+
+// match с Option
+fn plus_one(x: Option<i32>) -> Option<i32> {
+    match x {
+        None => None,
+        Some(i) => Some(i + 1),
+    }
+}
+
+// if let (короткая форма match)
+let config_max = Some(3u8);
+if let Some(max) = config_max {
+    println!("Максимум: {}", max);
+}
+
+================================================================================
+9. ОБРАБОТКА ОШИБОК (RESULT, OPTION)
+================================================================================
+
+// Option<T> - значение или ничего
+let some_number: Option<i32> = Some(5);
+let absent: Option<i32> = None;
+
+// Методы Option:
+let x = some_number.unwrap();  // 5, паника если None
+let x = some_number.unwrap_or(0);  // 5, или 0 если None
+let x = some_number.unwrap_or_default();  // 0 для i32
+if let Some(val) = some_number { /* ... */ }
+
+// Result<T, E> - успех или ошибка
+let result: Result<i32, String> = Ok(5);
+let error: Result<i32, String> = Err("Ошибка".to_string());
+
+// Методы Result:
+let x = result.unwrap();  // 5, паника если Err
+let x = result.unwrap_or(0);  // 5, или 0 если ошибка
+let x = result.unwrap_or_else(|e| 0);  // С обработкой ошибки
+
+// ? оператор (пропагация ошибок)
+fn read_file() -> Result<String, std::io::Error> {
+    let mut file = std::fs::File::open("file.txt")?;  // Возвращает Err если ошибка
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    Ok(contents)
+}
+
+// try-catch аналог (std::panic::catch_unwind)
+let result = std::panic::catch_unwind(|| {
+    // Код который может паниковать
+});
+
+// Создание своих типов ошибок
+use std::fmt;
+
+#[derive(Debug)]
+enum MyError {
+    Io(std::io::Error),
+    Parse(std::num::ParseIntError),
+}
+
+impl fmt::Display for MyError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Ошибка: {:?}", self)
+    }
+}
+
+impl std::error::Error for MyError {}
+
+================================================================================
+10. КОЛЛЕКЦИИ
+================================================================================
+
+// Vec<T> (вектор - динамический массив)
+let mut v: Vec<i32> = Vec::new();
+let mut v = vec![1, 2, 3];  // Макрос!
+
+v.push(4);  // Добавить
+v.push(5);
+let third = v[2];  // Доступ (может паниковать!)
+let third = v.get(2);  // Option<&i32> (безопасно)
+
+for i in &v {  // Неизменяемая ссылка
+    println!("{}", i);
+}
+
+for i in &mut v {  // Изменяемая ссылка
+    *i += 1;
+}
+
+// HashMap<K, V>
+use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Yellow"), 50);
+
+let team_name = String::from("Blue");
+let score = scores.get(&team_name);  // Option<&i32>
+
+for (key, value) in &scores {
+    println!("{}: {}", key, value);
+}
+
+// entry API (вставить если нет)
+scores.entry(String::from("Red")).or_insert(25);
+
+// String vs &str
+let s = String::from("hello");  // Владеющая строка (куча)
+let slice: &str = &s[0..3];  // Срез (стек, ссылка)
+
+let mut s = String::from("hello");
+s.push_str(" world");  // Можно изменить
+// let slice = "hello";  // &str, нельзя изменить содержимое
+
+================================================================================
+11. ТРЕЙТЫ (TRAITS) И ОБОБЩЕНИЯ (GENERICS)
+================================================================================
+
+// Generics (обобщения)
+fn largest<T: PartialOrd>(list: &[T]) -> &T {
+    let mut largest = &list[0];
+    for item in list {
+        if item > largest {
+            largest = item;
+        }
+    }
+    largest
+}
+
+// Trait (интерфейс)
+pub trait Summary {
+    fn summarize(&self) -> String;
+    
+    // Метод по умолчанию
+    fn summary(&self) -> String {
+        String::from("(Read more...)")
+    }
+}
+
+// Реализация трейта
+impl Summary for User {
+    fn summarize(&self) -> String {
+        format!("{} ({})", self.username, self.email)
+    }
+}
+
+// Trait bound (ограничение на generics)
+pub fn notify(item: &impl Summary) {
+    println!("Breaking news! {}", item.summarize());
+}
+
+// Или синтаксис с where
+fn some_function<T, U>(t: &T, u: &U) -> i32
+where
+    T: Display + Clone,
+    U: Clone + Debug,
+{
+    // ...
+}
+
+// Встроенные трейты:
+// Display - форматирование для пользователя ({})
+// Debug - форматирование для отладки ({:?})
+// Clone - глубокое копирование (.clone())
+// Copy - копирование на стеке
+// Drop - очистка при выходе из области
+// Send - можно передать между потоками
+// Sync - можно использовать из нескольких потоков
+
+================================================================================
+12. ЖИЗНИ (LIFETIMES)
+================================================================================
+
+// Жизни говорят компилятору как долго действительны ссылки
+
+// Аннотация жизни
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+
+// 'a читается как "жизнь а"
+// Обе входные ссылки и возврат должны жить одинаково долго
+
+// В структурах
+struct Excerpt<'a> {
+    part: &'a str,
+}
+
+// Elision rules (правила опускания)
+// Компилятор часто может вывести жизни автоматически:
+fn first_word(s: &str) -> &str {  // Жизни выводятся автоматически
+    let bytes = s.as_bytes();
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &s[0..i];
+        }
+    }
+    &s[..]
+}
+
+================================================================================
+13. ПАРАЛЛЕЛЬНЫЕ ВЫЧИСЛЕНИЯ
+================================================================================
+
+// Потоки (threads)
+use std::thread;
+use std::time::Duration;
+
+let handle = thread::spawn(|| {
+    for i in 1..10 {
+        println!("Поток: {}", i);
+        thread::sleep(Duration::from_millis(1));
+    }
+});
+
+handle.join().unwrap();  // Ждать завершения
+
+// Каналы (channels) для коммуникации
+use std::sync::mpsc;
+
+let (tx, rx) = mpsc::channel();
+thread::spawn(move || {
+    let val = String::from("привет");
+    tx.send(val).unwrap();
+});
+
+let received = rx.recv().unwrap();
+
+// Shared state (Arc + Mutex)
+use std::sync::{Arc, Mutex};
+
+let data = Arc::new(Mutex::new(0));
+let data_clone = Arc::clone(&data);
+
+thread::spawn(move || {
+    let mut num = data_clone.lock().unwrap();
+    *num += 1;
+});
+
+// Rayon (data parallelism - проще!)
+use rayon::prelude::*;
+
+let sum: i32 = (0..1000)
+    .into_par_iter()  // Параллельный итератор!
+    .map(|x| x * x)
+    .sum();
+
+// ⚡ Rayon часто быстрее чем ручные потоки!
+
+================================================================================
+14. ЧАСТЫЕ ОШИБКИ И ОПТИМИЗАЦИЯ
+================================================================================
+
+❌ Ошибка 1: Borrow checker ошибки
+let mut s = String::from("hello");
+let r1 = &s;
+let r2 = &mut s;  // ОШИБКА!
+
+✓ Решение: Разделить области видимости
+let mut s = String::from("hello");
+let r1 = &s;
+// r1 больше не используется
+let r2 = &mut s;  // OK!
+
+❌ Ошибка 2: Возврат ссылки на локальную переменную
+fn returns_dangling() -> &str {
+    let s = String::from("hello");
+    &s  // ОШИБКА! s будет удалён
+}
+
+✓ Решение: Вернуть владеющий тип
+fn returns_string() -> String {
+    String::from("hello")
+}
+
+❌ Ошибка 3: Неправильное использование unwrap
+let file = File::open("file.txt").unwrap();  // Паника если нет файла!
+
+✓ Решение: Обработать ошибку
+let file = match File::open("file.txt") {
+    Ok(f) => f,
+    Err(e) => {
+        eprintln!("Ошибка: {}", e);
+        return;
+    }
+};
+
+✓ Или использовать ?
+let file = File::open("file.txt")?;
+
+❌ Ошибка 4: Клонирование когда не нужно
+fn process(s: String) {  // Забирает владение
+    // ...
+}
+let s = String::from("hello");
+process(s.clone());  // Лишнее клонирование!
+
+✓ Решение: Использовать ссылки
+fn process(s: &str) {  // Заимствует
+    // ...
+}
+let s = String::from("hello");
+process(&s);  // Без клонирования!
+
+⚡ СОВЕТЫ ПО ОПТИМИЗАЦИИ:
+------------------------
+1. Используйте cargo build --release для продакшена
+2. Избегайте clone() когда можно использовать ссылки
+3. Используйте Vec с reserve() если знаете размер
+4. Используйте &str вместо String для параметров
+5. Используйте rayon для параллелизма данных
+6. Профилируйте с cargo flamegraph
+7. Используйте Box<T> для больших структур на стеке
+8. Избегайте паник в продакшене (обрабатывайте ошибки)
+
+================================================================================
+15. ПРИМЕРЫ БЫСТРЫХ РЕШЕНИЙ
+================================================================================
+
+Пример 1: Быстрая обработка файлов
+-----------------------------------
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+
+fn count_lines(filename: &str) -> std::io::Result<usize> {
+    let file = File::open(filename)?;
+    let reader = BufReader::new(file);
+    Ok(reader.lines().count())
+}
+
+Пример 2: Параллельная обработка с Rayon
+----------------------------------------
+use rayon::prelude::*;
+
+fn parallel_process(data: &[i32]) -> Vec<i32> {
+    data.par_iter()
+        .map(|&x| x * 2)
+        .collect()
+}
+
+// ⚡ Автоматически использует все ядра!
+
+Пример 3: Бенчмарк с Criterion
+------------------------------
+// Cargo.toml: [dev-dependencies] criterion = "0.5"
+
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+
+fn fibonacci(n: u64) -> u64 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _ => fibonacci(n-1) + fibonacci(n-2),
+    }
+}
+
+fn benchmark_fib(c: &mut Criterion) {
+    c.bench_function("fib 20", |b| b.iter(|| fibonacci(black_box(20))));
+}
+
+criterion_group!(benches, benchmark_fib);
+criterion_main!(benches);
+
+// Запуск: cargo bench
+
+Пример 4: CLI приложение с Clap
+-------------------------------
+use clap::Parser;
+
+#[derive(Parser)]
+#[command(name = "myapp")]
+struct Args {
+    #[arg(short, long)]
+    input: String,
+    
+    #[arg(short, long, default_value = "output.txt")]
+    output: String,
+}
+
+fn main() {
+    let args = Args::parse();
+    println!("Input: {}, Output: {}", args.input, args.output);
+}
+
+================================================================================
+                         КОНЕЦ SYNTAX_RUST
+================================================================================

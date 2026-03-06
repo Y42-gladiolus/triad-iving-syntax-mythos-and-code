@@ -1,0 +1,557 @@
+================================================================================
+              CARBON - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    C++ Successor + Modern Syntax + Interoperability
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Classes и structs
+6. Generics (вместо templates)
+7. Pattern matching
+8. Error handling
+9. C++ интероперабельность
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры systems programming стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (двойной слэш)
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Package declaration
+package MyProject api;
+
+// Import
+import Cpp.stdio;
+import Cpp.iostream;
+
+// Main функция
+fn Main() -> i32 {
+  Print("Hello, Carbon!");
+  return 0;
+}
+
+// No semicolons by default (опционально)
+let x = 5
+let y = 10
+
+// Semicolons разрешены
+let z = 15;
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ i8, i16, i32    │ 1, -10, 1000 (целые со знаком)                             │
+│ i64, i128       │ Большие целые                                              │
+│ u8, u16, u32    │ 0, 10, 1000 (беззнаковые)                                  │
+│ u64, u128       │ Большие беззнаковые                                        │
+│ f32, f64        │ 3.14, -0.5 (вещественные)                                  │
+│ bool            │ true, false                                                │
+│ char            │ 'a', 'б'                                                   │
+│ string          │ "hello", "привет"                                          │
+│ auto            │ Вывод типа                                                 │
+│ auto const      │ Const с выводом типа                                       │
+│ Ptr(T)          │ Указатель на T                                             │
+│ Ref(T)          │ Ссылка на T                                                │
+│ Array(T, N)     │ Массив из N элементов типа T                               │
+│ Slice(T)        │ Срез массива                                               │
+│ Optional(T)     │ Опциональное значение                                      │
+│ Result(T, E)    │ Результат с ошибкой                                        │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Type annotations
+let x: i32 = 5
+let y: f64 = 3.14
+
+// Type inference
+let z = 10  // Carbon выводит i32
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// let - immutable
+let x = 5
+// x = 6  // ОШИБКА! Immutable
+
+// var - mutable
+var y = 10
+y = 15  // OK
+
+// const - compile-time constant
+const PI: f64 = 3.14159
+
+// Type inference
+let a = 5       // i32
+let b = 3.14    // f64
+let c = true    // bool
+let d = "hello" // string
+
+// Shadowing (переопределение)
+let x = 5
+let x = 10  // OK в новом scope
+
+// Destructuring
+let (a, b) = (1, 2)
+let {x, y} = {x: 3, y: 4}
+
+// Tuple
+let point = (3, 4)
+let x = point.0
+let y = point.1
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+fn Add(a: i32, b: i32) -> i32 {
+  return a + b;
+}
+
+// Type inference для return
+fn Multiply(a: i32, b: i32) {
+  return a * b;  // выводит i32
+}
+
+// Default параметры
+fn Greet(name: string, greeting: string = "Hello") -> string {
+  return greeting + ", " + name;
+}
+
+// Variadic функции
+fn Sum(...nums: i32) -> i32 {
+  var total = 0;
+  for n in nums {
+    total += n;
+  }
+  return total;
+}
+
+// Lambda функции
+let square = fn(x: i32) -> i32 { return x * x; };
+
+// Function pointers
+let funcPtr: fn(i32, i32) -> i32 = &Add;
+
+// Recursive функции
+fn Factorial(n: i32) -> i32 {
+  if n <= 1 {
+    return 1;
+  }
+  return n * Factorial(n - 1);
+}
+
+// Tail recursion
+fn FactorialTail(n: i32, acc: i32 = 1) -> i32 {
+  if n <= 1 {
+    return acc;
+  }
+  return FactorialTail(n - 1, acc * n);
+}
+
+================================================================================
+5. CLASSES И STRUCTS
+================================================================================
+
+// Struct (value type)
+struct Point {
+  x: f64,
+  y: f64,
+}
+
+// Struct methods
+impl Point {
+  fn Distance(self) -> f64 {
+    return sqrt(self.x * self.x + self.y * self.y);
+  }
+}
+
+// Class (reference type)
+class Person {
+  let name: string;
+  var age: i32;
+  
+  // Constructor
+  fn Create(name: string, age: i32) -> Self {
+    return {name: name, age: age};
+  }
+  
+  // Method
+  fn Greet(self) {
+    Print("Hello, " + self.name);
+  }
+  
+  // Destructor
+  fn Destroy(self) {
+    // Cleanup
+  }
+}
+
+// Inheritance
+class Employee extends Person {
+  let salary: f64;
+  
+  fn Create(name: string, age: i32, salary: f64) -> Self {
+    return {base: Person.Create(name, age), salary: salary};
+  }
+}
+
+// Interface
+interface Drawable {
+  fn Draw(self);
+}
+
+// Implement interface
+impl Drawable for Circle {
+  fn Draw(self) {
+    // Implementation
+  }
+}
+
+================================================================================
+6. GENERICS (ВМЕСТО TEMPLATES)
+================================================================================
+
+// Generic функция
+fn Max[T: Comparable](a: T, b: T) -> T {
+  if a > b {
+    return a;
+  }
+  return b;
+}
+
+// Generic struct
+struct Container[T] {
+  let value: T,
+}
+
+// Generic impl
+impl[T] Container[T] {
+  fn Create(value: T) -> Self {
+    return {value: value};
+  }
+  
+  fn Get(self) -> T {
+    return self.value;
+  }
+}
+
+// Type constraints
+fn Process[T: Movable & Copyable](value: T) {
+  // T должен implementing Movable и Copyable
+}
+
+// Multiple type parameters
+fn Pair[A, B](a: A, b: B) -> (A, B) {
+  return (a, b);
+}
+
+================================================================================
+7. PATTERN MATCHING
+================================================================================
+
+// Match expression
+fn Describe(value: i32) -> string {
+  match (value) {
+    case 0 => return "zero",
+    case 1 => return "one",
+    case _ => return "other",
+  }
+}
+
+// Match с guards
+fn Classify(n: i32) -> string {
+  match (n) {
+    case n if n < 0 => return "negative",
+    case 0 => return "zero",
+    case n if n > 0 => return "positive",
+  }
+}
+
+// Match с tuples
+match (point) {
+  case (0, 0) => Print("origin"),
+  case (0, y) => Print("on y-axis"),
+  case (x, 0) => Print("on x-axis"),
+  case _ => Print("somewhere"),
+}
+
+// Match с structs
+match (person) {
+  case {name: "John", ..} => Print("John!"),
+  case {age: age, ..} if age < 18 => Print("minor"),
+  case _ => Print("unknown"),
+}
+
+// Match с Optional
+match (maybeValue) {
+  case Some(value) => Print(value),
+  case None => Print("no value"),
+}
+
+// Match с Result
+match (result) {
+  case Ok(value) => Print(value),
+  case Err(error) => Print(error),
+}
+
+================================================================================
+8. ERROR HANDLING
+================================================================================
+
+// Result type
+fn Divide(a: i32, b: i32) -> Result<i32, string> {
+  if b == 0 {
+    return Error("Division by zero");
+  }
+  return Ok(a / b);
+}
+
+// Handling Result
+match (Divide(10, 2)) {
+  case Ok(value) => Print(value),
+  case Err(error) => Print(error),
+}
+
+// Try operator (планируется)
+fn Process() -> Result<i32, string> {
+  let value = try Divide(10, 2);
+  return Ok(value * 2);
+}
+
+// Optional type
+let maybeValue: Optional<i32> = Some(5);
+let noValue: Optional<i32> = None;
+
+// Handling Optional
+match (maybeValue) {
+  case Some(value) => Print(value),
+  case None => Print("no value"),
+}
+
+// Assertions
+assert(x > 0, "x must be positive");
+
+// Compile-time assertions
+comptime_assert(sizeof<i32> == 4, "i32 must be 4 bytes");
+
+================================================================================
+9. C++ ИНТЕРОПЕРАБЕЛЬНОСТЬ
+================================================================================
+
+// Import C++ library
+import Cpp iostream;
+
+// Вызов C++ функций
+fn Main() -> i32 {
+  Cpp.std.cout << "Hello from Carbon!" << Cpp.std.endl;
+  return 0;
+}
+
+// Import C++ header
+import Cpp "mylib.h";
+
+// Вызов C++ функций из Carbon
+Cpp.MyFunction(5);
+
+// Carbon функции вызываемые из C++
+export fn CarbonFunction(x: i32) -> i32 {
+  return x * 2;
+}
+
+// C++ вызывает Carbon
+// int result = CarbonFunction(5);
+
+// C++ classes в Carbon
+let cppObject = Cpp.MyClass.Create();
+cppObject.Method();
+
+// Memory compatibility
+// Carbon и C++ могут делиться памятью
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable immutable
+let x = 5
+x = 10  // ОШИБКА! Immutable
+
+✓ Решение:
+var x = 5
+x = 10  // OK
+
+❌ Ошибка 2: Забыли return
+fn Add(a: i32, b: i32) -> i32 {
+  a + b  // ОШИБКА! Нет return
+}
+
+✓ Решение:
+fn Add(a: i32, b: i32) -> i32 {
+  return a + b;
+}
+
+❌ Ошибка 3: Неправильный generic
+fn Max[T](a: T, b: T) -> T {
+  return a > b ? a : b;  // ОШИБКА! T не Comparable
+}
+
+✓ Решение:
+fn Max[T: Comparable](a: T, b: T) -> T {
+  return a > b ? a : b;
+}
+
+❌ Ошибка 4: Match без default
+match (value) {
+  case 1 => Print("one"),
+  case 2 => Print("two"),
+  // Забыли default!
+}
+
+✓ Решение:
+match (value) {
+  case 1 => Print("one"),
+  case 2 => Print("two"),
+  case _ => Print("other"),
+}
+
+❌ Ошибка 5: C++ interop без import
+Cpp.cout << "Hello";  // ОШИБКА! Нет import
+
+✓ Решение:
+import Cpp iostream;
+Cpp.cout << "Hello";
+
+❌ Ошибка 6: Result без обработки
+let result = Divide(10, 0);
+Print(result.value);  // ОШИБКА!
+
+✓ Решение:
+match (result) {
+  case Ok(value) => Print(value),
+  case Err(error) => Print(error),
+}
+
+❌ Ошибка 7: Pointer без проверки
+let ptr: Ptr<i32> = GetPointer();
+Print(ptr.value);  // ОШИБКА! Может быть null
+
+✓ Решение:
+if ptr != null {
+  Print(ptr.value);
+}
+
+❌ Ошибка 8: Array out of bounds
+let arr: Array<i32, 5> = {1, 2, 3, 4, 5};
+Print(arr[10]);  // ОШИБКА!
+
+✓ Решение:
+if index < arr.size {
+  Print(arr[index]);
+}
+
+❌ Ошибка 9: Package declaration
+// Забыли package declaration!
+fn Main() -> i32 { return 0; }
+
+✓ Решение:
+package MyProject api;
+fn Main() -> i32 { return 0; }
+
+❌ Ошибка 10: Bazel build file
+// Забыли BUILD.bazel!
+
+✓ Решение:
+load("@rules_carbon//carbon:defs.bzl", "carbon_binary")
+carbon_binary(name = "main", srcs = ["main.carbon"])
+
+================================================================================
+11. ПРИМЕРЫ SYSTEMS PROGRAMMING СТИЛЯ
+================================================================================
+
+Пример 1: Data processing
+-------------------------
+fn ProcessData(data: Array<i32, 1000>) -> i32 {
+  var sum = 0;
+  for value in data {
+    if value > 0 {
+      sum += value * 2;
+    }
+  }
+  return sum;
+}
+
+Пример 2: C++ interop
+---------------------
+import Cpp iostream;
+import Cpp vector;
+
+fn Main() -> i32 {
+  var vec = Cpp.std.vector<i32>.Create();
+  vec.push_back(1);
+  vec.push_back(2);
+  Cpp.std.cout << vec.size() << Cpp.std.endl;
+  return 0;
+}
+
+Пример 3: Generic algorithm
+---------------------------
+fn Sort[T: Comparable](arr: Slice<T>) {
+  // Implementation
+  for i in 0..arr.size {
+    for j in i+1..arr.size {
+      if arr[i] > arr[j] {
+        Swap(&arr[i], &arr[j]);
+      }
+    }
+  }
+}
+
+Пример 4: Error handling
+------------------------
+fn ReadFile(path: string) -> Result<string, string> {
+  let file = try OpenFile(path);
+  let content = try ReadAll(file);
+  return Ok(content);
+}
+
+Пример 5: Memory management
+---------------------------
+fn Process() {
+  let ptr = new i32[100];
+  defer delete[] ptr;  // Автоматическое освобождение
+  
+  // Use ptr
+  ptr[0] = 5;
+}
+
+Пример 6: Pattern matching
+--------------------------
+fn Describe(value: Result<i32, string>) -> string {
+  match (value) {
+    case Ok(n) if n > 0 => return "positive",
+    case Ok(0) => return "zero",
+    case Ok(_) => return "negative",
+    case Err(e) => return "error: " + e,
+  }
+}
+
+================================================================================
+                         КОНЕЦ SYNTAX_CARBON
+================================================================================

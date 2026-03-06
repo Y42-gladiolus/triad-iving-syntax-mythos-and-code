@@ -1,0 +1,447 @@
+================================================================================
+                    CUE - КЛЮЧЕВЫЕ ОСОБЕННОСТИ ЯЗЫКА
+                         Configuration + Validation + Declarative + Google
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Архитектура и дизайн
+2. Система типов
+3. Unification algorithm
+4. Компиляция
+5. Error handling
+6. Configuration management
+7. Validation features
+8. Developer Experience
+9. Производительность
+10. Ограничения и будущее
+
+================================================================================
+1. АРХИТЕКТУРА И ДИЗАЙН
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CUE ARCHITECTURE                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  IMPLEMENTATION:                                                             │
+│  • Написан на Go (для интеграции с Go экосистемой)                          │
+│  • Компилируется в native code                                              │
+│  • CLI tool + library                                                       │
+│  • Кроссплатформенный (Linux, macOS, Windows)                               │
+│                                                                              │
+│  DESIGN PHILOSOPHY:                                                          │
+│  • Declarative (описываем что, не как)                                      │
+│  • Unification (объединение конфигураций)                                   │
+│  • Validation (валидация данных)                                            │
+│  • Type-safe configuration                                                  │
+│  • No Turing-complete (нет произвольных вычислений)                         │
+│  • Deterministic (детерминированное выполнение)                             │
+│                                                                              │
+│  KEY FEATURES:                                                               │
+│  • Configuration language                                                   │
+│  • Data validation                                                          │
+│  • Schema definition                                                        │
+│  • Template generation                                                      │
+│  • Multi-document merging                                                   │
+│  • Import/export (JSON, YAML, etc.)                                         │
+│  • Go integration                                                           │
+│                                                                              │
+│  STATUS (2024):                                                              │
+│  • Stable release (v0.x)                                                    │
+│  • Production ready                                                         │
+│  • Google backing                                                           │
+│  • CNCF project (Cloud Native)                                              │
+│  • Open source (Apache 2.0 license)                                         │
+│  • Created by Marcel van Lohuizen                                           │
+│                                                                              │
+│  COMPARISON:                                                                 │
+│  • vs JSON: Type-safe, validation, merging                                  │
+│  • vs YAML: Type-safe, validation, no ambiguity                             │
+│  • vs HCL (Terraform): More expressive, better validation                   │
+│  • vs Dhall: Simpler, less functional, more practical                       │
+│  • vs Jsonnet: Similar goals, CUE simpler                                   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+2. СИСТЕМА ТИПОВ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CUE TYPE SYSTEM                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  STATIC TYPING:                                                              │
+│  • Все типы известны на compile-time                                        │
+│  • Type inference                                                           │
+│  • Strong type safety                                                       │
+│  • No runtime type errors                                                   │
+│                                                                              │
+│  BASIC TYPES:                                                                │
+│  • bool (true, false)                                                       │
+│  • int (integers, arbitrary precision)                                      │
+│  • float (floating point)                                                   │
+│  • string (UTF-8 strings)                                                   │
+│  • bytes (binary data)                                                      │
+│  • null (null value)                                                        │
+│                                                                              │
+│  COMPOUND TYPES:                                                             │
+│  • Lists: [1, 2, 3]                                                         │
+│  • Objects: {key: value}                                                    │
+│  • Enums: "red" | "green" | "blue"                                          │
+│  • Structs: {name: string, age: int}                                        │
+│  • Maps: {[string]: int}                                                    │
+│                                                                              │
+│  CONSTRAINTS:                                                                │
+│  • >= 0 (minimum value)                                                     │
+│  • < 100 (maximum value)                                                    │
+│  • =~ "pattern" (regex matching)                                            │
+│  • != "value" (not equal)                                                   │
+│  • Optional fields: field?: type                                            │
+│                                                                              │
+│  DEFINITIONS:                                                                │
+│  • #Definition :: {field: type}                                             │
+│  • Reusable schemas                                                         │
+│  • Inheritance через embedding                                              │
+│  • Composition через unification                                            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+3. UNIFICATION ALGORITHM
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CUE UNIFICATION                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  WHAT IS UNIFICATION:                                                        │
+│  • Объединение нескольких конфигураций                                      │
+│  • Автоматическое слияние объектов                                          │
+│  • Конфликты обнаруживаются автоматически                                   │
+│  • Детерминированный результат                                              │
+│                                                                              │
+│  EXAMPLE:                                                                    │
+│  • File1: {name: "John", age: 25}                                           │
+│  • File2: {name: "John", city: "NYC"}                                       │
+│  • Result: {name: "John", age: 25, city: "NYC"}                             │
+│                                                                              │
+│  CONFLICT DETECTION:                                                         │
+│  • File1: {age: 25}                                                         │
+│  • File2: {age: 30}                                                         │
+│  • Error: conflicting values                                                │
+│                                                                              │
+│  CLOSURE:                                                                    │
+│  • Все поля вычисляются до конца                                            │
+│  • Нет partial evaluation                                                   │
+│  • Predictable output                                                       │
+│  • No hidden dependencies                                                   │
+│                                                                              │
+│  SUBTYPING:                                                                  │
+│  • More specific values override less specific                              │
+│  • Concrete values override constraints                                     │
+│  • Safe specialization                                                      │
+│  • Type-safe inheritance                                                    │
+│                                                                              │
+│  USE CASES:                                                                  │
+│  • Multi-environment configs (dev, staging, prod)                           │
+│  • Team collaboration (merge configs)                                       │
+│  • Template specialization                                                  │
+│  • Policy enforcement                                                       │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+4. КОМПИЛЯЦИЯ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CUE COMPILATION                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  INTERPRETED + COMPILED:                                                     │
+│  • cue eval (interpretation)                                                │
+│  • cue export (compile to JSON/YAML)                                        │
+│  • cue gen (generate Go code)                                               │
+│  • Fast evaluation                                                          │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Очень быстрая компиляция                                                 │
+│  • Incremental evaluation                                                   │
+│  • No long compile times                                                    │
+│  • Instant feedback                                                         │
+│                                                                              │
+│  OUTPUT FORMATS:                                                             │
+│  • JSON (cue export --out json)                                             │
+│  • YAML (cue export --out yaml)                                             │
+│  • CUE (cue export --out cue)                                               │
+│  • Go code (cue gen)                                                        │
+│                                                                              │
+│  VALIDATION:                                                                 │
+│  • cue vet (validation)                                                     │
+│  • Schema validation                                                        │
+│  • Constraint checking                                                      │
+│  • Error reporting                                                          │
+│                                                                              │
+│  BUILD SYSTEM:                                                               │
+│  • cue cmd (custom commands)                                                │
+│  • cue eval (evaluate configuration)                                        │
+│  • cue export (export to other formats)                                     │
+│  • cue fmt (formatting)                                                     │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+5. ERROR HANDLING
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CUE ERROR HANDLING                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  VALIDATION ERRORS:                                                          │
+│  • Type errors (wrong type)                                                 │
+│  • Constraint violations (value out of range)                               │
+│  • Missing required fields                                                  │
+│  • Conflicting values                                                       │
+│  • Undefined fields                                                         │
+│                                                                              │
+│  ERROR REPORTING:                                                            │
+│  • Clear error messages                                                     │
+│  • Line numbers                                                             │
+│  • Path to error location                                                   │
+│  • Suggestions for fixes                                                    │
+│                                                                              │
+│  NO EXCEPTIONS:                                                              │
+│  • Нет runtime exceptions                                                   │
+│  • All errors caught at compile-time                                        │
+│  • No unexpected runtime errors                                             │
+│  • Predictable behavior                                                     │
+│                                                                              │
+│  ERROR EXAMPLES:                                                             │
+│  • "incompatible types: int and string"                                     │
+│  • "missing required field: name"                                           │
+│  • "conflicting values: 25 and 30"                                          │
+│  • "value out of range: 150 >= 100"                                         │
+│                                                                              │
+│  STRICT MODE:                                                                │
+│  • cue vet --strict                                                         │
+│  • Disallow undefined fields                                                │
+│  • Enforce all constraints                                                  │
+│  • Production-ready validation                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+6. CONFIGURATION MANAGEMENT
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CUE CONFIGURATION MANAGEMENT                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  MULTI-FILE CONFIGURATION:                                                   │
+│  • Multiple .cue files                                                      │
+│  • Automatic merging                                                        │
+│  • Package system                                                           │
+│  • Import other files                                                       │
+│                                                                              │
+│  ENVIRONMENT SEPARATION:                                                     │
+│  • dev.cue, staging.cue, prod.cue                                           │
+│  • Common configuration in base.cue                                         │
+│  • Environment-specific overrides                                           │
+│  • Safe specialization                                                      │
+│                                                                              │
+│  TEMPLATE GENERATION:                                                        │
+│  • Generate Kubernetes manifests                                            │
+│  • Generate Terraform configs                                               │
+│  • Generate Dockerfiles                                                     │
+│  • Generate any YAML/JSON                                                   │
+│                                                                              │
+│  POLICY ENFORCEMENT:                                                         │
+│  • Enforce organizational policies                                          │
+│  • Validate before deployment                                               │
+│  • Prevent misconfigurations                                                │
+│  • Compliance checking                                                      │
+│                                                                              │
+│  VERSION CONTROL:                                                            │
+│  • .cue files in git                                                        │
+│  • Diff-friendly                                                            │
+│  • Merge-friendly                                                           │
+│  • Review-friendly                                                          │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+7. VALIDATION FEATURES
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CUE VALIDATION FEATURES                                   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  SCHEMA DEFINITION:                                                          │
+│  • #Person :: {name: string, age: >=0}                                      │
+│  • Reusable schemas                                                         │
+│  • Composable schemas                                                       │
+│  • Inheritance via embedding                                                │
+│                                                                              │
+│  CONSTRAINTS:                                                                │
+│  • Numeric: >= 0, < 100, != 0                                               │
+│  • String: =~ "pattern", != "value"                                         │
+│  • List: minItems: 1, maxItems: 10                                          │
+│  • Object: required fields, optional fields                                 │
+│                                                                              │
+│  CUSTOM VALIDATORS:                                                          │
+│  • cue cmd for custom validation                                            │
+│  • Go integration for complex logic                                         │
+│  • External validation scripts                                              │
+│  • CI/CD integration                                                        │
+│                                                                              │
+│  KUBERNETES VALIDATION:                                                      │
+│  • Validate Kubernetes manifests                                            │
+│  • Enforce cluster policies                                                 │
+│  • Prevent misconfigurations                                                │
+│  • GitOps integration                                                       │
+│                                                                              │
+│  CI/CD INTEGRATION:                                                          │
+│  • cue vet in CI pipeline                                                   │
+│  • Fail on validation errors                                                │
+│  • Pre-deployment validation                                                │
+│  • Automated compliance                                                     │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+8. DEVELOPER EXPERIENCE
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CUE DEVELOPER EXPERIENCE                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  SIMPLE SYNTAX:                                                              │
+│  • Проще чем JSON/YAML                                                      │
+│  • No commas (опционально)                                                  │
+│  • Clean readability                                                        │
+│  • Familiar syntax (like Go)                                                │
+│                                                                              │
+│  TOOLING:                                                                    │
+│  • cue (CLI tool)                                                           │
+│  • cue fmt (formatting)                                                     │
+│  • cue vet (validation)                                                     │
+│  • cue export (export to JSON/YAML)                                         │
+│  • cue gen (generate Go code)                                               │
+│  • cue cmd (custom commands)                                                │
+│                                                                              │
+│  DOCUMENTATION:                                                              │
+│  • Official documentation                                                   │
+│  • Clear и concise                                                          │
+│  • Examples included                                                        │
+│  • Active community docs                                                    │
+│                                                                              │
+│  LEARNING CURVE:                                                             │
+│  • Проще чем Dhall                                                          │
+│  • Проще чем Jsonnet                                                        │
+│  • Familiar для Go разработчиков                                            │
+│  • Quick to learn                                                           │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • Discord server                                                           │
+│  • GitHub repository                                                        │
+│  • Active community                                                         │
+│  • CNCF project                                                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+9. ПРОИЗВОДИТЕЛЬНОСТЬ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CUE PERFORMANCE                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  EVALUATION SPEED:                                                           │
+│  • Очень быстрая evaluation                                                 │
+│  • Incremental evaluation                                                   │
+│  • No long compile times                                                    │
+│  • Instant feedback                                                         │
+│                                                                              │
+│  VALIDATION SPEED:                                                           │
+│  • Fast validation                                                          │
+│  • Parallel validation                                                      │
+│  • Scalable to large configs                                                │
+│  • Suitable for CI/CD                                                       │
+│                                                                              │
+│  MEMORY USAGE:                                                               │
+│  • Low memory footprint                                                     │
+│  • Efficient data structures                                                │
+│  • Suitable for large configs                                               │
+│  • Predictable memory usage                                                 │
+│                                                                              │
+│  BINARY SIZE:                                                                │
+│  • Small CLI tool (~10 MB)                                                  │
+│  • No runtime dependencies                                                  │
+│  • Static binaries                                                          │
+│  • Easy distribution                                                        │
+│                                                                              │
+│  BENCHMARKS:                                                                 │
+│  • Small config (< 100 lines): < 10 ms                                      │
+│  • Medium config (< 1000 lines): < 100 ms                                   │
+│  • Large config (> 10000 lines): < 1 sec                                    │
+│  • Validation: Similar speeds                                               │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+10. ОГРАНИЧЕНИЯ И БУДУЩЕЕ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CUE LIMITATIONS & FUTURE                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CURRENT LIMITATIONS:                                                        │
+│  • Not Turing-complete (no arbitrary computation)                           │
+│  • Limited string manipulation                                              │
+│  • No loops (by design)                                                     │
+│  • Smaller ecosystem than YAML/JSON                                         │
+│  • Learning curve for teams                                                 │
+│                                                                              │
+│  FUTURE PLANS:                                                               │
+│  • More standard library functions                                          │
+│  • Better IDE support                                                       │
+│  • More integrations (Kubernetes, Terraform, etc.)                          │
+│  • Better error messages                                                    │
+│  • Performance improvements                                                 │
+│                                                                              │
+│  ROADMAP:                                                                    │
+│  • v1.0 stable release                                                      │
+│  • More integrations                                                        │
+│  • Better tooling                                                           │
+│  • Community growth                                                         │
+│  • Long-term: Industry standard                                             │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • Discord community                                                        │
+│  • GitHub repository                                                        │
+│  • CNCF project                                                             │
+│  • Google backing                                                           │
+│  • Active development                                                       │
+│                                                                              │
+│  WHEN TO USE:                                                                │
+│  • ✓ Configuration management                                               │
+│  • ✓ Data validation                                                        │
+│  • ✓ Kubernetes manifests                                                   │
+│  • ✓ Terraform configs                                                      │
+│  • ✓ CI/CD validation                                                       │
+│  • ✗ General-purpose programming                                            │
+│  • ✗ Arbitrary computation needed                                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                         КОНЕЦ FEATURES_CUE
+================================================================================

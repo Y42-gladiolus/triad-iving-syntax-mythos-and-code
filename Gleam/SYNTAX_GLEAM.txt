@@ -1,0 +1,597 @@
+================================================================================
+              GLEAM - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Статическая типизация + Функциональный стиль
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Pattern Matching
+5. Функции и модули
+6. Типы и аннотации
+7. Custom Types (ADT)
+8. Обработка ошибок (Result, Option)
+9. Конкурентность (Actors)
+10. JavaScript интероперабельность
+11. Типичные ошибки (РАСШИРЕНО!)
+12. Примеры функционального стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (как в JavaScript)
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Модуль (первая буква заглавная)
+module my_module
+
+// Импорт
+import gleam/io
+import gleam/list
+import gleam/result
+
+// Константы
+const pi = 3.14159
+const max_users = 100
+
+// Точка с запятой НЕ нужна
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Int             │ 1, -10, 1_000_000 (подчёркивания для читаемости)           │
+│ Float           │ 3.14, -0.5, 2.5e10                                         │
+│ Bool            │ True, False                                                │
+│ String          │ "hello", "привет"                                          │
+│ List(T)         │ [1, 2, 3], ["a", "b"]                                      │
+│ Tuple           │ #(1, "a", True)                                            │
+│ Dict(K, V)      │ dict.from_list([#("key", "value")])                        │
+│ Set(T)          │ set.from_list([1, 2, 3])                                   │
+│ Option(T)       │ Some(5), None                                              │
+│ Result(T, E)    │ Ok(5), Error("error")                                      │
+│ Custom Type     │ type User { User(name: String, age: Int) }                 │
+│ Opaque Type     │ opaque type Secret { Secret(String) }                      │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Проверка типа (в компиляторе)
+// Gleam статически типизирован - типы проверяются при компиляции!
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// let - неизменяемая переменная
+let x = 5
+// x = 6  // ОШИБКА! Нельзя изменить
+
+// let с аннотацией типа
+let y: Int = 10
+
+// let с pattern matching
+let #(a, b) = #(1, 2)  // a=1, b=2
+
+// _ для неиспользуемых
+let _ = some_function()  // Игнорировать результат
+
+// Блок let (локальная область)
+let result = {
+  let x = 5
+  let y = 10
+  x + y
+}
+
+// Константы модуля
+const max_size = 100
+
+================================================================================
+4. PATTERN MATCHING
+================================================================================
+
+// ⚡ Pattern matching — основа Gleam!
+
+// Базовый match (case)
+let description = case x {
+  0 -> "zero"
+  1 -> "one"
+  _ -> "other"  // wildcard
+}
+
+// Match с tuple
+case #(x, y) {
+  #(0, 0) -> "origin"
+  #(0, _) -> "on y-axis"
+  #(_, 0) -> "on x-axis"
+  _ -> "somewhere"
+}
+
+// Match с list
+case list {
+  [] -> "empty"
+  [first] -> "one element"
+  [first, ..rest] -> "multiple elements"
+}
+
+// Match с custom type
+type Message {
+  Text(String)
+  Image(String, Int)
+  Video(String, Int)
+}
+
+case message {
+  Text(content) -> content
+  Image(url, _) -> "Image: " <> url
+  Video(url, _) -> "Video: " <> url
+}
+
+// Match с guard (условие)
+case x {
+  n if n < 0 -> "negative"
+  0 -> "zero"
+  n if n > 0 -> "positive"
+}
+
+// Match в функциях (вместо if/else!)
+pub fn describe(n: Int) -> String {
+  case n {
+    0 -> "zero"
+    1 -> "one"
+    _ -> "other"
+  }
+}
+
+================================================================================
+5. ФУНКЦИИ И МОДУЛИ
+================================================================================
+
+// Базовая функция
+pub fn add(a: Int, b: Int) -> Int {
+  a + b
+}
+
+// Частная функция (не экспортируется)
+fn helper(x: Int) -> Int {
+  x * 2
+}
+
+// Однострочная функция
+pub fn square(x: Int) -> Int { x * x }
+
+// Функция с guard
+pub fn divide(a: Int, b: Int) -> Result(Int, String) {
+  case b {
+    0 -> Error("division by zero")
+    _ -> Ok(a / b)
+  }
+}
+
+// Анонимная функция
+let add = fn(a, b) { a + b }
+
+// Pipe оператор (|>)
+pub fn process(data: List(Int)) -> Int {
+  data
+  |> list.map(fn(x) { x * 2 })
+  |> list.filter(fn(x) { x > 5 })
+  |> list.sum
+}
+
+// Function capture (сокращение)
+pub fn double_all(numbers: List(Int)) -> List(Int) {
+  list.map(numbers, fn(x) { x * 2 })
+  // Или короче:
+  list.map(numbers, fn(x) { x * 2 })
+}
+
+// Рекурсия
+pub fn factorial(n: Int) -> Int {
+  case n {
+    0 -> 1
+    _ -> n * factorial(n - 1)
+  }
+}
+
+// Tail-рекурсия
+pub fn factorial_tail(n: Int) -> Int {
+  fn loop(acc, n) {
+    case n {
+      0 -> acc
+      _ -> loop(acc * n, n - 1)
+    }
+  }(1, n)
+}
+
+================================================================================
+6. ТИПЫ И АННОТАЦИИ
+================================================================================
+
+// Аннотация типа функции
+pub fn add(a: Int, b: Int) -> Int {
+  a + b
+}
+
+// Generic типы
+pub fn identity(x: a) -> a {
+  x
+}
+
+// Type alias
+pub type UserId = Int
+pub type Username = String
+
+// Opaque type (скрытая реализация)
+opaque type Secret {
+  Secret(String)
+}
+
+// Type с параметрами
+pub type Option(a) {
+  Some(a)
+  None
+}
+
+pub type Result(value, error) {
+  Ok(value)
+  Error(error)
+}
+
+// Import с alias
+import gleam/list as l
+import gleam/result as r
+
+================================================================================
+7. CUSTOM TYPES (ADT)
+================================================================================
+
+// Простой тип
+type Point {
+  Point(x: Int, y: Int)
+}
+
+// Тип с несколькими конструкторами
+type Shape {
+  Circle(radius: Float)
+  Rectangle(width: Float, height: Float)
+  Triangle(base: Float, height: Float)
+}
+
+// Использование
+pub fn area(shape: Shape) -> Float {
+  case shape {
+    Circle(radius) -> 3.14 *. radius *. radius
+    Rectangle(width, height) -> width *. height
+    Triangle(base, height) -> 0.5 *. base *. height
+  }
+}
+
+// Тип с generic
+type LinkedList(a) {
+  Empty
+  Node(a, LinkedList(a))
+}
+
+// Использование
+let list: LinkedList(Int) = Node(1, Node(2, Empty))
+
+// Record update syntax
+pub type User {
+  User(name: String, age: Int, email: String)
+}
+
+pub fn birthday(user: User) -> User {
+  User(..user, age: user.age + 1)
+}
+
+================================================================================
+8. ОБРАБОТКА ОШИБОК (RESULT, OPTION)
+================================================================================
+
+// Option (может быть ничего)
+pub fn find_user(id: Int) -> Option(User) {
+  case database_lookup(id) {
+    Ok(user) -> Some(user)
+    Error(_) -> None
+  }
+}
+
+// Result (успех или ошибка)
+pub fn divide(a: Float, b: Float) -> Result(Float, String) {
+  case b {
+    0.0 -> Error("division by zero")
+    _ -> Ok(a /. b)
+  }
+}
+
+// Комбинирование Result
+pub fn process() -> Result(Int, String) {
+  use a <- result.try(divide(10.0, 2.0))
+  use b <- result.try(divide(a, 2.0))
+  Ok(float.truncate(b))
+}
+
+// use = синтаксический сахар для result.bind
+// Эквивалентно:
+pub fn process_verbose() -> Result(Int, String) {
+  result.try(
+    divide(10.0, 2.0),
+    fn(a) {
+      result.try(
+        divide(a, 2.0),
+        fn(b) { Ok(float.truncate(b)) }
+      )
+    }
+  )
+}
+
+// Pattern matching с Result
+case result {
+  Ok(value) -> io.println("Success: " <> int.to_string(value))
+  Error(reason) -> io.println("Error: " <> reason)
+}
+
+// Option helpers
+option.unwrap(option, default)
+option.map(option, fn(x) { x * 2 })
+option.and_then(option, fn(x) { Some(x + 1) })
+
+================================================================================
+9. КОНКУРЕНТНОСТЬ (ACTORS)
+================================================================================
+
+// Gleam использует Erlang/Elixir процессы (BEAM)
+
+// Spawn процесса
+pub fn spawn_worker() -> Pid {
+  spawn(fn() {
+    loop(0)
+  })
+}
+
+fn loop(state: Int) {
+  receive {
+    Msg.Increment -> loop(state + 1)
+    Msg.Get(pid) -> {
+      pid ! state
+      loop(state)
+    }
+    Msg.Stop -> Nil
+  }
+}
+
+// Отправка сообщения
+send(pid, Msg.Increment)
+send(pid, Msg.Get(self()))
+
+// Получение ответа
+receive {
+  Msg.Response(value) -> value
+}
+
+// GenServer паттерн (через gleam_otp)
+import gleam/otp/actor
+
+pub type Counter {
+  Counter(Int)
+}
+
+pub fn start() {
+  actor.start(Counter(0))
+}
+
+pub fn increment(pid) {
+  actor.cast(pid, fn(state) {
+    Counter(state.0 + 1)
+  })
+}
+
+================================================================================
+10. JAVASCRIPT ИНТЕРОПЕРАБЕЛЬНОСТЬ
+================================================================================
+
+// Компиляция в JavaScript
+// gleam build --target javascript
+
+// Импорт JavaScript модулей
+@external(javascript, "./my_module.js", "my_function")
+pub fn js_function(String) -> Int
+
+// Экспорт в JavaScript
+@external(javascript, "./export.js", "export_function")
+pub fn gleam_function(Int) -> String
+
+// Использование в браузере
+// import { gleam_function } from "./build/dev/javascript/my_app/my_module.js"
+
+// DOM манипуляции (через lustre)
+import lustre
+import lustre/element
+
+pub fn main() {
+  lustre.start(
+    element.div([
+      element.h1([], [element.text("Hello, Gleam!")])
+    ])
+  )
+}
+
+================================================================================
+11. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Забыть pub для экспорта
+fn add(a, b) { a + b }  // Частная функция!
+
+✓ Решение:
+pub fn add(a, b) { a + b }  // Публичная
+
+❌ Ошибка 2: Неправильный тип
+let x: Int = "hello"  // ОШИБКА! String ≠ Int
+
+✓ Решение:
+let x: Int = 5
+
+❌ Ошибка 3: Pattern matching без wildcard
+case x {
+  1 -> "one"
+  2 -> "two"
+}  // ОШИБКА если x не 1 или 2!
+
+✓ Решение:
+case x {
+  1 -> "one"
+  2 -> "two"
+  _ -> "other"  // wildcard
+}
+
+❌ Ошибка 4: Изменение переменной
+let x = 5
+x = 6  // ОШИБКА! Нельзя изменить
+
+✓ Решение:
+let x = 5
+let x = 6  // Shadowing (новая переменная)
+
+❌ Ошибка 5: Неправильный pipe
+[1, 2, 3]
+|> list.map * 2  // ОШИБКА!
+
+✓ Решение:
+[1, 2, 3]
+|> list.map(fn(x) { x * 2 })
+
+❌ Ошибка 6: Result без обработки
+let result = divide(10, 0)
+result.0  // ОШИБКА! Нужно обработать Error
+
+✓ Решение:
+case divide(10, 0) {
+  Ok(value) -> value
+  Error(reason) -> panic  // или обработка
+}
+
+❌ Ошибка 7: Custom type без pattern matching
+type Message { Text(String) }
+let msg = Text("hello")
+msg.0  // ОШИБКА!
+
+✓ Решение:
+case msg {
+  Text(content) -> content
+}
+
+❌ Ошибка 8: Generic без указания типа
+pub fn identity(x: a) -> a { x }
+identity(5)  // OK
+identity("hello")  // Тоже OK (polymorphic)
+
+❌ Ошибка 9: Игнорирование warnings
+warning: unused variable
+let x = 5  // x не используется!
+
+✓ Решение:
+let _x = 5  // _ префикс для неиспользуемых
+
+❌ Ошибка 10: Неправильный import
+import gleam/io  // OK
+import "gleam/io"  // ОШИБКА!
+
+✓ Решение:
+import gleam/io
+
+================================================================================
+12. ПРИМЕРЫ ФУНКЦИОНАЛЬНОГО СТИЛЯ
+================================================================================
+
+Пример 1: Обработка данных (pipeline)
+-------------------------------------
+pub fn process_users(users: List(User)) -> List(String) {
+  users
+  |> list.filter(fn(u) { u.age >= 18 })
+  |> list.map(fn(u) { u.name })
+  |> list.sort(by: string.compare)
+}
+
+Пример 2: Result chaining
+-------------------------
+pub fn get_user_name(id: Int) -> Result(String, String) {
+  use user <- result.try(find_user(id))
+  use name <- result.try(validate_name(user.name))
+  Ok(name)
+}
+
+Пример 3: Custom type с pattern matching
+----------------------------------------
+type Expr {
+  Num(Float)
+  Add(Expr, Expr)
+  Sub(Expr, Expr)
+  Mul(Expr, Expr)
+  Div(Expr, Expr)
+}
+
+pub fn eval(expr: Expr) -> Result(Float, String) {
+  case expr {
+    Num(n) -> Ok(n)
+    Add(a, b) -> Ok(eval(a) +. eval(b))
+    Sub(a, b) -> Ok(eval(a) -. eval(b))
+    Mul(a, b) -> Ok(eval(a) *. eval(b))
+    Div(a, b) -> case eval(b) {
+      Ok(0.0) -> Error("division by zero")
+      Ok(v) -> Ok(eval(a) /. v)
+      Error(e) -> Error(e)
+    }
+  }
+}
+
+Пример 4: Actor для состояния
+-----------------------------
+pub type Cache {
+  Cache(Dict(String, String))
+}
+
+pub fn start_cache() {
+  spawn(fn() { loop(Cache(dict.new())) })
+}
+
+fn loop(cache: Cache) {
+  receive {
+    Msg.Get(key, pid) -> {
+      let value = dict.get(cache.0, key)
+      pid ! value
+      loop(cache)
+    }
+    Msg.Set(key, value) -> {
+      let new_cache = Cache(dict.insert(cache.0, key, value))
+      loop(new_cache)
+    }
+  }
+}
+
+Пример 5: Web server (wisp)
+---------------------------
+import wisp
+import wisp/request
+
+pub fn main() {
+  wisp.new()
+  |> wisp.get("/", fn(_req) {
+    wisp.text("Hello, Gleam!")
+  })
+  |> wisp.start(port: 3000)
+}
+
+================================================================================
+                         КОНЕЦ SYNTAX_GLEAM
+================================================================================

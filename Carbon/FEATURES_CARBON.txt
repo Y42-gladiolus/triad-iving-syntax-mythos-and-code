@@ -1,0 +1,422 @@
+================================================================================
+                    CARBON - КЛЮЧЕВЫЕ ОСОБЕННОСТИ ЯЗЫКА
+                         C++ Successor + Interoperability + Modern Syntax
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Архитектура и дизайн
+2. C++ интероперабельность
+3. Система типов
+4. Управление памятью
+5. Компиляция
+6. Error handling
+7. Memory safety
+8. Developer Experience
+9. Производительность
+10. Ограничения и будущее
+
+================================================================================
+1. АРХИТЕКТУРА И ДИЗАЙН
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CARBON ARCHITECTURE                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  IMPLEMENTATION:                                                             │
+│  • Написан на C++ (для C++ интероперабельности)                             │
+│  • Компилируется в LLVM IR                                                  │
+│  • Оптимизации уровня production                                            │
+│  • Инкрементальная компиляция                                               │
+│                                                                              │
+│  DESIGN PHILOSOPHY:                                                          │
+│  • C++ наследие (библиотеки без bindings)                                   │
+│  • Modern syntax (проще чем C++)                                            │
+│  • Fast compilation (быстрее чем C++)                                       │
+│  • Memory safety (цель, в разработке)                                       │
+│  • Performance (как C++)                                                    │
+│                                                                              │
+│  KEY FEATURES:                                                               │
+│  • No header files                                                          │
+│  • Generics (вместо templates)                                              │
+│  • Pattern matching                                                         │
+│  • Type inference                                                           │
+│  • Safe pointers by default                                                 │
+│  • No preprocessor                                                          │
+│                                                                              │
+│  STATUS (2024):                                                              │
+│  • Experimental (не production ready)                                       │
+│  • Активная разработка                                                      │
+│  • Нет stable release                                                       │
+│  • Google backing                                                           │
+│  • Open source (GitHub)                                                     │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+2. C++ ИНТЕРОПЕРАБЕЛЬНОСТЬ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CARBON C++ INTEROPERABILITY                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  BIDIRECTIONAL INTEROP:                                                      │
+│  • Вызов C++ кода из Carbon без overhead                                    │
+│  • Вызов Carbon кода из C++ без overhead                                    │
+│  • Нет bindings/wrappers нужно                                              │
+│  • Прямой импорт C++ библиотек                                              │
+│                                                                              │
+│  GRADUAL MIGRATION:                                                          │
+│  • Постепенная миграция с C++ на Carbon                                     │
+│  • Можно мигрировать файл за файлом                                         │
+│  • Нет need to rewrite everything at once                                   │
+│  • C++ и Carbon в одном проекте                                             │
+│                                                                              │
+│  LIBRARY COMPATIBILITY:                                                      │
+│  • STL библиотеки работают напрямую                                         │
+│  • Boost библиотеки работают напрямую                                       │
+│  • C++ ABI совместимость                                                    │
+│  • Нет FFI overhead                                                         │
+│                                                                              │
+│  EXAMPLES:                                                                   │
+│  • import C++ library "iostream"                                            │
+│  • std.cout << "Hello"                                                      │
+│  • Carbon code вызывается из C++ как обычный C++                            │
+│                                                                              │
+│  ADVANTAGES vs OTHER LANGUAGES:                                              │
+│  • Rust: C++ interop требует bindings                                       │
+│  • D: C++ interop есть но сложнее                                           │
+│  • Carbon: Лучшая C++ interop в индустрии                                   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+3. СИСТЕМА ТИПОВ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CARBON TYPE SYSTEM                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  STATIC TYPING:                                                              │
+│  • Все типы известны на compile-time                                        │
+│  • Type inference (вывод типов)                                             │
+│  • No type annotations needed most of the time                              │
+│  • Strong type safety                                                       │
+│                                                                              │
+│  GENERICS (вместо C++ templates):                                            │
+│  • Проще чем C++ templates                                                  │
+│  • Нет template metaprogramming complexity                                  │
+│  • Better error messages                                                    │
+│  • Faster compilation                                                       │
+│                                                                              │
+│  EXAMPLE:                                                                    │
+│  • fn Max[T: Comparable](a: T, b: T) -> T                                   │
+│  • vs C++: template<typename T> T Max(T a, T b)                             │
+│                                                                              │
+│  TYPE INFERENCE:                                                             │
+│  • var x = 5  # выводит Int                                                 │
+│  • let y: Int = 10  # explicit                                              │
+│  • Works across functions                                                   │
+│  • Fast inference                                                           │
+│                                                                              │
+│  NO UNDEFINED BEHAVIOR (цель):                                               │
+│  • Нет undefined behavior (цель дизайна)                                    │
+│  • Все поведение определено                                                 │
+│  • Безопаснее чем C++                                                       │
+│  • Predictable semantics                                                    │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+4. УПРАВЛЕНИЕ ПАМЯТЬЮ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CARBON MEMORY MANAGEMENT                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  SAFE POINTERS BY DEFAULT:                                                   │
+│  • Безопасные указатели по умолчанию                                        │
+│  • Нет dangling pointers (цель)                                             │
+│  • Нет double free (цель)                                                   │
+│  • Bounds checking                                                          │
+│                                                                              │
+│  NO GARBAGE COLLECTION:                                                      │
+│  • Нет GC пауз                                                              │
+│  • Predictable performance                                                  │
+│  • Как C++ (manual control)                                                 │
+│  • Real-time friendly                                                       │
+│                                                                              │
+│  OWNERSHIP MODEL (в разработке):                                             │
+│  • Ownership tracking (как Rust но проще)                                   │
+│  • Borrowing (заимствование)                                                │
+│  • Move semantics                                                           │
+│  • В разработке (не готово ещё)                                             │
+│                                                                              │
+│  MANUAL CONTROL:                                                             │
+│  • Можно использовать manual memory management                              │
+│  • malloc/free работают                                                     │
+│  • new/delete работают                                                      │
+│  • C++ compatibility                                                        │
+│                                                                              │
+│  MEMORY SAFETY GOALS:                                                        │
+│  • Memory safety без GC (цель)                                              │
+│  • Как Rust но проще                                                        │
+│  • В активной разработке                                                    │
+│  • Не готово для production (2024)                                          │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+5. КОМПИЛЯЦИЯ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CARBON COMPILATION                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  FAST COMPILATION:                                                           │
+│  • Быстрее чем C++ (цель)                                                   │
+│  • Нет preprocessor                                                         │
+│  • Нет header files                                                         │
+│  • Инкрементальная компиляция                                               │
+│  • Параллельная компиляция                                                  │
+│                                                                              │
+│  LLVM BACKEND:                                                               │
+│  • Компилируется в LLVM IR                                                  │
+│  • LLVM optimizations                                                       │
+│  • Multiple targets (Linux, macOS, Windows)                                 │
+│  • WebAssembly (планируется)                                                │
+│                                                                              │
+│  BUILD SPEED:                                                                │
+│  • Hello World: < 100 ms (цель)                                             │
+│  • Medium project: < 1 sec (цель)                                           │
+│  • Large project: < 10 sec (цель)                                           │
+│  • Much faster than C++                                                     │
+│                                                                              │
+│  NO PREPROCESSOR:                                                            │
+│  • Нет #define                                                              │
+│  • Нет #include                                                             │
+│  • Нет macros (как в C++)                                                   │
+│  • Cleaner code                                                             │
+│                                                                              │
+│  NO HEADER FILES:                                                            │
+│  • Один файл вместо .h + .cpp                                               │
+│  • Нет forward declarations                                                 │
+│  • Нет include guards                                                       │
+│  • Проще организация кода                                                   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+6. ERROR HANDLING
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CARBON ERROR HANDLING                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  RESULT TYPES (планируется):                                                 │
+│  • Result<T, E> для ошибок                                                  │
+│  • Нет exceptions (по умолчанию)                                            │
+│  • Все ошибки явные в типах                                                 │
+│  • Как Rust                                                                 │
+│                                                                              │
+│  EXCEPTIONS (опционально):                                                   │
+│  • Можно использовать exceptions                                            │
+│  • C++ exceptions совместимость                                             │
+│  • Опционально (можно отключить)                                            │
+│  • Для C++ interop                                                          │
+│                                                                              │
+│  ERROR MESSAGES:                                                             │
+│  • Отличные сообщения об ошибках                                            │
+│  • Цветной вывод                                                            │
+│  • Предложения по исправлению                                               │
+│  • Better than C++                                                          │
+│                                                                              │
+│  ASSERTIONS:                                                                 │
+│  • Assert для проверок                                                      │
+│  • Compile-time assertions                                                  │
+│  • Runtime assertions                                                       │
+│  • Debug builds                                                             │
+│                                                                              │
+│  EXAMPLE:                                                                    │
+│  • fn Divide(a: i32, b: i32) -> Result<i32, Error>                          │
+│  • if b == 0: return Error.DivisionByZero                                   │
+│  • return Ok(a / b)                                                         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+7. MEMORY SAFETY
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CARBON MEMORY SAFETY                                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  SAFETY GOALS:                                                               │
+│  • Memory safety без GC (цель)                                              │
+│  • Нет undefined behavior (цель)                                            │
+│  • Нет buffer overflows (цель)                                              │
+│  • Нет use-after-free (цель)                                                │
+│                                                                              │
+│  CURRENT STATUS (2024):                                                      │
+│  • В активной разработке                                                    │
+│  • Нет production ready memory safety                                       │
+│  • Basic safety features есть                                               │
+│  • Full safety в разработке                                                 │
+│                                                                              │
+│  SAFE BY DEFAULT:                                                            │
+│  • Безопасные указатели по умолчанию                                        │
+│  • Bounds checking                                                          │
+│  • Null pointer checks                                                      │
+│  • Type safety                                                              │
+│                                                                              │
+│  UNSAFE ESCAPE HATCHES:                                                      │
+│  • Можно использовать unsafe когда нужно                                    │
+│  • Явно помечается                                                          │
+│  • Для performance-critical кода                                            │
+│  • Для C++ interop                                                          │
+│                                                                              │
+│  COMPARISON:                                                                 │
+│  • C++: Нет safety by default                                               │
+│  • Rust: Safety by default (готово)                                         │
+│  • Carbon: Safety by default (в разработке)                                 │
+│  • D: Safety optional                                                       │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+8. DEVELOPER EXPERIENCE
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CARBON DEVELOPER EXPERIENCE                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  MODERN SYNTAX:                                                              │
+│  • Проще чем C++                                                            │
+│  • Меньше синтаксического шума                                              │
+│  • Нет semicolons (по умолчанию)                                            │
+│  • Clean readability                                                        │
+│                                                                              │
+│  TOOLING:                                                                    │
+│  • carbon (компилятор)                                                      │
+│  • carbon fmt (форматтер, планируется)                                      │
+│  • carbon test (тестирование, планируется)                                  │
+│  • Bazel integration                                                        │
+│                                                                              │
+│  DOCUMENTATION:                                                              │
+│  • Встроенная документация                                                  │
+│  • Doc comments                                                             │
+│  • Auto-generated docs                                                      │
+│  • Examples в документации                                                  │
+│                                                                              │
+│  LEARNING CURVE:                                                             │
+│  • Проще для C++ разработчиков                                              │
+│  • Familiar syntax                                                          │
+│  • Gradual learning                                                         │
+│  • C++ knowledge transfers                                                  │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • GitHub discussions                                                       │
+│  • Discord server                                                           │
+│  • Regular updates                                                          │
+│  • Open development                                                         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+9. ПРОИЗВОДИТЕЛЬНОСТЬ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CARBON PERFORMANCE                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  RUNTIME PERFORMANCE:                                                        │
+│  • Как C++ (цель)                                                           │
+│  • Zero-cost abstractions                                                   │
+│  • Нет runtime overhead                                                     │
+│  • Нет GC                                                                   │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Быстрее чем C++ (цель)                                                   │
+│  • Hello World: < 100 ms                                                    │
+│  • Medium project: < 1 sec                                                  │
+│  • Large project: < 10 sec                                                  │
+│                                                                              │
+│  BINARY SIZE:                                                                │
+│  • Как C++ binaries                                                         │
+│  • Нет runtime                                                              │
+│  • Optimized builds                                                         │
+│  • Comparable to C++                                                        │
+│                                                                              │
+│  MEMORY USAGE:                                                               │
+│  • Как C++                                                                  │
+│  • No GC overhead                                                           │
+│  • Predictable memory usage                                                 │
+│  • Manual control                                                           │
+│                                                                              │
+│  BENCHMARKS (цели):                                                          │
+│  • Numerical computations: 1x C++                                           │
+│  • String processing: 1x C++                                                │
+│  • Startup time: < 10 ms                                                    │
+│  • Compilation: 2-5x faster than C++                                        │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+10. ОГРАНИЧЕНИЯ И БУДУЩЕЕ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    CARBON LIMITATIONS & FUTURE                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CURRENT LIMITATIONS:                                                        │
+│  • Experimental (не production ready)                                       │
+│  • Нет stable release                                                       │
+│  • Breaking changes возможны                                                │
+│  • Маленькая экосистема                                                     │
+│  • Нет Windows support (ещё)                                                │
+│  • Memory safety не готова                                                  │
+│                                                                              │
+│  FUTURE PLANS:                                                               │
+│  • 2024-2025: First stable release                                          │
+│  • Memory safety implementation                                             │
+│  • More platforms (Windows, mobile)                                         │
+│  • More libraries                                                           │
+│  • Better IDE support                                                       │
+│  • Package manager                                                          │
+│                                                                              │
+│  ROADMAP:                                                                    │
+│  • Phase 1: C++ interop (готово)                                            │
+│  • Phase 2: Memory safety (в разработке)                                    │
+│  • Phase 3: Production ready (планируется)                                  │
+│  • Long-term: C++ replacement                                               │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • Активный GitHub                                                          │
+│  • Discord community                                                        │
+│  • Regular updates                                                          │
+│  • Google backing                                                           │
+│  • Open source                                                              │
+│                                                                              │
+│  WHEN TO USE:                                                                │
+│  • ✓ Early adopters                                                         │
+│  • ✓ C++ migration projects                                                 │
+│  • ✓ New projects (experimental)                                            │
+│  • ✓ Learning/experimentation                                               │
+│  • ✗ Production critical (ещё)                                              │
+│  • ✗ Need mature ecosystem                                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                         КОНЕЦ FEATURES_CARBON
+================================================================================

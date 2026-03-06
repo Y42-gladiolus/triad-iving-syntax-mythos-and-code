@@ -1,0 +1,630 @@
+================================================================================
+              LUA - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Встраиваемый язык + Корутины + Метатаблицы
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (first-class, closures)
+5. Таблицы (универсальная структура)
+6. Метатаблицы (метaprogramming)
+7. Корутины (cooperative multitasking)
+8. Модули и импорты
+9. Error Handling
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры встраиваемого стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+-- Комментарии (два дефиса)
+-- Однострочные
+
+--[[
+    Многострочные
+    комментарии
+]]
+
+-- Точка с запятой опциональна
+local x = 5
+local y = 10
+
+-- Блок кода (do/end)
+do
+    local temp = x + y
+    print(temp)
+end
+
+-- main выполнение (сверху вниз)
+print("Hello, Lua!")
+
+-- require для модулей
+local module = require("module_name")
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ nil             │ nil (отсутствие значения)                                  │
+│ boolean         │ true, false                                                │
+│ number          │ 1, -10, 3.14 (double по умолчанию)                         │
+│ integer         │ 1, -10 (целые, Lua 5.3+)                                   │
+│ string          │ "hello", 'привет', [[многострочная]]                       │
+│ function        │ function() end (first-class)                               │
+│ userdata        │ C данные (через FFI)                                       │
+│ thread          │ coroutine (корутины)                                       │
+│ table           │ {} (универсальная структура - массивы, словари, объекты)   │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+-- Проверка типа
+type(x)              -- "nil", "number", "string", "table", "function"
+type(x) == "table"
+
+-- Приведение типов
+tonumber("5")        -- 5
+tostring(5)          -- "5"
+
+-- Таблицы (единственная структура данных!)
+local arr = {1, 2, 3}           -- Массив
+local obj = {name = "John"}     -- Словарь/Объект
+local mixed = {1, name = "John"} -- Смешанный
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+-- Глобальные (по умолчанию)
+x = 5  -- Глобальная!
+
+-- Локальные (всегда используйте!)
+local y = 10
+
+-- Множественное присваивание
+local a, b, c = 1, 2, 3
+
+-- Swap
+x, y = y, x
+
+-- nil (удаление переменной)
+x = nil  -- Теперь x = nil
+
+-- Локальная область видимости
+do
+    local temp = 5  -- Только в этом блоке
+end
+-- temp не доступна здесь
+
+-- Константы (по соглашению)
+local MAX_SIZE = 100
+local PI = 3.14159
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+-- Базовая функция
+function add(a, b)
+    return a + b
+end
+
+-- Анонимная функция
+local multiply = function(a, b)
+    return a * b
+end
+
+-- Возврат нескольких значений
+function minMax(a, b)
+    return math.min(a, b), math.max(a, b)
+end
+
+local min, max = minMax(5, 10)
+
+-- Varargs (...)
+function sum(...)
+    local total = 0
+    for _, v in ipairs({...}) do
+        total = total + v
+    end
+    return total
+end
+
+sum(1, 2, 3, 4, 5)
+
+-- Замыкания (closures)
+function makeAdder(n)
+    return function(x)
+        return x + n
+    end
+end
+
+local add5 = makeAdder(5)
+print(add5(10))  -- 15
+
+-- Функции как таблицные поля
+local obj = {
+    value = 5,
+    add = function(self, x)
+        return self.value + x
+    end
+}
+
+-- Методы (синтаксический сахар)
+function obj:add(x)
+    return self.value + x
+end
+
+-- Или:
+obj.add = function(self, x)
+    return self.value + x
+end
+
+================================================================================
+5. ТАБЛИЦЫ (УНИВЕРСАЛЬНАЯ СТРУКТУРА)
+================================================================================
+
+-- Создание
+local t = {}
+
+-- Как массив (1-indexed!)
+local arr = {1, 2, 3, 4, 5}
+print(arr[1])  -- 1 (НЕ 0!)
+
+-- Как словарь
+local obj = {
+    name = "John",
+    age = 25
+}
+print(obj.name)  -- "John"
+print(obj["age"])  -- 25
+
+-- Вложенные таблицы
+local matrix = {
+    {1, 2, 3},
+    {4, 5, 6},
+    {7, 8, 9}
+}
+
+-- Итерация
+for i, v in ipairs(arr) do  -- Для массивов
+    print(i, v)
+end
+
+for k, v in pairs(obj) do  -- Для словарей
+    print(k, v)
+end
+
+-- Табличные функции
+table.insert(arr, 6)        -- Добавить в конец
+table.insert(arr, 1, 0)     -- Добавить в начало
+table.remove(arr)           -- Удалить последний
+table.remove(arr, 1)        -- Удалить первый
+table.sort(arr)             -- Сортировка
+table.concat(arr, ", ")     -- Объединить в строку
+
+-- Table как класс
+local Person = {}
+Person.__index = Person
+
+function Person:new(name, age)
+    local self = setmetatable({}, Person)
+    self.name = name
+    self.age = age
+    return self
+end
+
+function Person:greet()
+    return "Hello, I'm " .. self.name
+end
+
+local p = Person:new("John", 25)
+print(p:greet())
+
+================================================================================
+6. МЕТАТАБЛИЦЫ (METAPROGRAMMING)
+================================================================================
+
+-- ⚡ Метатаблицы = Lua metaprogramming!
+
+-- Базовая метатаблица
+local mt = {
+    __add = function(a, b)
+        return a.value + b.value
+    end
+}
+
+local t1 = {value = 5}
+local t2 = {value = 10}
+
+setmetatable(t1, mt)
+setmetatable(t2, mt)
+
+-- Теперь работает:
+-- local result = t1 + t2  -- 15
+
+-- __index (доступ к несуществующим полям)
+local mt = {
+    __index = function(table, key)
+        return "Default value for " .. key
+    end
+}
+
+local t = setmetatable({}, mt)
+print(t.name)  -- "Default value for name"
+
+-- __newindex (присваивание)
+local mt = {
+    __newindex = function(table, key, value)
+        print("Setting " .. key .. " = " .. value)
+        rawset(table, key, value)
+    end
+}
+
+-- __tostring (строковое представление)
+local mt = {
+    __tostring = function(t)
+        return "Point(" .. t.x .. ", " .. t.y .. ")"
+    end
+}
+
+-- __call (вызов как функция)
+local mt = {
+    __call = function(t, ...)
+        print("Called with:", ...)
+    end
+}
+
+-- __len (оператор длины)
+local mt = {
+    __len = function(t)
+        return t.size
+    end
+}
+
+-- __eq (сравнение)
+local mt = {
+    __eq = function(a, b)
+        return a.value == b.value
+    end
+}
+
+================================================================================
+7. КОРУТИНЫ (COOPERATIVE MULTITASKING)
+================================================================================
+
+-- Создание корутины
+local co = coroutine.create(function()
+    for i = 1, 5 do
+        print("Coroutine:", i)
+        coroutine.yield(i)
+    end
+end)
+
+-- Запуск
+coroutine.resume(co)  -- 1
+coroutine.resume(co)  -- 2
+
+-- Статус
+print(coroutine.status(co))  -- "suspended"
+
+-- Корутина с передачей данных
+local co = coroutine.create(function(initial)
+    local value = initial
+    while true do
+        value = coroutine.yield(value * 2)
+    end
+end)
+
+coroutine.resume(co, 5)  -- 10
+coroutine.resume(co, 3)  -- 6
+
+-- Producer-Consumer pattern
+function producer()
+    return coroutine.create(function()
+        while true do
+            local item = get_next_item()
+            coroutine.yield(item)
+        end
+    end)
+end
+
+function consumer(prod)
+    while true do
+        local ok, item = coroutine.resume(prod)
+        if not ok then break end
+        process(item)
+    end
+end
+
+================================================================================
+8. МОДУЛИ И ИМПОРТЫ
+================================================================================
+
+-- Создание модуля (module.lua)
+local M = {}
+
+function M.add(a, b)
+    return a + b
+end
+
+function M.subtract(a, b)
+    return a - b
+end
+
+return M
+
+-- Использование модуля
+local module = require("module")
+print(module.add(5, 3))
+
+-- require кэширует результаты
+local m1 = require("module")
+local m2 = require("module")
+print(m1 == m2)  -- true
+
+-- Пути поиска
+print(package.path)   -- Для Lua файлов
+print(package.cpath)  -- Для C библиотек
+
+-- Добавление путей
+package.path = package.path .. ";/my/path/?.lua"
+
+-- Environment (Lua 5.1)
+-- setfenv/getfenv (удалено в 5.2+)
+
+-- Module pattern (современный)
+local _M = {}
+local _private = "secret"
+
+function _M.public()
+    return _private
+end
+
+return _M
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+-- pcall (protected call)
+local ok, result = pcall(function()
+    error("Something went wrong")
+end)
+
+if not ok then
+    print("Error:", result)
+end
+
+-- xpcall (с обработчиком)
+local function handler(err)
+    print("Error handler:", err)
+    return "Handled"
+end
+
+local ok, result = xpcall(function()
+    error("Error")
+end, handler)
+
+-- assert
+local file = assert(io.open("file.txt", "r"))
+
+-- error
+error("Custom error message")
+
+-- try-catch pattern (через pcall)
+local function try(func)
+    local ok, result = pcall(func)
+    if not ok then
+        -- handle error
+    end
+    return result
+end
+
+-- Level (где произошла ошибка)
+error("Error", 2)  -- Уровень стека
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Глобальные переменные
+x = 5  -- Глобальная!
+
+✓ Решение:
+local x = 5  -- Всегда local!
+
+❌ Ошибка 2: Индексация с 0
+local arr = {1, 2, 3}
+print(arr[0])  -- nil!
+
+✓ Решение:
+print(arr[1])  -- 1 (Lua 1-indexed!)
+
+❌ Ошибка 3: table.concat с числами
+local arr = {1, 2, 3}
+print(table.concat(arr))  -- "123"
+
+✓ Решение:
+print(table.concat(arr, ", "))  -- "1, 2, 3"
+
+❌ Ошибка 4: Сравнение таблиц
+local t1 = {1, 2, 3}
+local t2 = {1, 2, 3}
+print(t1 == t2)  -- false (сравнение по ссылке!)
+
+✓ Решение:
+-- Сравнивать содержимое вручную
+local function table_eq(t1, t2)
+    for k, v in pairs(t1) do
+        if t2[k] ~= v then return false end
+    end
+    return true
+end
+
+❌ Ошибка 5: Мутация во время итерации
+for k, v in pairs(t) do
+    if condition then
+        t[k] = nil  -- ОШИБКА!
+    end
+end
+
+✓ Решение:
+local to_remove = {}
+for k, v in pairs(t) do
+    if condition then
+        table.insert(to_remove, k)
+    end
+end
+for _, k in ipairs(to_remove) do
+    t[k] = nil
+end
+
+❌ Ошибка 6: Забыли return в модуле
+-- module.lua
+local M = {}
+function M.add() end
+-- Забыли return M!
+
+✓ Решение:
+return M
+
+❌ Ошибка 7: Неправильное использование self
+function obj:method()
+    print(self.value)  -- self не определён если вызвано как obj.method()
+end
+
+✓ Решение:
+obj:method()  -- Использовать : вместо .
+
+❌ Ошибка 8: Утечка памяти (корутины)
+local co = coroutine.create(function()
+    while true do
+        -- Бесконечный цикл
+    end
+end)
+
+✓ Решение:
+-- Всегда завершать корутины
+coroutine.resume(co)
+-- Проверять статус
+
+❌ Ошибка 9: Метатаблица GC
+local mt = {
+    __gc = function(t)
+        -- Очистка
+    end
+}
+-- __gc работает только для userdata в Lua 5.2+
+
+❌ Ошибка 10: Игнорирование return от pcall
+pcall(function()
+    -- ...
+end)
+-- Игнорируется ok/result!
+
+✓ Решение:
+local ok, result = pcall(function()
+    -- ...
+end)
+if not ok then
+    print("Error:", result)
+end
+
+================================================================================
+11. ПРИМЕРЫ ВСТРАИВАЕМОГО СТИЛЯ
+================================================================================
+
+Пример 1: Конфигурационный файл
+--------------------------------
+-- config.lua
+return {
+    host = "localhost",
+    port = 8080,
+    debug = true,
+    paths = {
+        "/api",
+        "/web"
+    }
+}
+
+-- Использование:
+local config = require("config")
+print(config.host)
+
+Пример 2: DSL для игр
+---------------------
+-- game.lua
+local game = {}
+
+function game.entity(props)
+    -- Создание сущности
+end
+
+function game.component(name, props)
+    -- Добавление компонента
+end
+
+return game
+
+-- Использование:
+local game = require("game")
+game.entity {
+    name = "player",
+    components = {
+        game.component("sprite", {src = "player.png"}),
+        game.component("physics", {mass = 10})
+    }
+}
+
+Пример 3: Hot reload конфигурации
+---------------------------------
+local function reload_config()
+    package.loaded["config"] = nil
+    return require("config")
+end
+
+-- Перезагрузить без перезапуска!
+local config = reload_config()
+
+Пример 4: Coroutine для загрузки
+--------------------------------
+local function load_async(resource)
+    return coroutine.create(function()
+        local data = load_resource(resource)
+        coroutine.yield(data)
+    end)
+end
+
+local loader = load_async("texture.png")
+coroutine.resume(loader)
+
+Пример 5: Metatable для векторов
+--------------------------------
+local Vector = {}
+Vector.__index = Vector
+
+function Vector.new(x, y)
+    return setmetatable({x = x, y = y}, Vector)
+end
+
+function Vector.__add(a, b)
+    return Vector.new(a.x + b.x, a.y + b.y)
+end
+
+function Vector.__tostring(v)
+    return "(" .. v.x .. ", " .. v.y .. ")"
+end
+
+local v1 = Vector.new(1, 2)
+local v2 = Vector.new(3, 4)
+print(v1 + v2)  -- (4, 6)
+
+================================================================================
+                         КОНЕЦ SYNTAX_LUA
+================================================================================

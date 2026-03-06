@@ -1,0 +1,536 @@
+================================================================================
+              KITTEN - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Modern Stack-based + Type Inference + Functional
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (стек + типы)
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (stack-based + typed)
+5. Control Flow
+6. Stack операции
+7. Типы и type inference
+8. Modules и импорты
+9. Error Handling
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры modern stack-based стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (СТЕК + ТИПЫ)
+================================================================================
+
+\ Комментарии (обратный слэш)
+\ Однострочные
+
+# Многострочные комментарии #
+
+\ Постфиксная нотация (как Forth)
+2 2 +    \ 4
+
+\ Но со статической типизацией!
+\ Компилятор выводит типы автоматически
+
+\ Анонимные функции
+(x: Int) -> x + 1
+
+\ Именованные функции
+add (a: Int, b: Int) -> Int is
+  a b +
+
+\ main функция
+main is
+  2 2 +
+  print
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Int             │ 1, -10, 1000000 (целые числа)                              │
+│ Float           │ 3.14, -0.5 (вещественные)                                  │
+│ Bool            │ true, false                                                │
+│ Char            │ 'a', 'б'                                                   │
+│ String          │ "hello", "привет"                                          │
+│ List<T>         │ [1, 2, 3] : List<Int>                                      │
+│ Map<K, V>       │ {"a": 1} : Map<String, Int>                                │
+│ Option<T>       │ Some(5), None                                              │
+│ Result<T, E>    │ Ok(5), Error("msg")                                        │
+│ Tuple           │ (1, "a", true)                                             │
+│ Function        │ (Int, Int) -> Int                                          │
+│ Unit            │ () (пустой тип)                                            │
+│ Any             │ Любой тип (редко используется)                             │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+\ Проверка типа (compile-time)
+\ Kitten имеет статическую типизацию!
+
+\ Type annotations (опционально, компилятор выводит)
+let x: Int = 5
+let y = 5  \ Type inference: Int
+
+\ Type checking
+5 : Int      \ 5 имеет тип Int
+"hello" : String
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+\ let для переменных
+let x = 5
+let y = 10
+
+\ let с аннотацией типа
+let z: Int = 15
+
+\ let в scope
+let result =
+  let a = 5
+  let b = 10
+  a b +
+
+\ Константы
+const PI = 3.14159
+const MAX_SIZE = 100
+
+\ Destructuring
+let (x, y) = (1, 2)
+let [head, ...tail] = [1, 2, 3]
+
+\ Pattern matching в let
+let Some(x) = find_user(1)
+
+\ Mutable переменные (редко)
+var count = 0
+count := 1  \ Изменить
+
+\ Shadowing (переопределение)
+let x = 5
+let x = 10  \ OK в новом scope
+
+================================================================================
+4. ФУНКЦИИ (STACK-BASED + TYPED)
+================================================================================
+
+\ Базовая функция
+add (a: Int, b: Int) -> Int is
+  a b +
+
+\ Без аннотаций (type inference)
+add (a, b) is
+  a b +
+
+\ Анонимная функция
+(x: Int) -> x + 1
+
+\ Частичное применение (curry)
+add5 is add(5, _)
+add5(10)  \ 15
+
+\ Функции высшего порядка
+map (f: (a -> b), list: List<a>) -> List<b> is
+  list f apply
+
+\ Рекурсия
+factorial (n: Int) -> Int is
+  n 1 <= if
+    1
+  else
+    n n 1 - factorial *
+
+\ Tail-рекурсия (оптимизирована)
+factorial_tail (n: Int, acc: Int = 1) -> Int is
+  n 1 <= if
+    acc
+  else
+    n 1 - acc n * factorial_tail
+
+\ Variadic функции
+sum (...nums: Int) -> Int is
+  nums 0 fold(+)
+
+\ Generic функции
+identity (a: T) -> T is
+  a
+
+\ Функции как значения
+let f = add
+f(5, 3)  \ 8
+
+================================================================================
+5. CONTROL FLOW
+================================================================================
+
+\ If/else
+5 3 > if
+  ." Greater"
+else
+  ." Less or equal"
+
+\ If с возвращаемым значением
+let max = a b > if a else b
+
+\ Match (pattern matching)
+match x
+  0 -> ." zero"
+  1 -> ." one"
+  _ -> ." other"
+
+\ Match с типами
+match value
+  (n: Int) -> ." Integer: " n print
+  (s: String) -> ." String: " s print
+  _ -> ." Unknown"
+
+\ Циклы (редко, функциональный стиль предпочтителен)
+10 times is
+  i print
+
+\ For each
+[1, 2, 3] each is
+  x print
+
+\ While (через рекурсию)
+while_loop (n: Int) is
+  n 0 > if
+    n print
+    n 1 - while_loop
+
+\ Early return
+check (x: Int) -> Bool is
+  x 0 < if
+    false return
+  x 100 > if
+    false return
+  true
+
+================================================================================
+6. STACK ОПЕРАЦИИ
+================================================================================
+
+\ Базовые операции (как Forth)
+dup      \ ( a -- a a ) дублировать
+drop     \ ( a -- ) удалить
+swap     \ ( a b -- b a ) поменять
+over     \ ( a b -- a b a ) скопировать второй
+rot      \ ( a b c -- b c a ) ротация
+
+\ Но с типами!
+dup (a: T) -> (T, T)
+drop (a: T) -> ()
+swap (a: T, b: U) -> (U, T)
+
+\ Арифметика
++        \ (Int, Int) -> Int
+-        \ (Int, Int) -> Int
+*        \ (Int, Int) -> Int
+/        \ (Int, Int) -> Int
+mod      \ (Int, Int) -> Int
+
+\ Сравнение
+=        \ (T, T) -> Bool
+!=       \ (T, T) -> Bool
+<        \ (Int, Int) -> Bool
+>        \ (Int, Int) -> Bool
+<=       \ (Int, Int) -> Bool
+>=       \ (Int, Int) -> Bool
+
+\ Логика
+and      \ (Bool, Bool) -> Bool
+or       \ (Bool, Bool) -> Bool
+not      \ (Bool) -> Bool
+
+\ Пример сложной stack манипуляции
+quadratic (a: Float, b: Float, c: Float) -> (Float, Float) is
+  \ Вычисляет корни квадратного уравнения
+  b b * 4 a c * * - sqrt  \ sqrt(discriminant)
+  b neg swap              \ -b, sqrt
+  dup                     \ -b, sqrt, sqrt
+  rot +                   \ sqrt, -b+sqrt
+  a 2 * /                 \ root1
+  swap                    \ root1, sqrt
+  rot -                   \ root1, -b-sqrt
+  a 2 * /                 \ root1, root2
+
+================================================================================
+7. ТИПЫ И TYPE INFERENCE
+================================================================================
+
+\ Type inference (компилятор выводит)
+let x = 5           \ x: Int
+let y = "hello"     \ y: String
+let f = (x) -> x + 1 \ f: (Int) -> Int
+
+\ Type annotations (когда нужно уточнить)
+let x: Float = 5.0
+let f: (Int, Int) -> Int is add
+
+\ Generic типы
+identity (a: T) -> T is
+  a
+
+\ Type constraints
+add (a: Num, b: Num) -> Num is
+  a b +
+
+\ Type aliases
+type Point = (Int, Int)
+type Result<T, E> = Ok(T) | Error(E)
+
+\ Newtype (создание нового типа)
+type UserId = Int
+type Username = String
+
+\ Type classes (traits)
+trait Eq (T) is
+  eq (T, T) -> Bool
+
+instance Eq(Int) is
+  eq (a, b) -> a = b
+
+\ Type inference с ограничениями
+sort (list: List<T>) -> List<T> where T: Ord is
+  list quicksort
+
+================================================================================
+8. MODULES И ИМПОРТЫ
+================================================================================
+
+\ Создание модуля
+\ lib/utils.ktn
+export add, subtract
+
+add (a: Int, b: Int) -> Int is
+  a b +
+
+subtract (a: Int, b: Int) -> Int is
+  a b -
+
+\ Импорт модуля
+use lib/utils
+
+\ Импорт с alias
+use lib/utils as u
+u.add(5, 3)
+
+\ Импорт конкретных функций
+from lib/utils import add
+
+\ Стандартные модули
+import List
+import Map
+import String
+import IO
+
+\ Module types
+module Utils is
+  export add
+  add (a: Int, b: Int) -> Int is
+    a b +
+
+\ Private функции (не экспортируются)
+private_helper (x: Int) -> Int is
+  x * 2
+
+\ Public функции (экспортируются)
+export public_func
+public_func (x: Int) -> Int is
+  private_helper(x)
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+\ Option тип
+find_user (id: Int) -> Option<User> is
+  database.lookup(id)
+
+\ Обработка Option
+match find_user(1)
+  Some(user) -> user.name print
+  None -> ." User not found" print
+
+\ Result тип
+divide (a: Int, b: Int) -> Result<Int, String> is
+  b 0 = if
+    Error("Division by zero")
+  else
+    Ok(a b /)
+
+\ Обработка Result
+match divide(10, 2)
+  Ok(result) -> ." Result: " result print
+  Error(msg) -> ." Error: " msg print
+
+\ Try/catch (для исключений)
+try
+  risky_operation
+catch (e: Exception)
+  ." Error: " e.message print
+
+\ Assert
+assert (x > 0, "x must be positive")
+
+\ Panic (для критических ошибок)
+panic("Something went wrong")
+
+\ Error propagation
+process_file (path: String) -> Result<String, String> is
+  let file = try File.open(path)
+  let content = try file.read()
+  Ok(content)
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Stack imbalance
+add (a: Int) -> Int is
+  a 1 + drop  \ Забыли результат!
+
+✓ Решение:
+add (a: Int) -> Int is
+  a 1 +  \ Оставляем результат
+
+❌ Ошибка 2: Type mismatch
+add (a: Int, b: String) -> Int is
+  a b +  \ ОШИБКА! Нельзя сложить Int и String
+
+✓ Решение:
+add (a: Int, b: Int) -> Int is
+  a b +
+
+❌ Ошибка 3: Неполный pattern matching
+match x
+  0 -> ." zero"
+  1 -> ." one"
+  \ Забыли default case!
+
+✓ Решение:
+match x
+  0 -> ." zero"
+  1 -> ." one"
+  _ -> ." other"
+
+❌ Ошибка 4: Option без обработки
+let user = find_user(1)
+user.name  \ ОШИБКА! user может быть None
+
+✓ Решение:
+match find_user(1)
+  Some(user) -> user.name print
+  None -> ." Not found" print
+
+❌ Ошибка 5: Рекурсия без базового случая
+factorial (n: Int) -> Int is
+  n factorial(n - 1) *  \ Бесконечная рекурсия!
+
+✓ Решение:
+factorial (n: Int) -> Int is
+  n 1 <= if
+    1
+  else
+    n n 1 - factorial *
+
+❌ Ошибка 6: Неправильный порядок операндов
+subtract (a: Int, b: Int) -> Int is
+  -  \ ОШИБКА! Kitten вычитает TOS из второго
+
+✓ Решение:
+subtract (a: Int, b: Int) -> Int is
+  a b -  \ Явный порядок
+
+❌ Ошибка 7: Забыли type annotation когда нужно
+let x = []  \ Неясно: List<Int>? List<String>?
+
+✓ Решение:
+let x: List<Int> = []
+
+❌ Ошибка 8: Mutable state без необходимости
+var count = 0
+count := count + 1  \ Избегайте mutable!
+
+✓ Решение:
+let count = 0
+let new_count = count + 1  \ Immutable стиль
+
+❌ Ошибка 9: Игнорирование Result
+divide(10, 0)  \ Игнорируется ошибка!
+
+✓ Решение:
+match divide(10, 0)
+  Ok(result) -> result use
+  Error(msg) -> handle_error(msg)
+
+❌ Ошибка 10: Неправильное использование generic
+identity (a: T) -> U is  \ ОШИБКА! T и U не связаны
+  a
+
+✓ Решение:
+identity (a: T) -> T is
+  a
+
+================================================================================
+11. ПРИМЕРЫ MODERN STACK-BASED СТИЛЯ
+================================================================================
+
+Пример 1: Функциональный конвейер
+----------------------------------
+process_data is
+  read_file
+  parse_json
+  filter(valid?)
+  map(transform)
+  reduce(sum)
+  print
+
+\ Чтение как: read_file() |> parse_json() |> filter() |> map() |> reduce() |> print
+
+Пример 2: Type-safe API
+-----------------------
+type User = {id: Int, name: String}
+
+get_user (id: Int) -> Result<User, String> is
+  database.lookup(id)
+    | None -> Error("User not found")
+    | Some(user) -> Ok(user)
+
+Пример 3: Monadic bind
+----------------------
+process_user (id: Int) -> Result<String, String> is
+  get_user(id)
+    >>= (user) -> validate_user(user)
+    >>= (user) -> save_user(user)
+    >>= (user) -> Ok(user.name)
+
+Пример 4: Stack-based калькулятор
+---------------------------------
+calc is
+  read_line
+  parse_expr
+  eval
+  print
+
+\ Ввод: "2 2 +"
+\ Вывод: 4
+
+Пример 5: Type-safe state management
+------------------------------------
+type State = {count: Int}
+
+increment (state: State) -> State is
+  state.count 1 +
+  state with count = _
+
+decrement (state: State) -> State is
+  state.count 1 -
+  state with count = _
+
+================================================================================
+                         КОНЕЦ SYNTAX_KITTEN
+================================================================================

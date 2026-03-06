@@ -1,0 +1,560 @@
+================================================================================
+              WREN - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Small + Fast + Class-based + Embeddable
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Classes и OOP
+5. Functions и methods
+6. Control Flow
+7. Fibers (coroutines)
+8. Error handling
+9. C interop (Foreign)
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры embedding стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (двойной слэш)
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Semicolons опционально
+var x = 5
+var y = 10
+
+// Semicolons разрешены
+var z = 15;
+
+// Main class
+class Main {
+  static main() {
+    System.print("Hello, Wren!")
+  }
+}
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Num             │ 1, -10, 3.14, 2.5e10 (double precision)                    │
+│ String          │ "hello", "привет" (UTF-8)                                  │
+│ Bool            │ true, false                                                │
+│ Null            │ null                                                       │
+│ Class           │ Class instances                                            │
+│ List            │ [1, 2, 3] (dynamic arrays)                                 │
+│ Map             │ {"key": "value"} (hash maps)                               │
+│ Fiber           │ Fiber.new { ... } (coroutines)                             │
+│ Foreign         │ C pointers                                                 │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Type checking
+var x is Num      // true
+var x is String   // false
+
+// Type conversion
+var s = 5.toString    // "5"
+var n = "5".num       // 5
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// var - mutable
+var x = 5
+x = 10  // OK
+
+// No const (по умолчанию все mutable)
+// Use convention for constants
+var PI = 3.14159  // Convention: uppercase
+
+// Dynamic typing
+var x = 5       // Num
+var x = "hello" // String (можно изменить тип)
+
+// Shadowing (переопределение)
+var x = 5
+{
+  var x = 10  // OK в новом scope
+}
+
+// List
+var list = [1, 2, 3]
+list.add(4)
+
+// Map
+var map = {"key": "value"}
+map["key2"] = "value2"
+
+================================================================================
+4. CLASSES И OOP
+================================================================================
+
+// Class declaration
+class Person {
+  // Fields
+  construct new(name, age) {
+    _name = name
+    _age = age
+  }
+  
+  // Methods
+  greet() {
+    System.print("Hello, I'm %(_name)")
+  }
+  
+  // Getters
+  name { _name }
+  
+  // Setters
+  name=(value) { _name = value }
+  
+  // Static methods
+  static create(name, age) {
+    return Person.new(name, age)
+  }
+}
+
+// Inheritance
+class Employee is Person {
+  construct new(name, age, salary) {
+    super.new(name, age)
+    _salary = salary
+  }
+  
+  // Override methods
+  greet() {
+    System.print("Hello, I'm %(_name) and I earn %(_salary)")
+  }
+}
+
+// Usage
+var p = Person.new("John", 25)
+p.greet()
+
+var e = Employee.new("Jane", 30, 50000)
+e.greet()
+
+================================================================================
+5. FUNCTIONS И METHODS
+================================================================================
+
+// Methods в классах
+class Math {
+  static add(a, b) {
+    return a + b
+  }
+  
+  static square(x) {
+    return x * x
+  }
+}
+
+// Closures
+var add = Fn.new { |a, b| a + b }
+add.call(5, 3)  // 8
+
+// Default parameters (нет, использовать overloading)
+class Greeter {
+  static greet(name) {
+    System.print("Hello, %(name)")
+  }
+  
+  static greet(name, greeting) {
+    System.print("%(greeting), %(name)")
+  }
+}
+
+// Variadic functions (нет, использовать lists)
+class Sum {
+  static add(numbers) {
+    var total = 0
+    for (n in numbers) {
+      total = total + n
+    }
+    return total
+  }
+}
+
+// Recursive functions
+class Factorial {
+  static calc(n) {
+    if (n <= 1) return 1
+    return n * calc(n - 1)
+  }
+}
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+// If/else
+if (x > 5) {
+  System.print("greater")
+} else {
+  System.print("less or equal")
+}
+
+// If с multiple expressions
+if (x > 5) {
+  System.print("positive")
+  return x * 2
+}
+
+// For loop
+for (i in 0..10) {
+  System.print(i)
+}
+
+// For with step
+for (i in Range.from(0).to(10).by(2)) {
+  System.print(i)
+}
+
+// While loop
+while (x > 0) {
+  System.print(x)
+  x = x - 1
+}
+
+// Break/continue
+for (i in 0..10) {
+  if (i == 5) continue
+  if (i == 8) break
+  System.print(i)
+}
+
+// Switch (нет, использовать if-else или polymorphism)
+if (value == 1) {
+  System.print("one")
+} else if (value == 2) {
+  System.print("two")
+} else {
+  System.print("other")
+}
+
+================================================================================
+7. FIBERS (COROUTINES)
+================================================================================
+
+// Fiber creation
+var fiber = Fiber.new {
+  System.print("Starting")
+  Fiber.yield(1)
+  System.print("Resuming")
+  Fiber.yield(2)
+  System.print("Done")
+}
+
+// Fiber execution
+fiber.call()  // Starting, yields 1
+fiber.call()  // Resuming, yields 2
+fiber.call()  // Done
+
+// Fiber with values
+var fiber = Fiber.new {
+  var value = Fiber.yield()
+  System.print("Received: %(value)")
+}
+
+fiber.call(5)  // Sends 5 to fiber
+
+// Fiber error handling
+var fiber = Fiber.new {
+  Fiber.abort("Error!")
+}
+
+var result = Fiber.try {
+  fiber.call()
+}
+
+if (result == null) {
+  System.print("Fiber failed")
+}
+
+// Fiber state
+fiber.isDone    // true/false
+fiber.error     // Error message
+
+================================================================================
+8. ERROR HANDLING
+================================================================================
+
+// Fiber.abort для ошибок
+class Divider {
+  static divide(a, b) {
+    if (b == 0) {
+      Fiber.abort("Division by zero")
+    }
+    return a / b
+  }
+}
+
+// Fiber.try для обработки
+var result = Fiber.try {
+  Divider.divide(10, 0)
+}
+
+if (result == null) {
+  System.print("Error occurred")
+} else {
+  System.print("Result: %(result)")
+}
+
+// Error messages
+try {
+  // Some code
+} catch (error) {
+  System.print("Error: %(error)")
+}
+
+// Assertions (в C API)
+// assert(condition)
+
+================================================================================
+9. C INTEROP (FOREIGN)
+================================================================================
+
+// Foreign class для C pointers
+class Pointer {
+  // C implementation required
+  foreign construct new()
+  foreign method address()
+  foreign method free()
+}
+
+// C API embedding
+// #include <wren.h>
+// WrenVM* vm = wrenNewVM();
+// wrenInterpret(vm, "main", code);
+// wrenFreeVM(vm);
+
+// Foreign methods
+class File {
+  foreign construct new(path)
+  foreign method read()
+  foreign method write(text)
+  foreign method close()
+}
+
+// C implementation
+// Implemented in C code
+// Bound to Wren classes
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Dynamic typing surprise
+var x = 5
+var x = "hello"  // OK но может вызвать ошибки
+
+✓ Решение:
+// Use consistent types
+var x = 5
+// Don't change type
+
+❌ Ошибка 2: Fiber без yield
+var fiber = Fiber.new {
+  System.print("Hello")
+  // Нет yield!
+}
+fiber.call()  // OK но fiber сразу завершится
+
+✓ Решение:
+var fiber = Fiber.new {
+  System.print("Hello")
+  Fiber.yield()
+}
+
+❌ Ошибка 3: Foreign без C implementation
+class Pointer {
+  foreign construct new()
+}
+// Забыли C implementation!
+
+✓ Решение:
+// Implement in C code
+// Bind to Wren class
+
+❌ Ошибка 4: Class без construct
+class Person {
+  // Нет construct!
+}
+Person.new()  // ОШИБКА!
+
+✓ Решение:
+class Person {
+  construct new() {
+    // Constructor
+  }
+}
+
+❌ Ошибка 5: Static method call
+class Math {
+  static add(a, b) { a + b }
+}
+var m = Math.new()  // ОШИБКА! Static class
+m.add(1, 2)  // ОШИБКА!
+
+✓ Решение:
+Math.add(1, 2)  // Static call
+
+❌ Ошибка 6: Inheritance без super
+class Employee is Person {
+  construct new(name, age) {
+    // Забыли super.new!
+    _salary = 0
+  }
+}
+
+✓ Решение:
+class Employee is Person {
+  construct new(name, age) {
+    super.new(name, age)
+    _salary = 0
+  }
+}
+
+❌ Ошибка 7: Fiber error без try
+var fiber = Fiber.new {
+  Fiber.abort("Error")
+}
+fiber.call()  // ОШИБКА! Не обработана
+
+✓ Решение:
+var result = Fiber.try {
+  fiber.call()
+}
+
+❌ Ошибка 8: List index out of bounds
+var list = [1, 2, 3]
+var x = list[10]  // ОШИБКА!
+
+✓ Решение:
+if (index < list.count) {
+  var x = list[index]
+}
+
+❌ Ошибка 9: Map key without quotes
+var map = {key: "value"}  // ОШИБКА!
+
+✓ Решение:
+var map = {"key": "value"}
+
+❌ Ошибка 10: No main class
+// Забыли class Main!
+System.print("Hello")  // ОШИБКА!
+
+✓ Решение:
+class Main {
+  static main() {
+    System.print("Hello")
+  }
+}
+
+================================================================================
+11. ПРИМЕРЫ EMBEDDING СТИЛЯ
+================================================================================
+
+Пример 1: Game scripting
+------------------------
+class Player {
+  construct new(x, y) {
+    _x = x
+    _y = y
+  }
+  
+  move(dx, dy) {
+    _x = _x + dx
+    _y = _y + dy
+  }
+  
+  x { _x }
+  y { _y }
+}
+
+Пример 2: Plugin system
+-----------------------
+class Plugin {
+  static load(path) {
+    // Load plugin code
+    // Execute in sandbox
+  }
+  
+  static execute(plugin, method) {
+    // Call plugin method
+  }
+}
+
+Пример 3: Configuration с logic
+-------------------------------
+class Config {
+  static load() {
+    var config = {"port": 8080, "host": "localhost"}
+    // Add logic
+    if (config["port"] < 1024) {
+      Fiber.abort("Port must be >= 1024")
+    }
+    return config
+  }
+}
+
+Пример 4: Event system
+----------------------
+class Event {
+  construct new() {
+    _handlers = []
+  }
+  
+  add(handler) {
+    _handlers.add(handler)
+  }
+  
+  fire(data) {
+    for (handler in _handlers) {
+      handler.call(data)
+    }
+  }
+}
+
+Пример 5: Async simulation
+--------------------------
+class Async {
+  static sleep(ms) {
+    return Fiber.new {
+      Fiber.yield(ms)
+    }
+  }
+}
+
+var task = Async.sleep(1000)
+task.call()
+
+Пример 6: C integration
+-----------------------
+class File {
+  foreign construct new(path)
+  foreign method read()
+  foreign method write(text)
+  foreign method close()
+}
+
+// C implementation provides actual functionality
+
+================================================================================
+                         КОНЕЦ SYNTAX_WREN
+================================================================================

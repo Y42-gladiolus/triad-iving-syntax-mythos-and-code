@@ -1,0 +1,639 @@
+================================================================================
+              ZIG - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Системное программирование + Comptime магия
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Управление памятью
+5. Функции
+6. Control Flow
+7. Structs и Enums
+8. Comptime (КРИТИЧНО!)
+9. Error Handling
+10. C интероперабельность
+11. Типичные ошибки (РАСШИРЕНО!)
+12. Примеры системного стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (как в C)
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Точка с запятой обязательна
+const x: i32 = 5;
+const y: i32 = 10;
+
+// main функция
+pub fn main() !void {
+    // ...
+}
+
+// Импорт
+const std = @import("std");
+
+// Export для C
+export fn zig_function() i32 {
+    return 42;
+}
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ i8, i16, i32    │ -100, 0, 1000 (знаковые целые)                             │
+│ i64, i128       │ Большие целые со знаком                                    │
+│ u8, u16, u32    │ 0, 100, 1000 (беззнаковые)                                 │
+│ u64, u128       │ Большие беззнаковые                                        │
+│ isize, usize    │ Размер с указатель (для индексов!)                         │
+│ f16, f32        │ 3.14, -0.5 (вещественные)                                  │
+│ f64, f80, f128  │ Высокая точность                                           │
+│ bool            │ true, false                                                │
+│ void            │ Пустой тип (нет значения)                                  │
+│ noreturn        │ Никогда не возвращает (ошибки, бесконечные циклы)          │
+│ type            │ Тип как значение (для metaprogramming)                     │
+│ anyerror        │ Union всех возможных ошибок                                │
+│ error{...}      │ Error set (перечисление ошибок)                            │
+│ []T             │ Slice (указатель + длина)                                  │
+│ [N]T            │ Array фиксированного размера                               │
+│ [*]T            │ Указатель (как в C)                                        │
+│ ?T              │ Optional (может быть null)                                 │
+│ *T              │ Указатель на T                                             │
+│ struct { ... }  │ Структура                                                  │
+│ enum { ... }    │ Перечисление                                               │
+│ union { ... }   │ Union (как в C)                                            │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Проверка типа
+@TypeOf(x)      // Возвращает тип x
+@typeInfo(T)    // Информация о типе
+
+// Приведение типов
+@as(u32, 5)     // Явное приведение
+@intCast(x)     // Приведение целого
+@floatCast(x)   // Приведение float
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// const - неизменяемая (по умолчанию)
+const x: i32 = 5;
+// x = 6;  // ОШИБКА!
+
+// var - изменяемая
+var y: i32 = 10;
+y = 15;  // OK
+
+// Вывод типа
+const a = 5;      // comptime_int
+const b = 5.0;    // comptime_float
+const c: u32 = 5; // u32
+
+// Nullables (optional)
+var nullable: ?i32 = null;
+nullable = 5;  // OK
+
+// Доступ к nullable
+if (nullable) |value| {
+    std.debug.print("{}\n", .{value});
+} else {
+    std.debug.print("null\n", .{});
+}
+
+// Unreachable (для компилятора)
+unreachable;  // Сообщает компилятору что код недостижим
+
+================================================================================
+4. УПРАВЛЕНИЕ ПАМЯТЬЮ
+================================================================================
+
+// ⚡ Zig = ручное управление памятью (как C, но безопаснее!)
+
+// Allocator (выделение памяти)
+const allocator = std.heap.page_allocator;
+const ptr = allocator.alloc(i32, 10) catch unreachable;
+defer allocator.free(ptr);  // Освободить в конце функции
+
+// Stack allocation
+var stack_array: [10]i32 = undefined;
+
+// Slice (указатель + длина)
+const slice = stack_array[0..5];  // [5]i32
+const ptr = slice.ptr;            // [*]i32
+const len = slice.len;            // usize
+
+// Growable array (ArrayList)
+var list = std.ArrayList(i32).init(allocator);
+defer list.deinit();
+try list.append(1);
+try list.append(2);
+const slice = list.items;
+
+// String (это []const u8)
+const str: []const u8 = "hello";
+const len = str.len;
+
+// Важно: нет GC! Вы сами управляете памятью.
+
+================================================================================
+5. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+fn add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+// Функция с ошибкой
+fn divide(a: i32, b: i32) !i32 {
+    if (b == 0) return error.DivisionByZero;
+    return a / b;
+}
+
+// Вызов с обработкой ошибки
+const result = divide(10, 2) catch |err| {
+    std.debug.print("Error: {}\n", .{err});
+    return;
+};
+
+// Или propagate ошибку
+fn caller() !void {
+    const result = try divide(10, 2);  // try = catch return err
+};
+
+// Функция с variadic параметрами (C style)
+fn printf(format: [*:0]const u8, ...) callconv(.C) void {
+    // ...
+}
+
+// Inline функция (встраивается)
+inline fn square(x: i32) i32 {
+    return x * x;
+}
+
+// Comptime функция (выполняется при компиляции)
+fn comptimeSquare(x: comptime_int) comptime_int {
+    return x * x;
+}
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+// if/else (возвращает значение!)
+const x = if (condition) 5 else 10;
+
+// if с optional
+if (optional_value) |value| {
+    std.debug.print("{}\n", .{value});
+}
+
+// if с error union
+if (result) |value| {
+    std.debug.print("Success: {}\n", .{value});
+} else |err| {
+    std.debug.print("Error: {}\n", .{err});
+}
+
+// switch ( exhaustive!)
+switch (value) {
+    1 => std.debug.print("one\n", .{}),
+    2, 3 => std.debug.print("two or three\n", .{}),
+    else => std.debug.print("other\n", .{}),
+}
+
+// switch с optional
+switch (optional) {
+    null => std.debug.print("null\n", .{}),
+    5 => std.debug.print("five\n", .{}),
+    else => std.debug.print("other\n", .{}),
+}
+
+// for (цикл по массиву/slice)
+for (items) |item| {
+    std.debug.print("{}\n", .{item});
+}
+
+// for с индексом
+for (items, 0..) |item, index| {
+    std.debug.print("{}: {}\n", .{index, item});
+}
+
+// while
+var i: usize = 0;
+while (i < 10) : (i += 1) {
+    std.debug.print("{}\n", .{i});
+}
+
+// while с continue expression
+while (condition) : (cleanup) {
+    // ...
+}
+
+// break и continue
+for (items) |item| {
+    if (item == 5) break;
+    if (item % 2 == 0) continue;
+}
+
+// Label для break/continue
+outer: for (items) |item| {
+    for (nested) |n| {
+        if (condition) break :outer;
+    }
+}
+
+================================================================================
+7. STRUCTS И ENUMS
+================================================================================
+
+// Struct
+const Point = struct {
+    x: i32,
+    y: i32,
+    
+    // Метод (функция с self)
+    fn distance(self: Point, other: Point) f64 {
+        const dx = @as(f64, @floatFromInt(self.x - other.x));
+        const dy = @as(f64, @floatFromInt(self.y - other.y));
+        return @sqrt(dx * dx + dy * dy);
+    }
+};
+
+// Создание
+const p = Point{ .x = 3, .y = 4 };
+const p2 = Point{ .x = 0, .y = 0 };  // Все поля обязательны!
+
+// Доступ
+const x = p.x;
+const dist = p.distance(p2);
+
+// Enum
+const Color = enum {
+    red,
+    green,
+    blue,
+    
+    // Метод enum
+    fn toHex(self: Color) []const u8 {
+        return switch (self) {
+            .red => "#FF0000",
+            .green => "#00FF00",
+            .blue => "#0000FF",
+        };
+    }
+};
+
+// Union (как в C)
+const Value = union(enum) {
+    int: i32,
+    float: f64,
+    string: []const u8,
+    
+    fn print(self: Value) void {
+        switch (self) {
+            .int => |v| std.debug.print("int: {}\n", .{v}),
+            .float => |v| std.debug.print("float: {}\n", .{v}),
+            .string => |v| std.debug.print("string: {s}\n", .{v}),
+        }
+    }
+};
+
+// Packed struct (для битовых полей)
+const Packed = packed struct {
+    flag: bool,
+    value: u7,
+};
+
+================================================================================
+8. COMPTIME (КРИТИЧНО ВАЖНО!)
+================================================================================
+
+// ⚡ Comptime = код выполняется ПРИ КОМПИЛЯЦИИ!
+
+// Comptime переменная
+comptime const x = 5;
+
+// Comptime блок
+comptime {
+    std.debug.print("Compiling...\n", .{});
+}
+
+// Comptime функция
+fn comptimeSquare(x: comptime_int) comptime_int {
+    return x * x;
+}
+const result = comptimeSquare(5);  // Вычисляется при компиляции!
+
+// Comptime проверка
+fn add(a: anytype, b: anytype) @TypeOf(a, b) {
+    comptime {
+        if (@TypeOf(a) != @TypeOf(b)) {
+            @compileError("Types must match");
+        }
+    }
+    return a + b;
+}
+
+// Comptime генерация кода
+fn makeAdder(comptime n: comptime_int) fn(i32) i32 {
+    return struct {
+        fn adder(x: i32) i32 {
+            return x + n;
+        }
+    }.adder;
+}
+const add5 = makeAdder(5);  // Генерируется при компиляции!
+
+// Comptime reflection
+fn printTypeInfo(comptime T: type) void {
+    const info = @typeInfo(T);
+    std.debug.print("{}\n", .{info});
+}
+
+// Comptime for (генерация кода)
+comptime {
+    var i = 0;
+    while (i < 10) : (i += 1) {
+        // Генерируем код
+    }
+}
+
+// Inline for (разворачивается в код)
+inline for (.{i32, u32, f32}) |T| {
+    fn process(comptime T: type) void {
+        // Генерируется 3 функции!
+    }
+}
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+// Error set
+const MyError = error{
+    DivisionByZero,
+    OutOfMemory,
+    InvalidInput,
+};
+
+// Функция возвращающая ошибку
+fn divide(a: i32, b: i32) MyError!i32 {
+    if (b == 0) return MyError.DivisionByZero;
+    return a / b;
+}
+
+// try (propagate ошибку)
+fn caller() MyError!void {
+    const result = try divide(10, 2);  // Возвращает ошибку если есть
+};
+
+// catch (обработать ошибку)
+const result = divide(10, 0) catch |err| {
+    std.debug.print("Error: {}\n", .{err});
+    0  // Значение по умолчанию
+};
+
+// catch с возвращением
+const result = divide(10, 0) catch return;
+
+// anyerror (любая ошибка)
+fn anyFunction() anyerror!void {
+    // Может вернуть любую ошибку
+}
+
+// error union type
+const Result = MyError!i32;
+
+// Проверка на ошибку
+if (divide(10, 0)) |value| {
+    std.debug.print("Success: {}\n", .{value});
+} else |err| {
+    std.debug.print("Error: {}\n", .{err});
+}
+
+================================================================================
+10. C ИНТЕРОПЕРАБЕЛЬНОСТЬ
+================================================================================
+
+// Импорт C заголовков
+const c = @cImport({
+    @cInclude("stdio.h");
+    @cInclude("stdlib.h");
+});
+
+// Вызов C функций
+c.printf("Hello from C!\n");
+const ptr = c.malloc(100);
+c.free(ptr);
+
+// Export для C
+export fn zig_add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+// C ABI
+fn cFunction() callconv(.C) void {
+    // C calling convention
+}
+
+// Пакет для C кода
+// В build.zig:
+const c_program = b.addExecutable(.{
+    .name = "c_lib",
+    .target = target,
+    .optimize = optimize,
+});
+c_program.addCSourceFile(.{ .file = "lib.c" });
+
+// Link с C библиотеками
+exe.linkSystemLibrary("curl");
+exe.linkLibC();
+
+================================================================================
+11. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Забыли defer для памяти
+const ptr = allocator.alloc(i32, 10);
+// Забыли free! Утечка памяти!
+
+✓ Решение:
+const ptr = allocator.alloc(i32, 10);
+defer allocator.free(ptr);
+
+❌ Ошибка 2: Неправильный slice
+const arr: [10]i32 = undefined;
+const slice = arr[0..15];  // ОШИБКА! Выход за границы
+
+✓ Решение:
+const slice = arr[0..10];  // В пределах
+
+❌ Ошибка 3: Comptime vs runtime
+fn square(x: i32) i32 {
+    return x * x;
+}
+const result = comptime square(5);  // ОШИБКА! Не comptime функция
+
+✓ Решение:
+fn square(x: comptime_int) comptime_int {
+    return x * x;
+}
+
+❌ Ошибка 4: Ошибка без обработки
+fn divide(a: i32, b: i32) !i32 {
+    if (b == 0) return error.DivisionByZero;
+    return a / b;
+}
+const result = divide(10, 0);  // ОШИБКА! Нужно обработать
+
+✓ Решение:
+const result = divide(10, 0) catch |err| {
+    std.debug.print("Error: {}\n", .{err});
+    0
+};
+
+❌ Ошибка 5: Неполный switch
+switch (value) {
+    1 => std.debug.print("one\n", .{}),
+    // Забыли else!
+}
+
+✓ Решение:
+switch (value) {
+    1 => std.debug.print("one\n", .{}),
+    else => std.debug.print("other\n", .{}),
+}
+
+❌ Ошибка 6: Mutable через const
+const list = std.ArrayList(i32).init(allocator);
+list.append(1);  // ОШИБКА! const
+
+✓ Решение:
+var list = std.ArrayList(i32).init(allocator);
+
+❌ Ошибка 7: Неправильное приведение типа
+const x: i32 = 5;
+const y: u32 = x;  // ОШИБКА! Знаковый в беззнаковый
+
+✓ Решение:
+const y = @as(u32, @intCast(x));
+
+❌ Ошибка 8: Use after free
+const ptr = allocator.alloc(i32, 10);
+allocator.free(ptr);
+ptr[0] = 5;  // ОШИБКА! Use after free
+
+✓ Решение:
+const ptr = allocator.alloc(i32, 10);
+defer allocator.free(ptr);
+ptr[0] = 5;  // OK до выхода из функции
+
+❌ Ошибка 9: Игнорирование warnings
+const _ = someFunction();  // Игнорирование результата
+
+✓ Решение:
+_ = someFunction();  // Явное игнорирование (лучше)
+
+❌ Ошибка 10: Неправильный allocator
+fn process(allocator: std.mem.Allocator) void {
+    const ptr = std.heap.page_allocator.alloc(i32, 10);
+    // Используем другой allocator!
+}
+
+✓ Решение:
+fn process(allocator: std.mem.Allocator) void {
+    const ptr = allocator.alloc(i32, 10);
+    defer allocator.free(ptr);
+}
+
+================================================================================
+12. ПРИМЕРЫ СИСТЕМНОГО СТИЛЯ
+================================================================================
+
+Пример 1: Безопасный буфер
+---------------------------
+const Buffer = struct {
+    data: []u8,
+    pos: usize,
+    
+    fn write(self: *Buffer, bytes: []const u8) !void {
+        if (self.pos + bytes.len > self.data.len) {
+            return error.BufferOverflow;
+        }
+        @memcpy(self.data[self.pos..][0..bytes.len], bytes);
+        self.pos += bytes.len;
+    }
+};
+
+Пример 2: Generic контейнер
+---------------------------
+fn Container(comptime T: type) type {
+    return struct {
+        items: []T,
+        allocator: std.mem.Allocator,
+        
+        fn init(allocator: std.mem.Allocator, capacity: usize) !@This() {
+            const items = try allocator.alloc(T, capacity);
+            return .{ .items = items, .allocator = allocator };
+        }
+        
+        fn deinit(self: *@This()) void {
+            self.allocator.free(self.items);
+        }
+    };
+}
+
+Пример 3: Comptime генерация
+-----------------------------
+fn makeStructFields(comptime fields: []const []const u8) type {
+    return struct {
+        comptime {
+            // Генерируем поля при компиляции
+        }
+    };
+}
+
+Пример 4: C интероперабельность
+-------------------------------
+// zig_export.c
+export fn zig_compute(x: i32) i32 {
+    return x * 2;
+}
+
+// main.c
+extern int zig_compute(int x);
+int main() { return zig_compute(5); }
+
+Пример 5: Error handling паттерн
+---------------------------------
+fn processFile(path: []const u8) !void {
+    const file = try std.fs.cwd().openFile(path, .{});
+    defer file.close();
+    
+    const reader = file.reader();
+    var buffer: [1024]u8 = undefined;
+    
+    while (try reader.read(&buffer)) |n| {
+        if (n == 0) break;
+        try std.io.getStdOut().writeAll(buffer[0..n]);
+    }
+}
+
+================================================================================
+                         КОНЕЦ SYNTAX_ZIG
+================================================================================

@@ -1,0 +1,588 @@
+================================================================================
+              PYTHON - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Универсальный язык + Data Science + Web
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (lambda, *args, **kwargs)
+5. Классы и ООП
+6. List Comprehensions
+7. Decorators и Generators
+8. Error Handling
+9. Модули и импорты
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры Data Science стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+# Комментарии (решётка)
+# Однострочные
+
+"""
+    Многострочные
+    комментарии (docstring)
+"""
+
+# Отступы важны! (4 пробела)
+if condition:
+    print("Yes")
+else:
+    print("No")
+
+# Точка с запятой опциональна (но не рекомендуется)
+x = 5; y = 10  # Избегайте!
+
+# main блок
+if __name__ == "__main__":
+    print("Script executed directly")
+
+# Импорт
+import os
+from pathlib import Path
+from typing import List, Dict
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ int             │ 1, -10, 1_000_000 (подчёркивания для читаемости)           │
+│ float           │ 3.14, -0.5, 2.5e10                                         │
+│ complex         │ 3+4j (комплексные числа)                                   │
+│ bool            │ True, False                                                │
+│ str             │ "hello", 'привет', """многострочная"""                     │
+│ bytes           │ b"hello" (байты)                                           │
+│ list            │ [1, 2, 3] (изменяемый список)                              │
+│ tuple           │ (1, 2, 3) (неизменяемый кортеж)                            │
+│ dict            │ {"key": "value"} (словарь)                                 │
+│ set             │ {1, 2, 3} (множество)                                      │
+│ frozenset       │ frozenset([1, 2, 3]) (неизменяемое множество)              │
+│ None            │ None (отсутствие значения)                                 │
+│ range           │ range(1, 10) (диапазон)                                    │
+│ slice           │ slice(1, 10, 2) (срез)                                     │
+│ type            │ type(x) (тип объекта)                                      │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+# Проверка типа
+type(x)
+isinstance(x, int)
+isinstance(x, (int, float))  # Несколько типов
+
+# Приведение типов
+int("5")
+float(5)
+str(5)
+list((1, 2, 3))
+tuple([1, 2, 3])
+dict([("a", 1), ("b", 2)])
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+# Присваивание
+x = 5
+y = 10
+
+# Множественное присваивание
+a, b, c = 1, 2, 3
+
+# Swap
+x, y = y, x
+
+# Type hints (Python 3.5+)
+name: str = "John"
+age: int = 25
+scores: List[int] = [1, 2, 3]
+
+# Константы (по соглашению)
+MAX_SIZE = 100
+PI = 3.14159
+
+# Аннотации функций
+def add(a: int, b: int) -> int:
+    return a + b
+
+# Walrus operator (Python 3.8+)
+if (n := len(data)) > 10:
+    print(f"Too many items: {n}")
+
+# Delete
+del x  # Удалить переменную
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+# Базовая функция
+def add(a, b):
+    return a + b
+
+# Параметры по умолчанию
+def greet(name, greeting="Hello"):
+    return f"{greeting}, {name}!"
+
+# *args (позиционные)
+def sum_all(*args):
+    return sum(args)
+
+sum_all(1, 2, 3, 4, 5)
+
+# **kwargs (именованные)
+def print_kwargs(**kwargs):
+    for key, value in kwargs.items():
+        print(f"{key}: {value}")
+
+print_kwargs(name="John", age=25)
+
+# Комбинирование
+def func(a, b, *args, **kwargs):
+    pass
+
+# Lambda (анонимная функция)
+square = lambda x: x * x
+square(5)  # 25
+
+# Функция как объект
+def apply(func, value):
+    return func(value)
+
+apply(square, 5)  # 25
+
+# Рекурсия
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+================================================================================
+5. КЛАССЫ И ООП
+================================================================================
+
+# Базовый класс
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    
+    def greet(self):
+        return f"Hello, I'm {self.name}"
+    
+    def __str__(self):
+        return f"Person({self.name}, {self.age})"
+
+# Создание
+p = Person("John", 25)
+p.greet()
+
+# Наследование
+class Employee(Person):
+    def __init__(self, name, age, company):
+        super().__init__(name, age)
+        self.company = company
+    
+    def greet(self):
+        return f"{super().greet()}, I work at {self.company}"
+
+# Private атрибуты (по соглашению)
+class BankAccount:
+    def __init__(self):
+        self._balance = 0  # "Protected"
+        self.__password = "secret"  # "Private" (name mangling)
+
+# Properties
+class Circle:
+    def __init__(self, radius):
+        self._radius = radius
+    
+    @property
+    def radius(self):
+        return self._radius
+    
+    @radius.setter
+    def radius(self, value):
+        if value < 0:
+            raise ValueError("Radius must be positive")
+        self._radius = value
+    
+    @property
+    def area(self):
+        return 3.14 * self._radius ** 2
+
+# Abstract классы
+from abc import ABC, abstractmethod
+
+class Shape(ABC):
+    @abstractmethod
+    def area(self):
+        pass
+
+# Data classes (Python 3.7+)
+from dataclasses import dataclass
+
+@dataclass
+class Point:
+    x: int
+    y: int
+
+p = Point(3, 4)
+
+================================================================================
+6. LIST COMPREHENSIONS
+================================================================================
+
+# Базовый list comprehension
+squares = [x * x for x in range(10)]
+
+# С условием
+evens = [x for x in range(10) if x % 2 == 0]
+
+# Вложенный
+matrix = [[i * j for j in range(3)] for i in range(3)]
+
+# Dict comprehension
+squares_dict = {x: x * x for x in range(10)}
+
+# Set comprehension
+unique_squares = {x * x for x in range(10)}
+
+# Generator expression (ленивый)
+squares_gen = (x * x for x in range(10))
+
+# Zip
+names = ["Alice", "Bob", "Charlie"]
+ages = [25, 30, 35]
+combined = {name: age for name, age in zip(names, ages)}
+
+# Enumerate
+for i, name in enumerate(names):
+    print(f"{i}: {name}")
+
+================================================================================
+7. DECORATORS И GENERATORS
+================================================================================
+
+# Decorator
+def my_decorator(func):
+    def wrapper(*args, **kwargs):
+        print("Before function")
+        result = func(*args, **kwargs)
+        print("After function")
+        return result
+    return wrapper
+
+@my_decorator
+def say_hello():
+    print("Hello")
+
+# Decorator с параметрами
+def repeat(n):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            for _ in range(n):
+                func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@repeat(3)
+def greet():
+    print("Hello")
+
+# Generator
+def count_up(to):
+    for i in range(1, to + 1):
+        yield i
+
+for num in count_up(5):
+    print(num)
+
+# Generator expression
+squares = (x * x for x in range(10))
+
+# Context manager
+class FileManager:
+    def __init__(self, filename):
+        self.filename = filename
+    
+    def __enter__(self):
+        self.file = open(self.filename, 'r')
+        return self.file
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.file.close()
+
+with FileManager('file.txt') as f:
+    content = f.read()
+
+# Контекстный менеджер через contextlib
+from contextlib import contextmanager
+
+@contextmanager
+def open_file(filename, mode):
+    f = open(filename, mode)
+    try:
+        yield f
+    finally:
+        f.close()
+
+================================================================================
+8. ERROR HANDLING
+================================================================================
+
+# Try/except
+try:
+    result = 10 / 0
+except ZeroDivisionError as e:
+    print(f"Error: {e}")
+
+# Multiple exceptions
+try:
+    risky_operation()
+except (ValueError, TypeError) as e:
+    print(f"Error: {e}")
+
+# Else (если нет ошибки)
+try:
+    result = 10 / 2
+except ZeroDivisionError:
+    print("Division by zero")
+else:
+    print(f"Result: {result}")
+
+# Finally (всегда выполняется)
+try:
+    f = open('file.txt')
+finally:
+    f.close()
+
+# Raise
+raise ValueError("Invalid value")
+
+# Custom exception
+class MyError(Exception):
+    pass
+
+raise MyError("Something went wrong")
+
+# Assert
+assert x > 0, "x must be positive"
+
+# Warnings
+import warnings
+warnings.warn("This is deprecated")
+
+================================================================================
+9. МОДУЛИ И ИМПОРТЫ
+================================================================================
+
+# Импорт модуля
+import os
+import sys as system
+
+# Импорт из модуля
+from pathlib import Path
+from typing import List, Dict
+
+# Импорт всего (избегайте!)
+from module import *
+
+# Относительный импорт
+from . import module
+from ..parent import module
+
+# Создание модуля
+# Просто создайте файл .py
+
+# __init__.py для пакетов
+# my_package/
+#   __init__.py
+#   module1.py
+#   module2.py
+
+# __name__ == "__main__"
+if __name__ == "__main__":
+    # Код выполняется только если файл запущен напрямую
+    print("Script executed directly")
+
+# Установка пакетов
+# pip install package_name
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable default аргумент
+def add_item(item, list=[]):  # ОШИБКА! Список общий для всех вызовов!
+    list.append(item)
+    return list
+
+✓ Решение:
+def add_item(item, list=None):
+    if list is None:
+        list = []
+    list.append(item)
+    return list
+
+❌ Ошибка 2: Late binding closure
+funcs = []
+for i in range(5):
+    funcs.append(lambda: i)  # Все вернут 4!
+
+✓ Решение:
+funcs = []
+for i in range(5):
+    funcs.append(lambda i=i: i)  # Захват значения
+
+❌ Ошибка 3: Изменение списка во время итерации
+for item in my_list:
+    if condition:
+        my_list.remove(item)  # ОШИБКА!
+
+✓ Решение:
+my_list = [item for item in my_list if not condition]
+
+❌ Ошибка 4: Сравнение с None
+if x == None:  # Неправильно!
+
+✓ Решение:
+if x is None:  # Правильно!
+
+❌ Ошибка 5: Копирование списков
+list1 = [1, 2, 3]
+list2 = list1  # Ссылка, не копия!
+list2.append(4)
+print(list1)  # [1, 2, 3, 4]
+
+✓ Решение:
+list2 = list1.copy()  # Или list2 = list1[:]
+
+❌ Ошибка 6: Глобальные переменные
+count = 0
+def increment():
+    count += 1  # ОШИБКА!
+
+✓ Решение:
+def increment():
+    global count
+    count += 1
+
+❌ Ошибка 7: Игнорирование исключений
+try:
+    risky_operation()
+except:  # Поймает всё, даже KeyboardInterrupt!
+    pass
+
+✓ Решение:
+try:
+    risky_operation()
+except SpecificError as e:
+    print(f"Error: {e}")
+
+❌ Ошибка 8: Неправильное использование super
+class Child(Parent):
+    def __init__(self):
+        Parent.__init__(self)  # Старый стиль
+
+✓ Решение:
+class Child(Parent):
+    def __init__(self):
+        super().__init__()  # Новый стиль
+
+❌ Ошибка 9: String конкатенация в цикле
+result = ""
+for i in range(1000):
+    result += str(i)  # Медленно!
+
+✓ Решение:
+result = "".join(str(i) for i in range(1000))
+
+❌ Ошибка 10: Игнорирование type hints
+def process(data):  # Неясно что принимает!
+    pass
+
+✓ Решение:
+def process(data: List[int]) -> int:
+    pass
+
+================================================================================
+11. ПРИМЕРЫ DATA SCIENCE СТИЛЯ
+================================================================================
+
+Пример 1: Pandas обработка данных
+---------------------------------
+import pandas as pd
+
+df = pd.read_csv('data.csv')
+result = (df
+    .query('age > 18')
+    .groupby('city')
+    .agg({'salary': 'mean', 'name': 'count'})
+    .sort_values('salary', ascending=False)
+)
+
+Пример 2: NumPy векторизация
+----------------------------
+import numpy as np
+
+arr = np.array([1, 2, 3, 4, 5])
+squares = arr ** 2  # Векторизованно!
+result = np.sum(arr * squares)
+
+Пример 3: Async IO
+------------------
+import asyncio
+
+async def fetch_data(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.text()
+
+async def main():
+    results = await asyncio.gather(
+        fetch_data('url1'),
+        fetch_data('url2'),
+        fetch_data('url3')
+    )
+
+asyncio.run(main())
+
+Пример 4: Type hints
+--------------------
+from typing import List, Dict, Optional, Union
+
+def process_users(
+    users: List[Dict[str, Union[str, int]]],
+    min_age: Optional[int] = None
+) -> List[str]:
+    if min_age:
+        users = [u for u in users if u['age'] >= min_age]
+    return [u['name'] for u in users]
+
+Пример 5: Context manager для БД
+--------------------------------
+from contextlib import contextmanager
+import sqlite3
+
+@contextmanager
+def get_db_connection(db_path):
+    conn = sqlite3.connect(db_path)
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+with get_db_connection('db.sqlite') as conn:
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users')
+
+================================================================================
+                         КОНЕЦ SYNTAX_PYTHON
+================================================================================

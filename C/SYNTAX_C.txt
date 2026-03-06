@@ -1,0 +1,613 @@
+================================================================================
+              C - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Systems Programming + Manual Memory + 50+ лет
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Pointers (указатели)
+6. Arrays и Strings
+7. Structs и Unions
+8. Memory Management
+9. File I/O
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры systems programming стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Комментарии
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Точка с запятой обязательна
+int x = 5;
+int y = 10;
+
+// Main функция
+int main() {
+    printf("Hello, C!\n");
+    return 0;
+}
+
+// Preprocessor directives
+#define PI 3.14159
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+#ifdef DEBUG
+    printf("Debug mode\n");
+#endif
+
+#ifndef HEADER_H
+#define HEADER_H
+// Header guard
+#endif
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ char            │ 'a', 'б' (1 byte)                                          │
+│ short           │ 16-bit integer                                             │
+│ int             │ 32-bit integer (обычно)                                    │
+│ long            │ 32 или 64-bit integer                                      │
+│ long long       │ 64-bit integer                                             │
+│ float           │ 32-bit floating point                                      │
+│ double          │ 64-bit floating point                                      │
+│ long double     │ 80 или 128-bit floating point                              │
+│ void            │ Пустой тип                                                 │
+│ _Bool           │ Boolean (C99)                                              │
+│ size_t          │ Unsigned integer для размеров                              │
+│ ptrdiff_t       │ Signed integer для разницы pointers                        │
+│ int8_t, int16_t │ Fixed-width integers (C99)                                 │
+│ int32_t, int64_t│ Fixed-width integers (C99)                                 │
+│ uint8_t, etc.   │ Unsigned fixed-width integers                              │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// sizeof operator
+printf("%zu\n", sizeof(int));  // 4 (обычно)
+
+// Type casting
+int x = 5;
+double y = (double)x;  // C-style cast
+
+// Constants
+const int MAX = 100;
+#define MAX 100  // Preprocessor
+
+// Enum
+enum Color { RED, GREEN, BLUE };
+enum Color c = RED;
+
+// Typedef
+typedef unsigned long ulong;
+typedef struct Point Point;
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// Объявление переменных
+int x = 5;
+int y = 10, z = 15;
+
+// Const
+const int MAX = 100;
+// MAX = 200;  // ОШИБКА!
+
+// Static (сохраняет значение между вызовами)
+void counter() {
+    static int count = 0;
+    count++;
+    printf("%d\n", count);
+}
+
+// Extern (объявление в другом файле)
+extern int global_var;
+
+// Register (подсказка компилятору)
+register int i;
+
+// Volatile (может измениться внешне)
+volatile int flag;
+
+// Auto (по умолчанию для локальных)
+auto int x = 5;  // Не нужно указывать
+
+// Scope
+{
+    int x = 5;  // Локальная переменная
+}
+// x не доступна здесь
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+int add(int a, int b) {
+    return a + b;
+}
+
+// Void функция
+void print_hello() {
+    printf("Hello\n");
+}
+
+// Pointer параметры
+void increment(int* x) {
+    (*x)++;
+}
+
+// Array параметры
+void print_array(int arr[], int size) {
+    for (int i = 0; i < size; i++) {
+        printf("%d ", arr[i]);
+    }
+}
+
+// Function pointers
+int add(int a, int b) { return a + b; }
+int (*func_ptr)(int, int) = &add;
+int result = func_ptr(5, 3);  // 8
+
+// Inline функция (C99)
+inline int square(int x) {
+    return x * x;
+}
+
+// Variadic функции
+#include <stdarg.h>
+int sum(int count, ...) {
+    va_list args;
+    va_start(args, count);
+    int total = 0;
+    for (int i = 0; i < count; i++) {
+        total += va_arg(args, int);
+    }
+    va_end(args);
+    return total;
+}
+
+// Recursive функции
+int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
+================================================================================
+5. POINTERS (УКАЗАТЕЛИ)
+================================================================================
+
+// Объявление pointer
+int x = 5;
+int* ptr = &x;
+
+// Dereference
+printf("%d\n", *ptr);  // 5
+
+// Pointer arithmetic
+int arr[] = {1, 2, 3, 4, 5};
+int* ptr = arr;
+printf("%d\n", *ptr);      // 1
+printf("%d\n", *(ptr+1));  // 2
+ptr++;
+printf("%d\n", *ptr);      // 2
+
+// Pointer to pointer
+int x = 5;
+int* ptr1 = &x;
+int** ptr2 = &ptr1;
+printf("%d\n", **ptr2);  // 5
+
+// Const pointer
+const int* ptr1;  // Pointer to const int
+int* const ptr2;  // Const pointer to int
+const int* const ptr3;  // Const pointer to const int
+
+// Void pointer
+void* ptr;
+int x = 5;
+ptr = &x;
+int y = *(int*)ptr;  // Cast back
+
+// Function pointer
+int add(int a, int b) { return a + b; }
+int (*func_ptr)(int, int) = &add;
+int result = func_ptr(5, 3);
+
+================================================================================
+6. ARRAYS И STRINGS
+================================================================================
+
+// Array declaration
+int arr[5] = {1, 2, 3, 4, 5};
+int arr[] = {1, 2, 3, 4, 5};  // Size inferred
+
+// Access
+printf("%d\n", arr[0]);  // 1
+arr[2] = 10;
+
+// Multi-dimensional array
+int matrix[3][3] = {
+    {1, 2, 3},
+    {4, 5, 6},
+    {7, 8, 9}
+};
+
+// String (char array)
+char str[] = "Hello";
+char* str2 = "Hello";
+
+// String functions
+#include <string.h>
+strlen(str);      // Length
+strcpy(dest, src); // Copy
+strcat(dest, src); // Concatenate
+strcmp(s1, s2);    // Compare
+strstr(haystack, needle);  // Find substring
+
+// String input
+char buffer[100];
+scanf("%s", buffer);  // Небезопасно!
+fgets(buffer, sizeof(buffer), stdin);  // Безопасно
+
+// Pointer to array
+int (*ptr)[5] = &matrix[0];
+
+================================================================================
+7. STRUCTS И UNIONS
+================================================================================
+
+// Struct declaration
+struct Point {
+    int x;
+    int y;
+};
+
+// Struct variable
+struct Point p1;
+p1.x = 5;
+p1.y = 10;
+
+// Typedef struct
+typedef struct {
+    int x;
+    int y;
+} Point;
+
+Point p2 = {5, 10};
+
+// Pointer to struct
+Point* ptr = &p2;
+printf("%d\n", ptr->x);  // 5
+printf("%d\n", (*ptr).x);  // 5
+
+// Nested struct
+struct Rectangle {
+    Point top_left;
+    Point bottom_right;
+};
+
+// Union (shared memory)
+union Data {
+    int i;
+    float f;
+    char str[20];
+};
+
+union Data data;
+data.i = 10;
+data.f = 3.14;  // Overwrites i
+
+// Enum
+enum Color { RED, GREEN, BLUE };
+enum Color c = RED;
+
+// Bit fields
+struct {
+    unsigned int width : 4;
+    unsigned int height : 4;
+} box;
+
+================================================================================
+8. MEMORY MANAGEMENT
+================================================================================
+
+#include <stdlib.h>
+
+// Malloc
+int* ptr = (int*)malloc(5 * sizeof(int));
+if (ptr == NULL) {
+    // Handle error
+}
+
+// Calloc (zero-initialized)
+int* ptr = (int*)calloc(5, sizeof(int));
+
+// Realloc
+ptr = (int*)realloc(ptr, 10 * sizeof(int));
+
+// Free
+free(ptr);
+ptr = NULL;  // Prevent dangling pointer
+
+// Memory leak example
+void leak() {
+    int* ptr = malloc(sizeof(int));
+    // Forgot to free!
+}
+
+// Stack vs Heap
+void example() {
+    int stack_var = 5;  // Stack (automatic)
+    int* heap_var = malloc(sizeof(int));  // Heap (manual)
+    free(heap_var);
+}
+
+// Valgrind (check memory leaks)
+// valgrind --leak-check=full ./program
+
+================================================================================
+9. FILE I/O
+================================================================================
+
+#include <stdio.h>
+
+// Open file
+FILE* file = fopen("file.txt", "r");
+if (file == NULL) {
+    // Handle error
+}
+
+// Read file
+char buffer[100];
+fgets(buffer, sizeof(buffer), file);
+
+// Write file
+fprintf(file, "Hello, %s!\n", "World");
+
+// Read binary
+fread(buffer, sizeof(char), 100, file);
+
+// Write binary
+fwrite(buffer, sizeof(char), 100, file);
+
+// Close file
+fclose(file);
+
+// Seek
+fseek(file, 0, SEEK_SET);  // Beginning
+fseek(file, 0, SEEK_END);  // End
+long pos = ftell(file);    // Current position
+
+// Error handling
+if (ferror(file)) {
+    // Handle error
+}
+clearerr(file);
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Memory leak
+int* ptr = malloc(sizeof(int) * 100);
+// Забыли free!
+
+✓ Решение:
+int* ptr = malloc(sizeof(int) * 100);
+// ...
+free(ptr);
+ptr = NULL;
+
+❌ Ошибка 2: Buffer overflow
+char buffer[10];
+strcpy(buffer, "This is too long!");  // ОШИБКА!
+
+✓ Решение:
+char buffer[10];
+strncpy(buffer, "This is too long!", sizeof(buffer) - 1);
+buffer[sizeof(buffer) - 1] = '\0';
+
+❌ Ошибка 3: Dangling pointer
+int* ptr = malloc(sizeof(int));
+free(ptr);
+*ptr = 5;  // ОШИБКА! Use after free
+
+✓ Решение:
+int* ptr = malloc(sizeof(int));
+// ...
+free(ptr);
+ptr = NULL;  // Prevent use after free
+
+❌ Ошибка 4: Null pointer dereference
+int* ptr = NULL;
+*ptr = 5;  // ОШИБКА! Segmentation fault
+
+✓ Решение:
+int* ptr = NULL;
+if (ptr != NULL) {
+    *ptr = 5;
+}
+
+❌ Ошибка 5: Array out of bounds
+int arr[5];
+arr[10] = 5;  // ОШИБКА! Out of bounds
+
+✓ Решение:
+int arr[5];
+for (int i = 0; i < 5; i++) {
+    arr[i] = i;
+}
+
+❌ Ошибка 6: Uninitialized variable
+int x;
+printf("%d\n", x);  // ОШИБКА! Undefined behavior
+
+✓ Решение:
+int x = 0;
+printf("%d\n", x);
+
+❌ Ошибка 7: Wrong format specifier
+int x = 5;
+printf("%f\n", x);  // ОШИБКА! %f для float
+
+✓ Решение:
+int x = 5;
+printf("%d\n", x);
+
+❌ Ошибка 8: Pointer arithmetic error
+int arr[5] = {1, 2, 3, 4, 5};
+int* ptr = arr;
+printf("%d\n", ptr[5]);  // ОШИБКА! Out of bounds
+
+✓ Решение:
+int arr[5] = {1, 2, 3, 4, 5};
+int* ptr = arr;
+for (int i = 0; i < 5; i++) {
+    printf("%d\n", ptr[i]);
+}
+
+❌ Ошибка 9: Const correctness
+const int x = 5;
+x = 10;  // ОШИБКА! Cannot modify const
+
+✓ Решение:
+int x = 5;
+x = 10;  // OK
+
+❌ Ошибка 10: Return local pointer
+int* get_array() {
+    int arr[10];
+    return arr;  // ОШИБКА! arr на стеке
+}
+
+✓ Решение:
+int* get_array() {
+    int* arr = malloc(10 * sizeof(int));
+    return arr;  // OK (caller must free)
+}
+
+================================================================================
+11. ПРИМЕРЫ SYSTEMS PROGRAMMING СТИЛЯ
+================================================================================
+
+Пример 1: Linked list
+---------------------
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+Node* create_node(int data) {
+    Node* node = malloc(sizeof(Node));
+    node->data = data;
+    node->next = NULL;
+    return node;
+}
+
+void free_list(Node* head) {
+    while (head != NULL) {
+        Node* temp = head;
+        head = head->next;
+        free(temp);
+    }
+}
+
+Пример 2: Dynamic array
+-----------------------
+typedef struct {
+    int* data;
+    size_t size;
+    size_t capacity;
+} DynamicArray;
+
+DynamicArray* create_array() {
+    DynamicArray* arr = malloc(sizeof(DynamicArray));
+    arr->capacity = 10;
+    arr->size = 0;
+    arr->data = malloc(arr->capacity * sizeof(int));
+    return arr;
+}
+
+void push(DynamicArray* arr, int value) {
+    if (arr->size >= arr->capacity) {
+        arr->capacity *= 2;
+        arr->data = realloc(arr->data, arr->capacity * sizeof(int));
+    }
+    arr->data[arr->size++] = value;
+}
+
+Пример 3: File copy
+-------------------
+void copy_file(const char* src, const char* dest) {
+    FILE* src_file = fopen(src, "rb");
+    FILE* dest_file = fopen(dest, "wb");
+    
+    char buffer[1024];
+    size_t bytes;
+    
+    while ((bytes = fread(buffer, 1, sizeof(buffer), src_file)) > 0) {
+        fwrite(buffer, 1, bytes, dest_file);
+    }
+    
+    fclose(src_file);
+    fclose(dest_file);
+}
+
+Пример 4: String tokenizer
+--------------------------
+#include <string.h>
+
+char* tokenize(char* str, const char* delim) {
+    static char* static_str = NULL;
+    
+    if (str != NULL) {
+        static_str = str;
+    }
+    
+    if (static_str == NULL) {
+        return NULL;
+    }
+    
+    char* token = strtok(static_str, delim);
+    static_str = NULL;
+    
+    return token;
+}
+
+Пример 5: Signal handler
+------------------------
+#include <signal.h>
+
+void signal_handler(int sig) {
+    printf("Received signal %d\n", sig);
+}
+
+int main() {
+    signal(SIGINT, signal_handler);
+    while (1) {
+        // Wait for signal
+    }
+    return 0;
+}
+
+================================================================================
+                         КОНЕЦ SYNTAX_C
+================================================================================

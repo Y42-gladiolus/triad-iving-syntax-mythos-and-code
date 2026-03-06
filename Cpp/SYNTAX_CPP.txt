@@ -1,0 +1,667 @@
+================================================================================
+              C++ - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Systems Programming + Templates + Modern C++ (11/14/17/20)
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Классы и ООП
+6. Templates (обобщения)
+7. Smart Pointers
+8. STL контейнеры
+9. Lambda выражения
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры systems programming стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+#include <iostream>
+#include <vector>
+#include <string>
+
+// Комментарии
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Точка с запятой обязательна
+int x = 5;
+int y = 10;
+
+// Main функция
+int main() {
+    std::cout << "Hello, C++!" << std::endl;
+    return 0;
+}
+
+// Namespace
+using namespace std;  // Избегать в production!
+using std::cout;
+using std::endl;
+
+// Preprocessor directives
+#define PI 3.14159
+#ifdef DEBUG
+    cout << "Debug mode" << endl;
+#endif
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ bool            │ true, false                                                │
+│ char            │ 'a', 'б' (1 byte)                                          │
+│ char16_t        │ u'a' (2 bytes, UTF-16)                                     │
+│ char32_t        │ U'a' (4 bytes, UTF-32)                                     │
+│ wchar_t         │ L'a' (wide character)                                      │
+│ short           │ 16-bit integer                                             │
+│ int             │ 32-bit integer (обычно)                                    │
+│ long            │ 32 или 64-bit integer                                      │
+│ long long       │ 64-bit integer                                             │
+│ float           │ 32-bit floating point                                      │
+│ double          │ 64-bit floating point                                      │
+│ long double     │ 80 или 128-bit floating point                              │
+│ auto            │ Автоматический вывод типа (C++11)                          │
+│ nullptr         │ Null pointer (C++11)                                       │
+│ void            │ Пустой тип                                                 │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// sizeof operator
+cout << sizeof(int) << endl;  // 4 (обычно)
+
+// Type casting
+int x = 5;
+double y = (double)x;  // C-style
+double z = static_cast<double>(x);  // C++ style
+
+// auto (C++11)
+auto a = 5;          // int
+auto b = 3.14;       // double
+auto c = "hello";    // const char*
+
+// decltype (C++11)
+int x = 5;
+decltype(x) y = 10;  // y is int
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// Объявление переменных
+int x = 5;
+int y(10);        // Constructor initialization
+int z{15};        // Uniform initialization (C++11)
+
+// Const
+const int MAX = 100;
+// MAX = 200;  // ОШИБКА!
+
+// Constexpr (compile-time constant, C++11)
+constexpr int SIZE = 100;
+
+// Reference
+int a = 5;
+int& ref = a;     // Reference
+ref = 10;         // a = 10
+
+// Const reference
+const int& cref = a;
+// cref = 10;  // ОШИБКА!
+
+// Pointer
+int* ptr = &a;
+*ptr = 15;        // a = 15
+
+// nullptr (C++11)
+int* ptr = nullptr;
+
+// Rvalue reference (C++11)
+int&& rref = 10;
+
+// Move semantics (C++11)
+std::string s1 = "hello";
+std::string s2 = std::move(s1);  // s1 is now empty
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+int add(int a, int b) {
+    return a + b;
+}
+
+// Default parameters
+int greet(std::string name, std::string greeting = "Hello") {
+    return greeting + ", " + name;
+}
+
+// Function overloading
+int add(int a, int b) { return a + b; }
+double add(double a, double b) { return a + b; }
+
+// Reference parameters
+void increment(int& x) {
+    x++;
+}
+
+// Const reference (для больших объектов)
+void print(const std::string& str) {
+    std::cout << str << std::endl;
+}
+
+// Return by reference
+int& getRef(int& x) {
+    return x;
+}
+
+// Inline function
+inline int square(int x) {
+    return x * x;
+}
+
+// Lambda (C++11)
+auto lambda = [](int x) { return x * x; };
+int result = lambda(5);  // 25
+
+// Lambda с capture
+int factor = 2;
+auto multiply = [factor](int x) { return x * factor; };
+
+// Variadic templates (C++11)
+template<typename... Args>
+void print(Args... args) {
+    (std::cout << ... << args) << std::endl;
+}
+
+// constexpr function (C++11)
+constexpr int factorial(int n) {
+    return (n <= 1) ? 1 : (n * factorial(n - 1));
+}
+
+================================================================================
+5. КЛАССЫ И ООП
+================================================================================
+
+class MyClass {
+private:
+    int value;
+    
+public:
+    // Constructor
+    MyClass(int v) : value(v) {}
+    
+    // Destructor
+    ~MyClass() {}
+    
+    // Copy constructor
+    MyClass(const MyClass& other) : value(other.value) {}
+    
+    // Move constructor (C++11)
+    MyClass(MyClass&& other) noexcept : value(other.value) {}
+    
+    // Copy assignment
+    MyClass& operator=(const MyClass& other) {
+        value = other.value;
+        return *this;
+    }
+    
+    // Move assignment (C++11)
+    MyClass& operator=(MyClass&& other) noexcept {
+        value = other.value;
+        return *this;
+    }
+    
+    // Member function
+    int getValue() const {
+        return value;
+    }
+    
+    // Static member
+    static int count;
+};
+
+// Inheritance
+class Derived : public Base {
+public:
+    Derived(int v) : Base(v) {}
+    
+    // Override (C++11)
+    void print() override {
+        Base::print();
+    }
+};
+
+// Virtual function
+class Base {
+public:
+    virtual void print() {
+        std::cout << "Base" << std::endl;
+    }
+    virtual ~Base() {}  // Virtual destructor
+};
+
+// Pure virtual (abstract class)
+class Abstract {
+public:
+    virtual void print() = 0;  // Pure virtual
+    virtual ~Abstract() {}
+};
+
+// Smart pointers (C++11)
+#include <memory>
+std::unique_ptr<MyClass> ptr1 = std::make_unique<MyClass>(5);
+std::shared_ptr<MyClass> ptr2 = std::make_shared<MyClass>(5);
+
+================================================================================
+6. TEMPLATES (ОБОБЩЕНИЯ)
+================================================================================
+
+// Function template
+template<typename T>
+T add(T a, T b) {
+    return a + b;
+}
+
+// Class template
+template<typename T>
+class Container {
+private:
+    T value;
+public:
+    Container(T v) : value(v) {}
+    T getValue() { return value; }
+};
+
+// Template specialization
+template<>
+class Container<bool> {
+private:
+    bool value;
+public:
+    Container(bool v) : value(v) {}
+    // Specialized implementation
+};
+
+// Variadic templates (C++11)
+template<typename... Args>
+class Tuple {
+    // Implementation
+};
+
+// Template metaprogramming
+template<int N>
+struct Factorial {
+    static const int value = N * Factorial<N-1>::value;
+};
+
+template<>
+struct Factorial<0> {
+    static const int value = 1;
+};
+
+// SFINAE (C++11/14)
+template<typename T>
+typename std::enable_if<std::is_integral<T>::value, T>::type
+add(T a, T b) {
+    return a + b;
+}
+
+// Concepts (C++20)
+template<typename T>
+concept Numeric = std::is_arithmetic_v<T>;
+
+template<Numeric T>
+T add(T a, T b) {
+    return a + b;
+}
+
+================================================================================
+7. SMART POINTERS
+================================================================================
+
+#include <memory>
+
+// unique_ptr (exclusive ownership)
+std::unique_ptr<int> ptr1 = std::make_unique<int>(5);
+// ptr1 = ptr2;  // ОШИБКА! Cannot copy
+std::unique_ptr<int> ptr2 = std::move(ptr1);  // OK
+
+// shared_ptr (shared ownership)
+std::shared_ptr<int> ptr1 = std::make_shared<int>(5);
+std::shared_ptr<int> ptr2 = ptr1;  // OK, reference count = 2
+std::cout << ptr1.use_count() << std::endl;  // 2
+
+// weak_ptr (non-owning reference)
+std::weak_ptr<int> weak = ptr1;
+if (auto shared = weak.lock()) {
+    std::cout << *shared << std::endl;
+}
+
+// Custom deleter
+std::unique_ptr<FILE, decltype(&fclose)> file(
+    fopen("file.txt", "r"), &fclose);
+
+================================================================================
+8. STL КОНТЕЙНЕРЫ
+================================================================================
+
+#include <vector>
+#include <array>
+#include <list>
+#include <map>
+#include <unordered_map>
+#include <set>
+#include <unordered_set>
+#include <string>
+
+// Vector (dynamic array)
+std::vector<int> vec = {1, 2, 3, 4, 5};
+vec.push_back(6);
+vec.pop_back();
+vec.size();
+vec[0];  // Access
+vec.at(0);  // Bounds-checked access
+
+// Array (fixed size, C++11)
+std::array<int, 5> arr = {1, 2, 3, 4, 5};
+
+// List (doubly linked list)
+std::list<int> lst = {1, 2, 3};
+lst.push_front(0);
+lst.push_back(4);
+
+// Map (ordered key-value)
+std::map<std::string, int> map;
+map["one"] = 1;
+map["two"] = 2;
+map.find("one");
+
+// Unordered map (hash map, C++11)
+std::unordered_map<std::string, int> umap;
+umap["one"] = 1;
+
+// Set (ordered unique elements)
+std::set<int> set = {1, 2, 3};
+set.insert(4);
+
+// Unordered set (hash set, C++11)
+std::unordered_set<int> uset = {1, 2, 3};
+
+// String
+std::string str = "hello";
+str += " world";
+str.length();
+str.substr(0, 5);
+
+// Range-based for (C++11)
+for (const auto& item : vec) {
+    std::cout << item << std::endl;
+}
+
+================================================================================
+9. LAMBDA ВЫРАЖЕНИЯ (C++11)
+================================================================================
+
+// Basic lambda
+auto lambda = [](int x) { return x * x; };
+
+// Lambda с capture by value
+int factor = 2;
+auto multiply = [factor](int x) { return x * factor; };
+
+// Lambda с capture by reference
+int sum = 0;
+auto add = [&sum](int x) { sum += x; };
+
+// Mutable lambda
+int x = 5;
+auto lambda = [x]() mutable { x++; return x; };
+
+// Lambda с return type
+auto lambda = [](int x) -> int { return x * x; };
+
+// Generic lambda (C++14)
+auto lambda = [](auto x, auto y) { return x + y; };
+
+// Lambda with initializer (C++14)
+auto lambda = [x = 5]() { return x * 2; };
+
+// Lambda в алгоритмах
+std::vector<int> vec = {1, 2, 3, 4, 5};
+std::sort(vec.begin(), vec.end(), [](int a, int b) {
+    return a > b;  // Descending
+});
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Memory leak
+int* ptr = new int[100];
+// Забыли delete[]!
+
+✓ Решение:
+std::unique_ptr<int[]> ptr = std::make_unique<int[]>(100);
+// Автоматическое освобождение!
+
+❌ Ошибка 2: Dangling reference
+int& getRef() {
+    int x = 5;
+    return x;  // ОШИБКА! x будет уничтожен
+}
+
+✓ Решение:
+int getValue() {
+    return 5;  // Return by value
+}
+
+❌ Ошибка 3: Slice problem
+class Derived : public Base {};
+std::vector<Base> vec;
+vec.push_back(Derived());  // ОШИБКА! Slicing
+
+✓ Решение:
+std::vector<std::unique_ptr<Base>> vec;
+vec.push_back(std::make_unique<Derived>());
+
+❌ Ошибка 4: Rule of three/five
+class MyClass {
+    int* ptr;
+public:
+    MyClass() : ptr(new int) {}
+    // Забыли copy constructor, copy assignment, destructor!
+};
+
+✓ Решение:
+class MyClass {
+    int* ptr;
+public:
+    MyClass() : ptr(new int) {}
+    ~MyClass() { delete ptr; }
+    MyClass(const MyClass& other) : ptr(new int(*other.ptr)) {}
+    MyClass& operator=(const MyClass& other) {
+        if (this != &other) {
+            delete ptr;
+            ptr = new int(*other.ptr);
+        }
+        return *this;
+    }
+};
+
+❌ Ошибка 5: Virtual destructor
+class Base {
+public:
+    ~Base() {}  // ОШИБКА! Не virtual!
+};
+
+✓ Решение:
+class Base {
+public:
+    virtual ~Base() {}  // OK
+};
+
+❌ Ошибка 6: Const correctness
+void print(std::string& str) {
+    std::cout << str << std::endl;
+}
+
+✓ Решение:
+void print(const std::string& str) {
+    std::cout << str << std::endl;
+}
+
+❌ Ошибка 7: Move semantics
+class MyClass {
+    int* ptr;
+public:
+    MyClass(MyClass& other) : ptr(other.ptr) {}  // ОШИБКА!
+};
+
+✓ Решение:
+class MyClass {
+    int* ptr;
+public:
+    MyClass(MyClass&& other) noexcept : ptr(other.ptr) {
+        other.ptr = nullptr;
+    }
+};
+
+❌ Ошибка 8: Exception safety
+void process() {
+    int* ptr = new int[100];
+    mightThrow();  // Если выбросит, memory leak!
+    delete[] ptr;
+}
+
+✓ Решение:
+void process() {
+    std::unique_ptr<int[]> ptr = std::make_unique<int[]>(100);
+    mightThrow();  // RAII освободит память
+}
+
+❌ Ошибка 9: Integer overflow
+int x = 2000000000;
+int y = 2000000000;
+int z = x + y;  // ОШИБКА! Overflow
+
+✓ Решение:
+long long z = (long long)x + y;
+
+❌ Ошибка 10: Undefined behavior
+int arr[5];
+arr[10] = 5;  // ОШИБКА! Out of bounds
+
+✓ Решение:
+std::vector<int> arr(5);
+arr.at(4) = 5;  // Bounds-checked
+
+================================================================================
+11. ПРИМЕРЫ SYSTEMS PROGRAMMING СТИЛЯ
+================================================================================
+
+Пример 1: RAII pattern
+----------------------
+class File {
+    FILE* file;
+public:
+    File(const char* path) : file(fopen(path, "r")) {}
+    ~File() { if (file) fclose(file); }
+    FILE* get() { return file; }
+};
+
+// Использование
+void process() {
+    File file("data.txt");  // Автоматически закроется
+    fread(buffer, 1, size, file.get());
+}
+
+Пример 2: Move semantics
+------------------------
+class Buffer {
+    int* data;
+    size_t size;
+public:
+    Buffer(size_t s) : data(new int[s]), size(s) {}
+    
+    // Move constructor
+    Buffer(Buffer&& other) noexcept 
+        : data(other.data), size(other.size) {
+        other.data = nullptr;
+        other.size = 0;
+    }
+    
+    // Move assignment
+    Buffer& operator=(Buffer&& other) noexcept {
+        if (this != &other) {
+            delete[] data;
+            data = other.data;
+            size = other.size;
+            other.data = nullptr;
+            other.size = 0;
+        }
+        return *this;
+    }
+};
+
+Пример 3: Template metaprogramming
+----------------------------------
+template<int N>
+struct Fibonacci {
+    static const int value = Fibonacci<N-1>::value + Fibonacci<N-2>::value;
+};
+
+template<>
+struct Fibonacci<0> { static const int value = 0; };
+
+template<>
+struct Fibonacci<1> { static const int value = 1; };
+
+// Fibonacci<10>::value = 55
+
+Пример 4: Modern C++ (C++17/20)
+-------------------------------
+// Structured binding (C++17)
+auto [x, y] = std::make_pair(1, 2);
+
+// If with initializer (C++17)
+if (auto it = map.find(key); it != map.end()) {
+    std::cout << it->second << std::endl;
+}
+
+// Concepts (C++20)
+template<typename T>
+concept Addable = requires(T a, T b) {
+    { a + b } -> std::same_as<T>;
+};
+
+template<Addable T>
+T add(T a, T b) { return a + b; }
+
+Пример 5: Thread-safe singleton
+-------------------------------
+class Singleton {
+public:
+    static Singleton& getInstance() {
+        static Singleton instance;  // Thread-safe in C++11
+        return instance;
+    }
+private:
+    Singleton() {}
+};
+
+================================================================================
+                         КОНЕЦ SYNTAX_CPP
+================================================================================

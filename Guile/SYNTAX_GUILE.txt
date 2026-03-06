@@ -1,0 +1,545 @@
+================================================================================
+              GUILE - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    GNU Scheme + C Integration + SRFI Libraries
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (Scheme стиль)
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (lambda, define)
+5. Control Flow
+6. Lists и коллекции
+7. C интеграция (FFI)
+8. Modules и импорты
+9. Error Handling
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры GNU стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (SCHEME СТИЛЬ)
+================================================================================
+
+; Комментарии (точка с запятой)
+; Однострочные
+
+#|
+    Многострочные
+    комментарии
+|#
+
+; S-выражения (как в Lisp)
+(+ 1 2 3)  ; 6
+
+; Префиксная нотация
+(* (+ 1 2) 3)  ; 9
+
+; Define для определений
+(define x 5)
+(define name "Guile")
+
+; Lambda для функций
+(lambda (x) (+ x 1))
+
+; Quote (цитирование)
+'(1 2 3)  ; (1 2 3) не вычисляется
+
+; Quasiquote (с вычислением)
+(define x 5)
+`(1 2 ,x 4)  ; (1 2 5 4)
+
+; Begin (последовательность)
+(begin
+   (display "Hello")
+   (newline)
+   42)  ; Возвращает 42
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ number          │ 1, -10, 3.14, 2.5e10                                       │
+│ integer         │ 1, -10, 1000000                                            │
+│ rational        │ 1/2, 3/4 (точные дроби)                                    │
+│ real            │ 3.14, -0.5                                                 │
+│ complex         │ 3+4i (комплексные числа)                                   │
+│ boolean         │ #t, #f (true, false)                                       │
+│ char            │ #\a, #\б                                                   │
+│ string          │ "hello", "привет"                                          │
+│ symbol          │ 'foo, 'bar, 'name                                          │
+│ list            │ '(1 2 3), (list 1 2 3)                                     │
+│ vector          │ #(1 2 3), (vector 1 2 3)                                   │
+│ bytevector      │ #u8(1 2 3)                                                 │
+│ hash-table      │ (make-hash-table)                                          │
+│ procedure       │ (lambda (x) x)                                             │
+│ port            │ (current-input-port)                                       │
+│ continuation    │ (call/cc (lambda (k) k))                                   │
+│ foreign-object  │ C объекты (через FFI)                                      │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+; Проверка типа
+(number? x)      ; число?
+(integer? x)     ; целое?
+(string? x)      ; строка?
+(list? x)        ; список?
+(procedure? x)   ; функция?
+
+; Приведение типов
+(string->number "5")  ; 5
+(number->string 5)    ; "5"
+(list->vector '(1 2 3)) ; #(1 2 3)
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+; Define (глобальные)
+(define x 5)
+(define name "Guile")
+
+; Let (локальные переменные)
+(let ((x 5)
+      (y 10))
+  (+ x y))  ; 15
+
+; Let* (последовательное связывание)
+(let* ((x 5)
+       (y (+ x 5)))
+  y)  ; 10
+
+; Letrec (рекурсивное связывание)
+(letrec ((even? (lambda (n)
+                  (if (= n 0)
+                      #t
+                      (odd? (- n 1)))))
+         (odd? (lambda (n)
+                 (if (= n 0)
+                     #f
+                     (even? (- n 1))))))
+  (even? 10))  ; #t
+
+; Set! (изменение)
+(define counter 0)
+(set! counter 1)
+
+; Const (константы по соглашению)
+(define PI 3.14159)
+(define MAX-SIZE 100)
+
+; Destructuring
+(define (destruct lst)
+  (let ((a (car lst))
+        (b (cadr lst)))
+    (+ a b)))
+
+(destruct '(1 2 3))  ; 3
+
+================================================================================
+4. ФУНКЦИИ (LAMBDA, DEFINE)
+================================================================================
+
+; Базовая функция
+(define (add a b)
+  (+ a b))
+
+; Lambda (анонимная функция)
+(lambda (x) (+ x 1))
+
+; Define с lambda
+(define add (lambda (a b) (+ a b)))
+
+; Частичное применение (curry)
+(define (curry f a)
+  (lambda (b) (f a b)))
+
+(define add5 (curry + 5))
+(add5 10)  ; 15
+
+; Default параметры (через case-lambda)
+(define greet
+  (case-lambda
+    ((name) (greet name "Hello"))
+    ((name greeting) (string-append greeting ", " name))))
+
+(greet "John")  ; "Hello, John"
+(greet "John" "Hi")  ; "Hi, John"
+
+; Varargs (rest параметры)
+(define (sum . nums)
+  (apply + nums))
+
+(sum 1 2 3 4 5)  ; 15
+
+; Замыкания (closures)
+(define (make-adder n)
+  (lambda (x) (+ x n)))
+
+(define add5 (make-adder 5))
+(add5 10)  ; 15
+
+; Рекурсия
+(define (factorial n)
+  (if (<= n 1)
+      1
+      (* n (factorial (- n 1)))))
+
+; Tail-рекурсия (оптимизирована)
+(define (factorial-tail n acc)
+  (if (<= n 1)
+      acc
+      (factorial-tail (- n 1) (* acc n))))
+
+================================================================================
+5. CONTROL FLOW
+================================================================================
+
+; If/else
+(if (> x 0)
+    (display "positive")
+    (display "non-positive"))
+
+; Cond (множественный выбор)
+(cond
+  [(= x 0) "zero"]
+  [(= x 1) "one"]
+  [else "other"])
+
+; Case (case statement)
+(case x
+  [(0) "zero"]
+  [(1) "one"]
+  [else "other"])
+
+; When (только если истинно)
+(when (> x 0)
+  (display "positive"))
+
+; Unless (только если ложно)
+(unless (= x 0)
+  (display "not zero"))
+
+; Циклы
+; Named let (рекурсивный цикл)
+(let loop ((i 0))
+  (when (< i 10)
+    (display i)
+    (loop (+ i 1))))
+
+; Do (цикл с счётчиком)
+(do ((i 0 (+ i 1)))
+    ((>= i 10))
+  (display i))
+
+; For-each (для каждого)
+(for-each display '(1 2 3))
+
+; Map (преобразование)
+(map (lambda (x) (* x 2)) '(1 2 3))  ; (2 4 6)
+
+================================================================================
+6. LISTS И КОЛЛЕКЦИИ
+================================================================================
+
+; List (список)
+(define lst '(1 2 3 4 5))
+
+; List операции
+(car lst)      ; 1 (первый элемент)
+(cdr lst)      ; (2 3 4 5) (остаток)
+(cons 0 lst)   ; (0 1 2 3 4 5)
+(length lst)   ; 5
+(list-ref lst 2) ; 3
+(reverse lst)  ; (5 4 3 2 1)
+(append lst '(6 7)) ; (1 2 3 4 5 6 7)
+
+; List transformation
+(map (lambda (x) (* x 2)) lst)  ; (2 4 6 8 10)
+(filter (lambda (x) (> x 2)) lst) ; (3 4 5)
+(fold-left + 0 lst)  ; 15
+(fold-right + 0 lst) ; 15
+
+; Vector (вектор)
+(define vec #(1 2 3 4 5))
+(vector-ref vec 0)  ; 1
+(vector-set! vec 0 0)
+(vector-length vec) ; 5
+
+; Hash table
+(define ht (make-hash-table))
+(hash-set! ht "key" "value")
+(hash-ref ht "key")  ; "value"
+(hash-delete! ht "key")
+
+; SRFI :1 (списки)
+(use-modules (srfi srfi-1))
+(iota 5)  ; (0 1 2 3 4)
+(take lst 3)  ; (1 2 3)
+(drop lst 2)  ; (3 4 5)
+
+================================================================================
+7. C ИНТЕГРАЦИЯ (FFI)
+================================================================================
+
+; Вызов C функций
+(use-modules (system foreign))
+
+(define libc (dynamic-link "libc"))
+(define printf (dynamic-func "printf" libc))
+
+(define (c-printf fmt . args)
+  (pointer->procedure int printf (list '*))
+  (printf (string->pointer fmt)))
+
+(c-printf "Hello from C!\n")
+
+; C структуры
+(define-struct struct-point (x y))
+(define p (make-struct struct-point 10 20))
+(struct-point-x p)  ; 10
+
+; C указатели
+(define ptr (malloc 10))
+(free ptr)
+
+; Inline C
+(use-modules (system ffi))
+
+; C макросы
+(define-syntax C-PRINTF
+  (syntax-rules ()
+    ((_ fmt args ...)
+     (c-printf fmt args ...))))
+
+(C-PRINTF "Hello\n")
+
+================================================================================
+8. MODULES И ИМПОРТЫ
+================================================================================
+
+; Guile modules
+(use-modules (ice-9 format))
+(use-modules (ice-9 regex))
+(use-modules (ice-9 match))
+
+; SRFI modules
+(use-modules (srfi srfi-1))
+(use-modules (srfi srfi-13))
+(use-modules (srfi srfi-69))
+
+; R6RS modules
+(import (rnrs base))
+(import (rnrs lists))
+
+; Создание модуля
+; lib/utils.scm
+(define-module (lib utils)
+  #:export (add subtract))
+
+(define (add a b) (+ a b))
+(define (subtract a b) (- a b))
+
+; Использование модуля
+(use-modules (lib utils))
+(add 5 3)  ; 8
+
+; Include (включение файлов)
+(include "lib/utils.scm")
+
+; Load (загрузка в REPL)
+(load "lib/utils.scm")
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+; Error
+(error "Something went wrong")
+
+; Condition system
+(throw 'my-error "error message")
+
+; Catch (обработка условий)
+(catch 'my-error
+  (lambda ()
+    (throw 'my-error "test"))
+  (lambda (key . args)
+    (display "Error: ")
+    (display args)))
+
+; Guard (обработка условий)
+(guard (condition
+         [(error? condition)
+          (display "Error caught")])
+  (error "test"))
+
+; With-exception-handler
+(with-exception-handler
+  (lambda (exn)
+    (display "Error: ")
+    (display exn))
+  (lambda ()
+    (error "test")))
+
+; Assert
+(assert (> x 0) "X must be positive")
+
+; Raise
+(raise (condition (& error)))
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Неправильный car/cdr
+(car '())  ; ОШИБКА! Пустой список
+
+✓ Решение:
+(if (null? lst)
+    '()
+    (car lst))
+
+❌ Ошибка 2: Set! без define
+(set! x 5)  ; ОШИБКА! x не определён
+
+✓ Решение:
+(define x 0)
+(set! x 5)
+
+❌ Ошибка 3: Неполный cond
+(cond
+  [(= x 0) "zero"]
+  [(= x 1) "one"])  ; Забыли else!
+
+✓ Решение:
+(cond
+  [(= x 0) "zero"]
+  [(= x 1) "one"]
+  [else "other"])
+
+❌ Ошибка 4: Рекурсия без базового случая
+(define (factorial n)
+  (* n (factorial (- n 1))))  ; Бесконечная рекурсия!
+
+✓ Решение:
+(define (factorial n)
+  (if (<= n 1)
+      1
+      (* n (factorial (- n 1)))))
+
+❌ Ошибка 5: Неправильный let
+(let ((x 5) (y 10))  ; OK
+  (+ x y))
+
+(let (x 5 y 10)  ; ОШИБКА! Нужны скобки
+  (+ x y))
+
+✓ Решение:
+(let ((x 5) (y 10))
+  (+ x y))
+
+❌ Ошибка 6: Map без функции
+(map lst)  ; ОШИБКА! Нужна функция
+
+✓ Решение:
+(map (lambda (x) x) lst)
+
+❌ Ошибка 7: Apply без списка
+(apply + 1 2 3)  ; ОШИБКА!
+
+✓ Решение:
+(apply + '(1 2 3))
+
+❌ Ошибка 8: Macro без syntax-rules
+(define-syntax my-if
+  (test then else)  ; ОШИБКА!
+  (if test then else))
+
+✓ Решение:
+(define-syntax my-if
+  (syntax-rules ()
+    ((my-if test then else)
+     (if test then else))))
+
+❌ Ошибка 9: Неправильный import
+(import lists)  ; ОШИБКА!
+
+✓ Решение:
+(import (rnrs lists))
+; или
+(use-modules (srfi srfi-1))
+
+❌ Ошибка 10: Игнорирование return значения
+(define (func)
+  (display "Hello")
+  ; Забыли return значение!
+)
+
+✓ Решение:
+(define (func)
+  (display "Hello")
+  42)  ; Возвращает 42
+
+================================================================================
+11. ПРИМЕРЫ GNU СТИЛЯ
+================================================================================
+
+Пример 1: GNU tool extension
+-----------------------------
+; Расширение для GNU инструмента
+(define-module (gnu my-tool)
+  #:use-module (ice-9 format))
+
+(define (my-tool-function data)
+  (format #t "Processing: ~a~%" data))
+
+Пример 2: C integration
+-----------------------
+(use-modules (system foreign))
+
+(define libc (dynamic-link "libc"))
+(define srand (dynamic-func "srand" libc))
+(define rand (dynamic-func "rand" libc))
+
+(define (random-number)
+  (srand (time->seconds (gettimeofday)))
+  (rand))
+
+Пример 3: Script automation
+---------------------------
+#!/usr/bin/env guile
+
+(use-modules (ice-9 popen))
+
+(define (run-command cmd)
+  (let ((port (open-input-pipe cmd)))
+    (let loop ((lines '()))
+      (let ((line (get-line port)))
+        (if (eof-object? line)
+            (begin
+              (close-input-pipe port)
+              (reverse lines))
+            (loop (cons line lines)))))))
+
+Пример 4: Pattern matching
+--------------------------
+(use-modules (ice-9 match))
+
+(match '(1 2 3)
+  ((1 2 3) (display "Matched!"))
+  (_ (display "Not matched")))
+
+Пример 5: Format output
+-----------------------
+(use-modules (ice-9 format))
+
+(format #t "Hello, ~a!~%" "Guile")
+(format #t "Number: ~d~%" 42)
+(format #t "Float: ~,2f~%" 3.14159)
+
+================================================================================
+                         КОНЕЦ SYNTAX_GUILE
+================================================================================

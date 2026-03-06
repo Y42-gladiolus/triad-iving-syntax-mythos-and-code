@@ -1,0 +1,419 @@
+================================================================================
+                    ROC - КЛЮЧЕВЫЕ ОСОБЕННОСТИ ЯЗЫКА
+                         Modern Functional + Fast + No GC + Great UX
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Архитектура и дизайн
+2. Система типов
+3. Управление памятью
+4. Компиляция
+5. Error handling
+6. WebAssembly поддержка
+7. Interoperability
+8. Developer Experience
+9. Производительность
+10. Ограничения и будущее
+
+================================================================================
+1. АРХИТЕКТУРА И ДИЗАЙН
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ROC ARCHITECTURE                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  IMPLEMENTATION:                                                             │
+│  • Написан на Zig (быстрый, безопасный)                                     │
+│  • Компилируется в LLVM IR                                                  │
+│  • Оптимизации уровня production                                            │
+│  • Параллельная компиляция                                                  │
+│                                                                              │
+│  DESIGN PHILOSOPHY:                                                          │
+│  • Fast compilation (быстрее Haskell/OCaml)                                 │
+│  • Friendly error messages (лучший UX)                                      │
+│  • No garbage collector (reference counting)                                │
+│  • Functional programming (без type classes)                                │
+│  • Web-first (WebAssembly + native)                                         │
+│                                                                              │
+│  KEY FEATURES:                                                               │
+│  • Built-in formatting (roc format)                                         │
+│  • Type inference (вывод типов)                                             │
+│  • No null (как Elm)                                                        │
+│  • Result types для ошибок                                                  │
+│  • Abilities (новая концепция вместо type classes)                          │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+2. СИСТЕМА ТИПОВ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ROC TYPE SYSTEM                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  STATIC TYPING:                                                              │
+│  • Все типы известны на compile-time                                        │
+│  • Type inference (не нужно annotating всё)                                 │
+│  • No type annotations needed most of the time                              │
+│                                                                              │
+│  NO NULL:                                                                    │
+│  • Нет null значений                                                        │
+│  • Option types вместо null                                                 │
+│  • Result types для ошибок                                                  │
+│  • Как Elm, Rust                                                            │
+│                                                                              │
+│  ABILITIES (вместо type classes):                                            │
+│  • Abilities = capabilities для функций                                     │
+│  • Проще чем Haskell type classes                                           │
+│  • Composability                                                            │
+│  • Better ergonomics                                                        │
+│                                                                              │
+│  TYPE INFERENCE:                                                             │
+│  • Hindley-Milner based                                                     │
+│  • Works across modules                                                     │
+│  • Fast inference                                                           │
+│  • Clear error messages                                                     │
+│                                                                              │
+│  EXAMPLES:                                                                   │
+│  • Num a - числовые типы                                                    │
+│  • Str - строки                                                             │
+│  • Bool - булевы                                                            │
+│  • List a - списки                                                          │
+│  • Result ok err - результаты                                               │
+│  • Option a - опциональные значения                                         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+3. УПРАВЛЕНИЕ ПАМЯТЬЮ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ROC MEMORY MANAGEMENT                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  REFERENCE COUNTING:                                                         │
+│  • Автоматическое управление памятью                                        │
+│  • Нет garbage collection пауз                                              │
+│  • Предсказуемая производительность                                         │
+│  • Как Swift, Python (CPython)                                              │
+│                                                                              │
+│  NO GC PAUSES:                                                               │
+│  • Нет stop-the-world пауз                                                  │
+│  • Real-time friendly                                                       │
+│  • Predictable latency                                                      │
+│  • Как Rust но проще                                                        │
+│                                                                              │
+│  OWNERSHIP:                                                                  │
+│  • Unique types для ownership                                               │
+│  • Borrowing (как Rust но проще)                                            │
+│  • No borrow checker complexity                                             │
+│  • Automatic lifetime management                                            │
+│                                                                              │
+│  PERFORMANCE:                                                                │
+│  • Fast allocation/deallocation                                             │
+│  • Low overhead                                                             │
+│  • Comparable to manual memory management                                   │
+│  • Better than GC for latency-sensitive apps                                │
+│                                                                              │
+│  EXAMPLES:                                                                   │
+│  • Unique List a - уникальный список                                        │
+│  • Borrowed List a - заимствованный список                                  │
+│  • Automatic cleanup когда не используется                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+4. КОМПИЛЯЦИЯ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ROC COMPILATION                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  FAST COMPILATION:                                                           │
+│  • Быстрее чем Haskell/OCaml                                                │
+│  • Параллельная компиляция                                                  │
+│  • Инкрементальная компиляция                                               │
+│  • Написан на Zig (быстрый компилятор)                                      │
+│                                                                              │
+│  TARGETS:                                                                    │
+│  • Native code (Linux, macOS, Windows)                                      │
+│  • WebAssembly (wasm32)                                                     │
+│  • JavaScript (через wasm)                                                  │
+│  • More targets in development                                              │
+│                                                                              │
+│  OPTIMIZATIONS:                                                              │
+│  • LLVM optimizations                                                       │
+│  • Dead code elimination                                                    │
+│  • Inlining                                                                   │
+│  • Specialization                                                           │
+│  • Comparable to C/C++ performance                                          │
+│                                                                              │
+│  BUILD MODES:                                                                │
+│  • Development (быстрая компиляция, debug info)                             │
+│  • Release (оптимизации, нет debug info)                                    │
+│  • Size (оптимизация по размеру)                                            │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Hello World: < 100 ms                                                    │
+│  • Medium project: < 1 sec                                                  │
+│  • Large project: < 10 sec                                                  │
+│  • Much faster than Haskell/OCaml                                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+5. ERROR HANDLING
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ROC ERROR HANDLING                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  RESULT TYPES:                                                               │
+│  • Result ok err - для ошибок                                               │
+│  • Нет exceptions                                                           │
+│  • Все ошибки явные в типах                                                 │
+│  • Как Rust, Elm                                                            │
+│                                                                              │
+│  EXAMPLES:                                                                   │
+│  • Result Str [NotFound, PermissionDenied]                                  │
+│  • Ok "success"                                                             │
+│  • Err NotFound                                                             │
+│                                                                              │
+│  PATTERN MATCHING:                                                           │
+│  • Когда for handling results                                               │
+│  • Exhaustive checking                                                      │
+│  • Компилятор проверяет все cases                                           │
+│                                                                              │
+│  EXAMPLE:                                                                    │
+│  when readFile "file.txt" is                                                │
+│      Ok content -> Stdout.line content                                      │
+│      Err NotFound -> Stdout.line "File not found"                           │
+│      Err PermissionDenied -> Stdout.line "Permission denied"                │
+│                                                                              │
+│  NO EXCEPTIONS:                                                              │
+│  • Нет try/catch                                                            │
+│  • Все ошибки через Result                                                  │
+│  • Нет runtime exceptions                                                   │
+│  • Все ошибки compile-time checked                                          │
+│                                                                              │
+│  COMPILER ERRORS:                                                            │
+│  • Отличные сообщения об ошибках                                            │
+│  • Цветной вывод                                                            │
+│  • Предложения по исправлению                                               │
+│  • Лучший compiler UX в индустрии                                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+6. WEBASSEMBLY ПОДДЕРЖКА
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ROC WEBASSEMBLY                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  FIRST-CLASS WASM SUPPORT:                                                   │
+│  • Компиляция в WebAssembly из коробки                                      │
+│  • Нет дополнительных инструментов                                          │
+│  • Fast WASM generation                                                     │
+│  • Small WASM size                                                          │
+│                                                                              │
+│  USE CASES:                                                                  │
+│  • Frontend web development                                                 │
+│  • Server-side WebAssembly (WASI)                                           │
+│  • Edge computing                                                           │
+│  • Plugins и extensions                                                     │
+│                                                                              │
+│  PERFORMANCE:                                                                │
+│  • Near-native performance в браузере                                       │
+│  • Fast startup                                                             │
+│  • Small binary size                                                        │
+│  • Better than JavaScript for compute-heavy tasks                           │
+│                                                                              │
+│  INTEROPERABILITY:                                                           │
+│  • Вызов JavaScript функций                                                 │
+│  • JavaScript вызов Roc функций                                             │
+│  • DOM manipulation через JS                                                │
+│  • Web APIs через JS                                                        │
+│                                                                              │
+│  BUILD COMMAND:                                                              │
+│  • roc build --target=wasm32 main.roc                                       │
+│  • roc build --target=wasm32-wasi main.roc                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+7. INTEROPERABILITY
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ROC INTEROPERABILITY                                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  C INTEROP:                                                                  │
+│  • Вызов C функций напрямую                                                 │
+│  • C заголовочные файлы                                                     │
+│  • No bindings needed                                                       │
+│  • Seamless integration                                                     │
+│                                                                              │
+│  JAVASCRIPT INTEROP:                                                         │
+│  • Вызов JavaScript функций (через WASM)                                    │
+│  • JavaScript вызывает Roc функции                                          │
+│  • Web APIs через JS                                                        │
+│  • DOM manipulation через JS                                                │
+│                                                                              │
+│  FFI (Foreign Function Interface):                                           │
+│  • Platform FFI для platform-specific кода                                  │
+│  • Safe FFI с type checking                                                 │
+│  • No undefined behavior                                                    │
+│                                                                              │
+│  EXAMPLES:                                                                   │
+│  • platform "linux" provides [readFile] to "./platform/linux.roc"           │
+│  • app "myapp" packages { pf: "..." } imports [pf.Stdout]                   │
+│                                                                              │
+│  PACKAGES:                                                                   │
+│  • Roc packages через URLs                                                  │
+│  • GitHub releases                                                          │
+│  • Version pinning                                                          │
+│  • Automatic dependency resolution                                          │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+8. DEVELOPER EXPERIENCE
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ROC DEVELOPER EXPERIENCE                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  BUILT-IN FORMATTER:                                                         │
+│  • roc format (встроенный форматтер)                                        │
+│  • Нет споров о стиле кода                                                  │
+│  • Как go fmt, elm format                                                   │
+│  • Fast formatting                                                          │
+│                                                                              │
+│  EXCELLENT ERROR MESSAGES:                                                   │
+│  • Понятные ошибки для начинающих                                           │
+│  • Цветной вывод                                                            │
+│  • Предложения по исправлению                                               │
+│  • Лучший compiler UX                                                       │
+│                                                                              │
+│  FAST FEEDBACK LOOP:                                                         │
+│  • Быстрая компиляция                                                       │
+│  • Быстрый REPL                                                             │
+│  • Quick iteration                                                          │
+│  • Like interpreted language speed                                          │
+│                                                                              │
+│  DOCUMENTATION:                                                              │
+│  • Встроенная документация                                                  │
+│  • roc docs генерация                                                       │
+│  • Type signatures в документации                                           │
+│  • Examples в документации                                                  │
+│                                                                              │
+│  TOOLING:                                                                    │
+│  • roc check (type checking)                                                │
+│  • roc run (запуск)                                                         │
+│  • roc build (компиляция)                                                   │
+│  • roc format (форматирование)                                              │
+│  • roc test (тестирование)                                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+9. ПРОИЗВОДИТЕЛЬНОСТЬ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ROC PERFORMANCE                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  RUNTIME PERFORMANCE:                                                        │
+│  • Сравнима с C/C++ для многих задач                                        │
+│  • Быстрее чем Python/Ruby/JavaScript                                       │
+│  • Сравнима с Rust для многих задач                                         │
+│  • Нет GC пауз                                                              │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Быстрее чем Haskell/OCaml/Rust                                           │
+│  • Hello World: < 100 ms                                                    │
+│  • Medium project: < 1 sec                                                  │
+│  • Large project: < 10 sec                                                  │
+│                                                                              │
+│  BINARY SIZE:                                                                │
+│  • Small binaries (без runtime)                                             │
+│  • Hello World: ~100 KB                                                     │
+│  • Optimized builds даже меньше                                             │
+│  • Smaller than Go, comparable to Rust                                      │
+│                                                                              │
+│  MEMORY USAGE:                                                               │
+│  • Low memory footprint                                                     │
+│  • No GC overhead                                                           │
+│  • Predictable memory usage                                                 │
+│  • Like C/C++                                                               │
+│                                                                              │
+│  BENCHMARKS:                                                                 │
+│  • Numerical computations: ~1x C                                            │
+│  • String processing: ~1-2x C                                               │
+│  • WebAssembly: faster than JS                                              │
+│  • Startup time: < 10 ms                                                    │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+10. ОГРАНИЧЕНИЯ И БУДУЩЕЕ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ROC LIMITATIONS & FUTURE                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CURRENT LIMITATIONS:                                                        │
+│  • Очень новый язык (2020+)                                                 │
+│  • Маленькая экосистема                                                     │
+│  • Нет stable release (ещё в разработке)                                    │
+│  • Breaking changes возможны                                                │
+│  • Меньше библиотек чем mainstream                                          │
+│  • Нет Windows support (ещё)                                                │
+│                                                                              │
+│  FUTURE PLANS:                                                               │
+│  • Stable release (в разработке)                                            │
+│  • More platforms (Windows, mobile)                                         │
+│  • More libraries                                                           │
+│  • Better IDE support                                                       │
+│  • GUI toolkit                                                              │
+│  • Database libraries                                                       │
+│  • Web frameworks                                                           │
+│                                                                              │
+│  ROADMAP:                                                                    │
+│  • 2024: First stable release                                               │
+│  • 2025: More platforms                                                     │
+│  • 2026: Ecosystem growth                                                   │
+│  • Long-term: Production-ready                                              │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • Активный Discord                                                         │
+│  • GitHub discussions                                                       │
+│  • Regular updates                                                          │
+│  • Growing community                                                        │
+│  • Open source                                                              │
+│                                                                              │
+│  WHEN TO USE:                                                                │
+│  • ✓ Early adopters                                                         │
+│  • ✓ New projects                                                           │
+│  • ✓ WebAssembly projects                                                   │
+│  • ✓ Functional programming fans                                            │
+│  • ✗ Production critical (ещё)                                              │
+│  • ✗ Need mature ecosystem                                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                         КОНЕЦ FEATURES_ROC
+================================================================================

@@ -1,0 +1,642 @@
+================================================================================
+              NIM - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Python-синтаксис + Lisp-макросы + Metaprogramming
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Макросы (КРИТИЧНО!)
+5. Функции
+6. Control Flow
+7. Объекты и классы
+8. Generics и Templates
+9. Асинхронность
+10. Error Handling
+11. Типичные ошибки (РАСШИРЕНО!)
+12. Примеры Lisp-стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+# Комментарии (решётка)
+# Однострочные
+
+discard """
+    Многострочные
+    комментарии
+"""
+
+# Отступы важны (как Python)
+if condition:
+  echo "Yes"
+else:
+  echo "No"
+
+# Точка с запятой опциональна
+let x = 5; let y = 10
+
+# main не обязателен (код выполняется сверху вниз)
+echo "Hello, Nim!"
+
+# Импорт
+import std/[strutils, sequtils]
+import json
+import os
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ int             │ 1, -10, 1_000_000 (подчёркивания для читаемости)           │
+│ int8, int16     │ Целые разной разрядности                                   │
+│ int32, int64    │ Большие целые                                              │
+│ uint8, uint16   │ Беззнаковые целые                                          │
+│ float, float32  │ 3.14, -0.5 (вещественные)                                  │
+│ float64         │ Двойная точность                                           │
+│ bool            │ true, false                                                │
+│ char            │ 'a', 'б' (одиночные кавычки)                               │
+│ string          │ "hello", "привет" (двойные кавычки)                        │
+│ cstring         │ C-строки (null-terminated)                                 │
+│ seq[T]          │ @[1, 2, 3] (динамический массив)                           │
+│ array[N, T]     │ [1, 2, 3] (фиксированный массив)                           │
+│ tuple           │ (1, "a", true) (кортеж)                                    │
+│ object          │ Объект (как struct/class)                                  │
+│ enum            │ enum Color = Red, Green, Blue                              │
+│ set             │ {1, 2, 3} (множество)                                      │
+│ range           │ 1..10 (диапазон)                                           │
+│ ref T           │ Ссылка (указатель)                                         │
+│ ptr T           │ C указатель                                                │
+│ pointer         │ Raw pointer                                                │
+│ void            │ Пустой тип                                                 │
+│ nil             │ Null значение                                              │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+# Проверка типа
+echo typeof(x)
+echo x is int
+
+# Приведение типов
+let x = 5.int64
+let y = cast[uint32](x)
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+# let - неизменяемая
+let x = 5
+# x = 6  # ОШИБКА!
+
+# var - изменяемая
+var y = 10
+y = 15  # OK
+
+# const - compile-time константа
+const pi = 3.14159
+const maxUsers = 100
+
+# Вывод типа
+var z = 5.0  # float
+
+# Явная аннотация
+var a: int = 5
+var b: string = "hello"
+
+# Destructuring
+let (x, y) = (1, 2)
+let (name, age) = ("John", 25)
+
+# Discard (игнорировать результат)
+discard someFunction()
+someFunction()  # Тоже игнорирует
+
+================================================================================
+4. МАКРОСЫ (КРИТИЧНО ВАЖНО!)
+================================================================================
+
+# ⚡ Макросы = Lisp-подобная метапрограммирование!
+
+# Базовый макрос
+macro dump(n: untyped): untyped =
+  result = quote do:
+    echo `n`, " = ", `n`
+
+dump(5 + 5)  # Выводит: 5 + 5 = 10
+
+# quote do - цитирование кода
+macro defvar(name: untyped, value: untyped) =
+  result = quote do:
+    let `name` = `value`
+
+defvar(x, 5)  # Создаёт let x = 5
+
+# AST манипуляция
+macro myIf(condition: untyped, body: untyped) =
+  result = quote do:
+    if `condition`:
+      `body`
+
+# Hygienic макросы (нет захвата переменных)
+macro safeAssign(name: untyped, value: untyped) =
+  let temp = genSym(nskLet, "temp")
+  result = quote do:
+    let `temp` = `value`
+    `name` = `temp`
+
+# Compile-time执行
+static:
+  echo "Compiling..."
+
+# Macro для DSL
+macro html(tag: untyped, body: untyped) =
+  result = quote do:
+    echo "<", `tag`, ">"
+    `body`
+    echo "</", `tag`, ">"
+
+html div:
+  echo "Content"
+
+# system.macros
+import macros
+
+macro logCall(n: untyped): untyped =
+  result = quote do:
+    echo "Calling: ", `n`.repr
+    `n`
+
+================================================================================
+5. ФУНКЦИИ
+================================================================================
+
+# Базовая функция
+func add(a: int, b: int): int =
+  a + b
+
+# proc (может иметь side effects)
+proc greet(name: string) =
+  echo "Hello, ", name
+
+# func (no side effects по умолчанию)
+func square(x: int): int =
+  x * x
+
+# Параметры по умолчанию
+proc greet(name: string, greeting: string = "Hello") =
+  echo greeting, ", ", name
+
+# Именованные параметры
+greet(name = "John", greeting = "Hi")
+
+# Var параметры (изменяемые)
+proc increment(x: var int) =
+  x += 1
+
+var n = 5
+increment(n)
+
+# Out параметры
+proc divide(a, b: int, result: out int, remainder: out int) =
+  result = a div b
+  remainder = a mod b
+
+# Varargs (переменное число)
+proc sum(nums: varargs[int]): int =
+  for n in nums:
+    result += n
+
+sum(1, 2, 3, 4, 5)
+
+# Возврат нескольких значений
+proc minMax(nums: seq[int]): (int, int) =
+  (nums.min, nums.max)
+
+let (min, max) = minMax(@[1, 2, 3, 4, 5])
+
+# Замыкания
+proc makeAdder(n: int): proc(x: int): int =
+  return proc(x: int): int = x + n
+
+let add5 = makeAdder(5)
+echo add5(10)  # 15
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+# if/elif/else
+if x > 10:
+  echo "big"
+elif x > 5:
+  echo "medium"
+else:
+  echo "small"
+
+# if как выражение
+let result = if x > 0: "positive" else: "non-positive"
+
+# case (switch)
+case x
+of 1: echo "one"
+of 2, 3: echo "two or three"
+else: echo "other"
+
+# when (compile-time if)
+when defined(release):
+  echo "Release build"
+else:
+  echo "Debug build"
+
+# for
+for i in 0..9:
+  echo i
+
+for i in 0..<10:  # 0 до 9
+  echo i
+
+for item in items:
+  echo item
+
+for i, item in pairs(items):
+  echo i, ": ", item
+
+# while
+var i = 0
+while i < 10:
+  echo i
+  inc i
+
+# block и break
+block outer:
+  for i in 0..10:
+    if i == 5:
+      break outer
+
+# continue
+for i in 0..10:
+  if i mod 2 == 0:
+    continue
+  echo i
+
+# try/except/finally
+try:
+  riskyOperation()
+except ValueError:
+  echo "Value error"
+except:
+  echo "Other error"
+finally:
+  echo "Always executed"
+
+# raise
+raise newException(ValueError, "Invalid value")
+
+================================================================================
+7. ОБЪЕКТЫ И КЛАССЫ
+================================================================================
+
+# Object (struct)
+type
+  Person = object
+    name: string
+    age: int
+    email: Option[string]
+
+# Создание
+let p = Person(name: "John", age: 25, email: none(string))
+
+# Доступ
+echo p.name
+echo p.age
+
+# Методы (процедуры с self)
+method greet(self: Person) =
+  echo "Hello, I'm ", self.name
+
+# Наследование
+type
+  Animal = ref object of RootObj
+    name: string
+  
+  Dog = ref object of Animal
+    breed: string
+
+# Полиморфизм
+method speak(a: Animal) =
+  echo "..."
+
+method speak(d: Dog) =
+  echo "Woof!"
+
+# Constructor
+proc newPerson(name: string, age: int): Person =
+  Person(name: name, age: age, email: none(string))
+
+# Destructor
+proc destroy(p: var Person) =
+  echo "Destroying ", p.name
+
+# Object variants (tagged union)
+type
+  NodeKind = enum
+    nkNumber, nkString, nkList
+  
+  Node = object
+    case kind: NodeKind
+    of nkNumber:
+      number: int
+    of nkString:
+      string: string
+    of nkList:
+      list: seq[Node]
+
+================================================================================
+8. GENERICS И TEMPLATES
+================================================================================
+
+# Generic тип
+type
+  Container[T] = object
+    value: T
+
+let intContainer = Container[int](value: 5)
+let strContainer = Container[string](value: "hello")
+
+# Generic функция
+func identity[T](x: T): T =
+  x
+
+echo identity[int](5)
+echo identity[string]("hello")
+
+# Type constraints
+func add[T: SomeNumber](a, b: T): T =
+  a + b
+
+# Templates (compile-time substitution)
+template unless(condition: untyped, body: untyped) =
+  if not condition:
+    body
+
+unless x > 10:
+  echo "x is small"
+
+# Template с parameters
+template withFile(f: untyped, filename: string, mode: string, body: untyped) =
+  var `f` = open(filename, mode)
+  try:
+    body
+  finally:
+    close(`f`)
+
+withFile(f, "test.txt", fmWrite):
+  f.write("Hello")
+
+# Iterators
+iterator reverse[T](s: seq[T]): T =
+  for i in countdown(s.high, 0):
+    yield s[i]
+
+for x in reverse(@[1, 2, 3, 4, 5]):
+  echo x
+
+================================================================================
+9. АСИНХРОННОСТЬ
+================================================================================
+
+import asyncdispatch
+
+# Async функция
+proc fetchData(): Future[string] {.async.} =
+  await sleepAsync(1000)
+  return "Data loaded"
+
+# Async/await
+proc main() {.async.} =
+  let data = await fetchData()
+  echo data
+
+# Parallel execution
+proc fetchAll() {.async.} =
+  let futures = @[
+    fetchData(),
+    fetchData(),
+    fetchData()
+  ]
+  let results = await all(futures)
+
+# Callback style
+proc fetchDataCallback(callback: proc(data: string)) =
+  setTimeout(1000) do ():
+    callback("Data loaded")
+
+# Channels
+import channels
+
+let ch = newChannel[string]()
+send(ch, "Hello")
+let msg = recv(ch)
+
+================================================================================
+10. ERROR HANDLING
+================================================================================
+
+# Exception type
+type
+  MyError = object of ValueError
+
+# Raise
+raise newException(MyError, "Something went wrong")
+
+# Try/except
+try:
+  riskyOperation()
+except MyError as e:
+  echo "MyError: ", e.msg
+except ValueError:
+  echo "ValueError"
+except:
+  echo "Unknown error"
+
+# Finally
+try:
+  let f = open("file.txt")
+  # работа с файлом
+finally:
+  f.close()
+
+# Option type
+import options
+
+let opt: Option[int] = some(5)
+let noneOpt: Option[int] = none(int)
+
+if opt.isSome:
+  echo opt.get()
+
+# Result type (как в Rust)
+type
+  Result[T, E] = object
+    case isSuccess: bool
+    of true:
+      value: T
+    of false:
+      error: E
+
+# Error handling с templates
+template tryExpr(expr: untyped): untyped =
+  try:
+    expr
+  except:
+    none(type(expr))
+
+================================================================================
+11. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable через let
+let x = 5
+x = 6  # ОШИБКА! let = immutable
+
+✓ Решение:
+var x = 5
+x = 6  # OK
+
+❌ Ошибка 2: Забыли discard
+someFunction()  # Игнорирует результат (warning)
+
+✓ Решение:
+discard someFunction()  # Явное игнорирование
+
+❌ Ошибка 3: Неправильный тип в generic
+func add[T](a: T, b: T): T =
+  a + b  # ОШИБКА! T может быть не числом
+
+✓ Решение:
+func add[T: SomeNumber](a: T, b: T): T =
+  a + b
+
+❌ Ошибка 4: Макрос без quote
+macro myMacro(x: untyped) =
+  x  # ОШИБКА! Нужно quote
+
+✓ Решение:
+macro myMacro(x: untyped) =
+  result = quote do:
+    `x`
+
+❌ Ошибка 5: Async без await
+proc fetchData(): Future[string] {.async.} =
+  let data = fetchData()  # Забыли await!
+
+✓ Решение:
+proc fetchData(): Future[string] {.async.} =
+  let data = await fetchData()
+
+❌ Ошибка 6: Неправильное наследование
+type
+  Animal = ref object
+  Dog = ref object  # Забыли of Animal!
+
+✓ Решение:
+type
+  Animal = ref object of RootObj
+  Dog = ref object of Animal
+
+❌ Ошибка 7: GC память утечка
+var p = Person(name: "John", age: 25)
+# Забыли освободить!
+
+✓ Решение:
+var p = Person(name: "John", age: 25)
+# GC автоматически освободит
+# Или используйте -d:gc:arc для детерминированного
+
+❌ Ошибка 8: Template vs macro
+template myTemplate(x: untyped) = ...  # Для простой подстановки
+macro myMacro(x: untyped) = ...  # Для AST манипуляции
+
+❌ Ошибка 9: Игнорирование warnings
+warning: unused variable
+let x = 5  # x не используется
+
+✓ Решение:
+let _ = 5  # _ для неиспользуемых
+
+❌ Ошибка 10: Неправильный import
+import strutils  # OK
+import "strutils"  # ОШИБКА!
+
+✓ Решение:
+import std/strutils
+
+================================================================================
+12. ПРИМЕРЫ LISP-СТИЛЯ
+================================================================================
+
+Пример 1: Макрос для DSL
+------------------------
+macro sql(query: untyped) =
+  result = quote do:
+    echo "Executing SQL: ", `query`.repr
+
+sql SELECT * FROM users WHERE id = 1
+
+Пример 2: Compile-time вычисления
+---------------------------------
+const factorial = static:
+  var result = 1
+  for i in 1..10:
+    result *= i
+  result
+
+echo factorial  # Вычислено при компиляции!
+
+Пример 3: Macro для logging
+---------------------------
+macro log(msg: untyped) =
+  result = quote do:
+    echo "[", instantiationInfo(), "] ", `msg`
+
+log("Application started")
+
+Пример 4: Генерация кода
+------------------------
+macro makeGetters(fields: varargs[untyped]) =
+  result = newStmtList()
+  for field in fields:
+    let getterName = ident("get" & capitalize($field))
+    result.add quote do:
+      func `getterName`(): untyped = `field`
+
+Пример 5: Lisp-подобный список
+------------------------------
+type
+  List[T] = ref object
+    head: T
+    tail: List[T]
+
+func cons[T](head: T, tail: List[T]): List[T] =
+  List[T](head: head, tail: tail)
+
+func car[T](lst: List[T]): T =
+  lst.head
+
+func cdr[T](lst: List[T]): List[T] =
+  lst.tail
+
+# Использование как Lisp
+let lst = cons(1, cons(2, cons(3, nil)))
+echo car(lst)  # 1
+echo car(cdr(lst))  # 2
+
+================================================================================
+                         КОНЕЦ SYNTAX_NIM
+================================================================================

@@ -1,0 +1,637 @@
+================================================================================
+              RE SCRIPT - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Типы которые работают + JS интероперабельность
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (pattern matching, currying)
+5. Records и Variants
+6. Option и Result типы
+7. Modules и импорты
+8. React с ReScript
+9. JS интероперабельность
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры production стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (как JS)
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// let для переменных
+let x = 5
+
+// Файл заканчивается без export (всё экспортируется по умолчанию)
+
+// Аннотация типа (опционально, компилятор выводит)
+let y: int = 10
+
+// Pipe оператор (|>)
+5 |> double |> add(10)
+
+// Комментарии в типах
+type user = {
+  name: string,  // Имя пользователя
+  age: int,      // Возраст
+}
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ int             │ 1, -10, 1_000_000                                          │
+│ float           │ 3.14, -0.5, 2.5e10                                         │
+│ bool            │ true, false                                                │
+│ string          │ "hello", "привет"                                          │
+│ char            │ 'a', 'б'                                                   │
+│ array           │ [1, 2, 3]                                                  │
+│ list            │ list{1, 2, 3} (immutable linked list)                      │
+│ tuple           │ (1, "a", true)                                             │
+│ record          │ {name: "John", age: 25}                                    │
+│ variant         │ type status = Active | Inactive                            │
+│ option          │ option<int> = Some(5) | None                               │
+│ result          │ result<int, string> = Ok(5) | Error("msg")                 │
+│ function        │ (int, int) => int                                          │
+│ promise         │ promise<string>                                            │
+│ js.t            │ JavaScript типы (для интероперабельности)                  │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Проверка типа (компилятор проверяет статически)
+// Нет runtime проверки типов!
+
+// Приведение типов (ограничено для безопасности)
+let str = "5"
+let num = Js.Int.fromString(str)  // option<int>
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// let - неизменяемая (по умолчанию)
+let x = 5
+// x = 6  // ОШИБКА!
+
+// let с аннотацией
+let y: int = 10
+
+// let с mutable
+let mutable count = 0
+count = 1  // OK
+
+// let в блоке
+let result = {
+  let a = 5
+  let b = 10
+  a + b
+}
+
+// Destructuring
+let {name, age} = user
+let [first, second] = array
+let (x, y) = tuple
+
+// Pattern matching в let
+let {name: userName, age: userAge} = user
+
+// Shadowing (переопределение в scope)
+let x = 5
+{
+  let x = 10  // OK в этом блоке
+}
+
+// Module level constants
+let pi = 3.14159
+let maxUsers = 100
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+let add = (a, b) => a + b
+
+// С аннотацией типа
+let multiply: (int, int) => int = (a, b) => a * b
+
+// Curry (автоматически)
+let add = (a, b) => a + b
+let add5 = add(5)  // Частичное применение!
+add5(10)  // 15
+
+// Default параметры
+let greet = (name, greeting="Hello") => greeting ++ ", " ++ name
+
+// Labeled параметры
+let createUser = (~name, ~age, ~email="") => {name, age, email}
+createUser(~name="John", ~age=25)
+
+// Optional параметры
+let greet = (~name, ~greeting=?) => {
+  switch greeting {
+  | Some(g) => g ++ ", " ++ name
+  | None => "Hello, " ++ name
+  }
+}
+
+// Pattern matching в функциях
+let describe = x => {
+  switch x {
+  | 0 => "zero"
+  | 1 => "one"
+  | _ => "other"
+  }
+}
+
+// Рекурсия
+let rec factorial = n => {
+  if (n <= 1) {
+    1
+  } else {
+    n * factorial(n - 1)
+  }
+}
+
+// Tail-рекурсия (оптимизирована)
+let rec factorialTail = (n, acc=1) => {
+  if (n <= 1) {
+    acc
+  } else {
+    factorialTail(n - 1, n * acc)
+  }
+}
+
+// Анонимные функции
+let numbers = [1, 2, 3]
+numbers |> List.map(x => x * 2)
+
+================================================================================
+5. RECORDS И VARIANTS
+================================================================================
+
+// Record (структура)
+type user = {
+  name: string,
+  age: int,
+  email: option<string>,
+}
+
+// Создание
+let john: user = {name: "John", age: 25, email: Some("john@example.com")}
+
+// Доступ
+john.name
+john.age
+
+// Обновление (immutable)
+let olderJohn = {...john, age: 26}
+
+// Variant (алгебраический тип)
+type status = 
+  | Active
+  | Inactive
+  | Suspended(reason: string)
+
+// Использование
+let accountStatus: status = Active
+let suspendedAccount: status = Suspended("Payment failed")
+
+// Pattern matching с variants
+let getStatusMessage = status => {
+  switch status {
+  | Active => "Account is active"
+  | Inactive => "Account is inactive"
+  | Suspended(reason) => "Suspended: " ++ reason
+  }
+}
+
+// Variant с generic
+type result<'a, 'e> = 
+  | Ok('a)
+  | Error('e)
+
+// Poly variant (гибкий variant)
+type color = [ #Red | #Green | #Blue ]
+let myColor: color = #Red
+
+// Оpaque type (скрытая реализация)
+@opaque
+type userId = string
+
+// Private type (ограниченное создание)
+type private counter = {mutable count: int}
+
+================================================================================
+6. OPTION И RESULT ТИПЫ
+================================================================================
+
+// Option (может быть ничего)
+let findUser = (id: int): option<user> => {
+  // Some(user) или None
+}
+
+// Обработка Option
+switch findUser(1) {
+| Some(user) => user.name
+| None => "User not found"
+}
+
+// Option утилиты
+let name = findUser(1) |> Option.map(u => u.name) |> Option.getWithDefault("Unknown")
+
+// Result (успех или ошибка)
+let divide = (a: int, b: int): result<int, string> => {
+  if (b == 0) {
+    Error("Division by zero")
+  } else {
+    Ok(a / b)
+  }
+}
+
+// Обработка Result
+switch divide(10, 2) {
+| Ok(result) => "Result: " ++ Int.toString(result)
+| Error(msg) => "Error: " ++ msg
+}
+
+// Result утилиты
+let result = divide(10, 2) |> Result.map(x => x * 2) |> Result.getWithDefault(0)
+
+// Комбинирование Result
+let process = (a, b) => {
+  switch divide(a, b) {
+  | Ok(div) => Ok(div * 2)
+  | Error(e) => Error(e)
+  }
+}
+
+// Belt утилиты (стандартная библиотека)
+import {Option, Result} from "@rescript/core"
+
+let name = Option.get(findUser(1), {name: "Default", age: 0, email: None})
+
+================================================================================
+7. MODULES И ИМПОРТЫ
+================================================================================
+
+// Создание модуля (каждый файл = модуль)
+// User.res
+type t = {name: string, age: int}
+let create = (name, age) => {name, age}
+let getName = user => user.name
+
+// Импорт модуля
+import {create, getName} from "./User"
+
+// Импорт с alias
+import {create as createUser} from "./User"
+
+// Импорт всего модуля
+import * as User from "./User"
+User.create("John", 25)
+
+// Module type (интерфейс)
+module type UserService = {
+  type t
+  let create: (string, int) => t
+  let getName: t => string
+}
+
+// Module implementation
+module User: UserService = {
+  type t = {name: string, age: int}
+  let create = (name, age) => {name, age}
+  let getName = user => user.name
+}
+
+// Открытие модуля
+open User
+create("John", 25)  // Без префикса
+
+// Js модули (JavaScript интероперабельность)
+@module("lodash")
+external map: (array<'a>, 'a => 'b) => array<'b> = "map"
+
+================================================================================
+8. REACT С RE SCRIPT
+================================================================================
+
+// Компонент
+@react.component
+let make = (~name) => {
+  <div> {React.string("Hello, " ++ name)} </div>
+}
+
+// С состоянием
+@react.component
+let make = () => {
+  let (count, setCount) = React.useState(() => 0)
+  
+  <button onClick={_ => setCount(_ => count + 1)}>
+    {React.string("Count: " ++ Int.toString(count))}
+  </button>
+}
+
+// С эффектами
+@react.component
+let make = (~userId) => {
+  let (user, setUser) = React.useState(() => None)
+  
+  React.useEffect0(() => {
+    fetchUser(userId).then(setUser)
+    None
+  })
+  
+  switch user {
+  | Some(u) => <div> {React.string(u.name)} </div>
+  | None => <div> {React.string("Loading...")} </div>
+  }
+}
+
+// Props с labeled параметрами
+@react.component
+let make = (~name, ~age, ~email=?) => {
+  <div>
+    {React.string(name ++ " is " ++ Int.toString(age))}
+  </div>
+}
+
+// Children
+@react.component
+let make = (~children) => {
+  <div> {children} </div>
+}
+
+// Event handlers
+@react.component
+let make = () => {
+  let handleClick = (_event) => {
+    Js.log("Clicked!")
+  }
+  
+  <button onClick={handleClick}>
+    {React.string("Click me")}
+  </button>
+}
+
+================================================================================
+9. JS ИНТЕРОПЕРАБЕЛЬНОСТЬ
+================================================================================
+
+// Вызов JS функции
+@bs.val
+external consoleLog: string => unit = "console.log"
+
+consoleLog("Hello from ReScript!")
+
+// Импорт JS модуля
+@bs.module
+external lodashMap: (array<'a>, 'a => 'b) => array<'b> = "lodash/map"
+
+// JS объекты
+@bs.obj
+external createConfig: (
+  ~host: string,
+  ~port: int,
+  unit
+) => {. "host": string, "port": int} = ""
+
+let config = createConfig(~host="localhost", ~port=8080, ())
+
+// JS классы
+@bs.send
+external toString: 'a => string = "toString"
+
+// Promise
+@bs.send
+external then_: (promise<'a>, 'a => promise<'b>) => promise<'b> = "then"
+
+// Async/await (через Promise)
+let fetchData = async () => {
+  let response = await fetch("/api/data")
+  let json = await response.json()
+  json
+}
+
+// GenType для TS интероперабельности
+@genType
+type user = {name: string, age: int}
+
+// Экспорт для JS
+@genType.export
+let createUser = (name, age) => {name, age}
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable без аннотации
+let count = 0
+count = 1  // ОШИБКА! let immutable по умолчанию
+
+✓ Решение:
+let mutable count = 0
+count = 1  // OK
+
+❌ Ошибка 2: Option без обработки
+let user: option<user> = findUser(1)
+user.name  // ОШИБКА! user может быть None
+
+✓ Решение:
+switch user {
+| Some(u) => u.name
+| None => "Unknown"
+}
+
+❌ Ошибка 3: Неполный pattern matching
+let describe = x => {
+  switch x {
+  | 0 => "zero"
+  | 1 => "one"
+  // Забыли default case!
+  }
+}
+
+✓ Решение:
+let describe = x => {
+  switch x {
+  | 0 => "zero"
+  | 1 => "one"
+  | _ => "other"  // Default case
+  }
+}
+
+❌ Ошибка 4: JS интероперабельность без external
+let result = lodash.map([1,2,3], x => x * 2)  // ОШИБКА!
+
+✓ Решение:
+@bs.module
+external map: (array<int>, int => int) => array<int> = "lodash/map"
+let result = map([1,2,3], x => x * 2)
+
+❌ Ошибка 5: React компонент без @react.component
+let make = (~name) => <div> {React.string(name)} </div>  // ОШИБКА!
+
+✓ Решение:
+@react.component
+let make = (~name) => <div> {React.string(name)} </div>
+
+❌ Ошибка 6: Record update без spread
+let olderUser = {user, age: 26}  // ОШИБКА!
+
+✓ Решение:
+let olderUser = {...user, age: 26}
+
+❌ Ошибка 7: Variant без обработки всех случаев
+type status = Active | Inactive
+let message = switch status {
+| Active => "Active"
+// Забыли Inactive!
+}
+
+✓ Решение:
+let message = switch status {
+| Active => "Active"
+| Inactive => "Inactive"
+}
+
+❌ Ошибка 8: Curry misunderstanding
+let add = (a, b) => a + b
+let result = add(5, 10)  // OK
+let add5 = add(5)  // OK (curry)
+add5(10)  // 15
+
+// Но с labeled параметрами:
+let createUser = (~name, ~age) => {name, age}
+// createUser("John")  // ОШИБКА! Labeled параметры не curry
+
+✓ Решение:
+createUser(~name="John", ~age=25)
+
+❌ Ошибка 9: Pipe оператор без совместимых типов
+let result = 5 |> double |> "hello"  // ОШИБКА! Типы не совпадают
+
+✓ Решение:
+let result = 5 |> double |> add(10)
+
+❌ Ошибка 10: Игнорирование warnings
+// Warning: unused variable
+let x = 5  // x не используется
+
+✓ Решение:
+let _x = 5  // _ префикс для неиспользуемых
+
+================================================================================
+11. ПРИМЕРЫ PRODUCTION СТИЛЯ
+================================================================================
+
+Пример 1: Type-safe API client
+-------------------------------
+type response<'a> = {
+  data: 'a,
+  status: int,
+}
+
+let fetchApi = async (url: string): promise<response<'a>> => {
+  let response = await fetch(url)
+  let data = await response.json()
+  {data, status: response.status}
+}
+
+type user = {id: int, name: string}
+
+let getUser = async (id: int): promise<response<user>> => {
+  await fetchApi<user>("/api/users/" ++ Int.toString(id))
+}
+
+Пример 2: Form validation
+-------------------------
+type validationError = [
+  | `Required
+  | `InvalidEmail
+  | `TooShort(int)
+]
+
+type formState = {
+  email: string,
+  errors: list<validationError>,
+}
+
+let validateEmail = (email: string): list<validationError> => {
+  if (email == "") {
+    [`Required]
+  } else if (!String.includes(email, "@")) {
+    [`InvalidEmail]
+  } else if (String.length(email) < 5) {
+    [`TooShort(5)]
+  } else {
+    []
+  }
+}
+
+Пример 3: State management
+--------------------------
+type action = 
+  | Increment
+  | Decrement
+  | Set(int)
+
+type state = {count: int}
+
+let reducer = (state, action) => {
+  switch action {
+  | Increment => {...state, count: state.count + 1}
+  | Decrement => {...state, count: state.count - 1}
+  | Set(n) => {...state, count: n}
+  }
+}
+
+Пример 4: Error boundaries
+--------------------------
+type result<'a, 'e> = 
+  | Ok('a)
+  | Error('e)
+
+let withErrorHandling = async (fn: unit => promise<'a>): promise<result<'a, string>> => {
+  try {
+    let result = await fn()
+    Ok(result)
+  } catch {
+  | Failure(msg) => Error(msg)
+  | _ => Error("Unknown error")
+  }
+}
+
+Пример 5: Type-safe routing
+---------------------------
+type route = 
+  | Home
+  | User(int)
+  | Post(int, string)
+  | NotFound
+
+let routeToPath = (route: route): string => {
+  switch route {
+  | Home => "/"
+  | User(id) => "/users/" ++ Int.toString(id)
+  | Post(id, slug) => "/posts/" ++ Int.toString(id) ++ "/" ++ slug
+  | NotFound => "/404"
+  }
+}
+
+================================================================================
+                         КОНЕЦ SYNTAX_RESCRIPT
+================================================================================

@@ -1,0 +1,521 @@
+================================================================================
+              SHEN - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Lisp + Static Types + Pattern Matching + Engineering
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (Lisp стиль)
+2. Типы данных (статические!)
+3. Переменные и присваивание
+4. Функции (define, type signatures)
+5. Pattern Matching
+6. Control Flow
+7. Type System (sequent calculus)
+8. Modules и импорты
+9. Error Handling
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры engineering стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (LISP СТИЛЬ)
+================================================================================
+
+; Комментарии (точка с запятой)
+; Однострочные
+
+#|
+    Многострочные
+    комментарии
+|#
+
+; S-выражения (как в Lisp)
+(+ 1 2 3)  ; 6
+
+; Префиксная нотация
+(* (+ 1 2) 3)  ; 9
+
+; Defun для функций
+(define add
+  A B -> (+ A B))
+
+; Type signatures
+(add : number --> number --> number)
+
+; Quasiquote (backquote)
+(setq X 5)
+`(1 2 ,X 4)  ; (1 2 5 4)
+
+; Progn (последовательность)
+(progn
+   (print "Hello")
+   (print "World")
+   42)  ; Возвращает 42
+
+================================================================================
+2. ТИПЫ ДАННЫХ (СТАТИЧЕСКИЕ!)
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ number          │ 1, -10, 3.14                                               │
+│ symbol          │ A, B, foo, bar                                             │
+│ string          │ "hello", "привет"                                          │
+│ list            │ (1 2 3), (A B C)                                           │
+│ boolean         │ true, false                                                │
+│ char            │ 'a', 'б'                                                   │
+│ vector          │ [1 2 3]                                                    │
+│ tuple           │ {1 "a" true}                                               │
+│ option          │ (some 5), none                                             │
+│ result          │ (ok 5), (error "msg")                                      │
+│ function        │ (number --> number)                                        │
+│ unit            │ () (пустой тип)                                            │
+│ any             │ Любой тип                                                  │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+; Проверка типа (compile-time)
+(type 2 number)  ; true
+(type "hello" string)  ; true
+
+; Type annotations
+(define X : number 5)
+
+; Type inference
+(define Y 5)  ; Y : number (автоматически)
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+; Setq (присваивание)
+(setq X 5)
+(setq Name "Shen")
+
+; Let (локальные переменные)
+(let ((X 5) (Y 10))
+   (+ X Y))  ; 15
+
+; Let* (последовательное связывание)
+(let* ((X 5)
+       (Y (+ X 5)))
+   Y)  ; 10
+
+; Const (константы)
+(const PI 3.14159)
+(const MAX-SIZE 100)
+
+; Destructuring
+(let ((X . Y) (cons 1 2))
+   X)  ; 1
+
+; Global variables
+(defglobal *CONFIG* nil)
+
+================================================================================
+4. ФУНКЦИИ (DEFINE, TYPE SIGNATURES)
+================================================================================
+
+; Базовая функция
+(define add
+  A B -> (+ A B))
+
+; Type signature
+(add : number --> number --> number)
+
+; Анонимная функция
+(lambda (X) (+ X 1))
+
+; Частичное применение (curry)
+(define Add5
+  (add 5))
+(Add5 10)  ; 15
+
+; Default параметры
+(define greet
+  Name (Greeting "Hello") -> (string Greeting ", " Name))
+
+(greet "John")  ; "Hello, John"
+(greet "John" "Hi")  ; "Hi, John"
+
+; Varargs (&rest)
+(define sum
+  &rest N -> (apply + N))
+
+(sum 1 2 3 4 5)  ; 15
+
+; Замыкания (closures)
+(define make-adder
+  N -> (lambda (X) (+ X N)))
+
+(define Add5 (make-adder 5))
+(Add5 10)  ; 15
+
+; Рекурсия
+(define factorial
+  0 -> 1
+  N -> (* N (factorial (- N 1))))
+
+; Tail-рекурсия (оптимизирована)
+(define factorial-tail
+  N Acc -> (if (<= N 1)
+             Acc
+             (factorial-tail (- N 1) (* Acc N))))
+
+================================================================================
+5. PATTERN MATCHING
+================================================================================
+
+; Match с функциями
+(define describe
+  0 -> "zero"
+  1 -> "one"
+  N -> "other")
+
+(describe 0)  ; "zero"
+(describe 5)  ; "other"
+
+; Match со списками
+(define head
+  (cons X _) -> X
+  nil -> none)
+
+(head (cons 1 (cons 2 nil)))  ; 1
+
+; Match с кортежами
+(define get-first
+  {X _ _} -> X)
+
+(get-first {1 2 3})  ; 1
+
+; Match с guards
+(define classify
+  N where (< N 0) -> "negative"
+  0 -> "zero"
+  N where (> N 0) -> "positive")
+
+; Match с типами
+(define process
+  X : number -> (* X 2)
+  X : string -> (string-length X)
+  X -> X)
+
+; Nested patterns
+(define deep-match
+  {1 {2 X}} -> X
+  _ -> none)
+
+(deep-match {1 {2 3}})  ; 3
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+; If/else
+(if (> X 0)
+    (print "positive")
+    (print "non-positive"))
+
+; Cond (множественный выбор)
+(cond
+   ((= X 0) "zero")
+   ((= X 1) "one")
+   (true "other"))
+
+; Case (case statement)
+(case X
+   (0 "zero")
+   (1 "one")
+   ("other"))
+
+; When (только если истинно)
+(when (> X 0)
+   (print "positive"))
+
+; Unless (только если ложно)
+(unless (= X 0)
+   (print "not zero"))
+
+; Циклы
+; For
+(for ((I 1 10))
+   (print I))
+
+; While
+(while (> N 0)
+   (print N)
+   (set! N (- N 1)))
+
+; Do (последовательность)
+(do
+   (print "Hello")
+   (print "World")
+   42)  ; Возвращает 42
+
+================================================================================
+7. TYPE SYSTEM (SEQUENT CALCULUS)
+================================================================================
+
+; Type signatures
+(define add : number --> number --> number
+  A B -> (+ A B))
+
+; Type inference
+(define X 5)  ; X : number (автоматически)
+
+; Type constraints
+(define divide
+  : number --> number --> number
+  A B -> (if (= B 0)
+           (error "Division by zero")
+           (/ A B)))
+
+; Polymorphic types
+(define identity
+  : A --> A
+  X -> X)
+
+; Type aliases
+(type Point {number number})
+(type Result A B (union (ok A) (error B)))
+
+; Type classes
+(defclass Eq A
+  (== : A --> A --> boolean))
+
+(instance Eq number
+  (== A B -> (= A B)))
+
+; Sequent calculus rules
+(define type-check
+  : Expr --> Type --> boolean
+  ; Правила вывода типов
+  ...)
+
+================================================================================
+8. MODULES И ИМПОРТЫ
+================================================================================
+
+; Создание модуля
+(define-module my-project
+  (export add subtract)
+  
+  (define add
+    A B -> (+ A B))
+  
+  (define subtract
+    A B -> (- A B)))
+
+; Импорт модуля
+(import my-project)
+
+; Импорт с alias
+(import [my-project as mp])
+(mp.add 5 3)
+
+; Импорт конкретных функций
+(import [add from my-project])
+
+; Private функции (не экспортируются)
+(define private-helper
+  X -> (* X 2))
+
+; Public функции (экспортируются)
+(export public-func)
+(define public-func
+  X -> (private-helper X))
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+; Error
+(error "Something went wrong")
+
+; Try/catch
+(try
+   (risky-operation)
+   (catch E
+      (print "Error: " E)))
+
+; Option тип
+(define find-user
+  : number --> (option user)
+  ID -> (database-lookup ID))
+
+; Обработка Option
+(case (find-user 1)
+   ((some User) (user-name User))
+   (none "User not found"))
+
+; Result тип
+(define divide
+  : number --> number --> (result number string)
+  A B -> (if (= B 0)
+           (error "Division by zero")
+           (ok (/ A B))))
+
+; Assert
+(assert (> X 0) "X must be positive")
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Неправильный type signature
+(define add : number --> number
+  A B -> (+ A B))  ; ОШИБКА! Должно быть number --> number --> number
+
+✓ Решение:
+(define add : number --> number --> number
+  A B -> (+ A B))
+
+❌ Ошибка 2: Pattern matching без default
+(define describe
+  0 -> "zero"
+  1 -> "one")  ; Забыли default case!
+
+✓ Решение:
+(define describe
+  0 -> "zero"
+  1 -> "one"
+  _ -> "other")
+
+❌ Ошибка 3: Type mismatch
+(define add : number --> number --> number
+  A B -> (string A B))  ; ОШИБКА! string вместо +
+
+✓ Решение:
+(define add : number --> number --> number
+  A B -> (+ A B))
+
+❌ Ошибка 4: Option без обработки
+(define User (find-user 1))
+(user-name User)  ; ОШИБКА! User может быть none
+
+✓ Решение:
+(case (find-user 1)
+   ((some User) (user-name User))
+   (none "Not found"))
+
+❌ Ошибка 5: Рекурсия без базового случая
+(define factorial
+  N -> (* N (factorial (- N 1))))  ; Бесконечная рекурсия!
+
+✓ Решение:
+(define factorial
+  0 -> 1
+  N -> (* N (factorial (- N 1))))
+
+❌ Ошибка 6: Неправильный let
+(let ((X 5) (Y 10))  ; OK
+   (+ X Y))
+
+(let (X 5 Y 10)  ; ОШИБКА! Нужны скобки
+   (+ X Y))
+
+✓ Решение:
+(let ((X 5) (Y 10))
+   (+ X Y))
+
+❌ Ошибка 7: Игнорирование type signature
+(define X 5)
+(define X "hello")  ; ОШИБКА! Type mismatch
+
+✓ Решение:
+(define X : number 5)
+(define Y : string "hello")  ; Разные переменные
+
+❌ Ошибка 8: Неправильный pattern
+(define head
+  (cons X _) -> X)  ; Забыли nil case!
+
+✓ Решение:
+(define head
+  (cons X _) -> X
+  nil -> none)
+
+❌ Ошибка 9: Type class без instance
+(defclass Eq A
+  (== : A --> A --> boolean))
+
+; Забыли instance!
+; (instance Eq number ...)
+
+✓ Решение:
+(instance Eq number
+  (== A B -> (= A B)))
+
+❌ Ошибка 10: Игнорирование error
+(divide 10 0)  ; Игнорируется ошибка!
+
+✓ Решение:
+(try
+   (divide 10 0)
+   (catch E
+      (print "Error: " E)))
+
+================================================================================
+11. ПРИМЕРЫ ENGINEERING СТИЛЯ
+================================================================================
+
+Пример 1: Type-safe API
+-----------------------
+(define-module api
+  (export get-user create-user)
+  
+  (type User {id: number, name: string})
+  
+  (define get-user
+    : number --> (option User)
+    ID -> (database-lookup ID))
+  
+  (define create-user
+    : string --> User
+    Name -> {id: (generate-id), name: Name}))
+
+Пример 2: Pattern matching parser
+---------------------------------
+(define parse-expr
+  : string --> Expr
+  "+" -> (binop +)
+  "-" -> (binop -)
+  "*" -> (binop *)
+  "/" -> (binop /)
+  N where (number? N) -> (number N)
+  _ -> (error "Invalid expression"))
+
+Пример 3: Type-safe state
+-------------------------
+(define-module state
+  (type State {count: number})
+  
+  (define increment
+    : State --> State
+    S -> {count: (+ (count S) 1)})
+  
+  (define decrement
+    : State --> State
+    S -> {count: (- (count S) 1)}))
+
+Пример 4: Error handling
+------------------------
+(define safe-divide
+  : number --> number --> (result number string)
+  A B -> (try
+            (ok (/ A B))
+            (catch _
+               (error "Division failed"))))
+
+Пример 5: Generic function
+--------------------------
+(define map
+  : (A --> B) --> (list A) --> (list B)
+  F List -> (cond
+              ((null List) nil)
+              (true (cons (F (head List))
+                         (map F (tail List))))))
+
+================================================================================
+                         КОНЕЦ SYNTAX_SHEN
+================================================================================

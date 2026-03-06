@@ -1,0 +1,543 @@
+================================================================================
+              RACKET - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ И ТИПАМ
+                    От основ до продвинутых систем типов
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (Lisp)
+2. Типы данных
+3. Переменные и определения
+4. Функции и лямбды
+5. Структуры и классы
+6. Управление потоком
+7. Макросы (гигиенические)
+8. Typed Racket (система типов)
+9. Refinement Types (уточнённые типы)
+10. Contracts (контракты)
+11. Зависимые типы (ограничения Racket)
+12. Обработка ошибок
+13. Параллельные вычисления
+14. Частые ошибки и оптимизация
+15. Примеры с типами
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (LISP)
+================================================================================
+
+; Комментарии (точка с запятой)
+; Один уровень = один символ ;
+;; Два уровня = два символа ;;
+;;; Три уровня = заголовок
+
+; S-выражения (всё в скобках)
+(+ 2 3)           ; Префиксная нотация
+(* (+ 2 3) 4)     ; Вложенные выражения
+
+; Кавычки (quoting)
+'(1 2 3)          ; Список (не вычисляется)
+(quote (1 2 3))   ; То же самое
+
+; Backquote (шаблон)
+`(1 2 ,(+ 3 4))   ; (1 2 7) - вычисляет только ,
+
+; Точка с запятой НЕ нужна в конце строк
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Integer         │ 1, -10, 1000000000000 (произвольная точность!)             │
+│ Rational        │ 1/2, 3/4 (точные дроби!)                                   │
+│ Real            │ 3.14, 2.5e10                                               │
+│ Complex         │ 3+4i                                                       │
+│ Boolean         │ #t, #f (true/false)                                        │
+│ Character       │ #\a, #\б, #\newline                                        │
+│ String          │ "hello", "привет"                                          │
+│ Symbol          │ 'name, 'variable (символы)                                 │
+│ Keyword         │ #:name, #:value (ключевые слова)                           │
+│ List            │ '(1 2 3), (list 1 2 3)                                     │
+│ Vector          │ #(1 2 3), (vector 1 2 3)                                   │
+│ Hash            │ (hash 'a 1 'b 2)                                           │
+│ Set             │ (set 1 2 3)                                                │
+│ Box             │ (box 5) (изменяемая обёртка)                               │
+│ Promise         │ (delay (+ 1 2)) (ленивое вычисление)                       │
+│ Continuation    │ (call/cc (λ (k) ...)) (продолжения)                        │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+; Проверка типа:
+(integer? 5)      ; #t
+(string? "hello") ; #t
+(list? '(1 2 3))  ; #t
+
+; Приведение типов:
+(string->number "123")    ; 123
+(number->string 123)      ; "123"
+(string->list "hello")    ; '(#\h #\e #\l #\l #\o)
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ОПРЕДЕЛЕНИЯ
+================================================================================
+
+; define - базовое определение
+(define x 5)
+(define y (+ 2 3))
+
+; define для функций
+(define (square x)
+  (* x x))
+
+; let - локальные переменные
+(let ([x 5]
+      [y 10])
+  (+ x y))  ; 15
+
+; let* - последовательное связывание
+(let* ([x 5]
+       [y (+ x 5)])  ; Может использовать x
+  (+ x y))  ; 15
+
+; letrec - рекурсивное связывание
+(letrec ([even? (λ (n) (if (zero? n) #t (odd? (- n 1))))]
+         [odd? (λ (n) (if (zero? n) #f (even? (- n 1))))])
+  (even? 10))  ; #t
+
+; define-struct - структуры
+(define-struct point (x y))
+(define p (make-point 3 4))
+(point-x p)  ; 3
+(point-y p)  ; 4
+
+================================================================================
+4. ФУНКЦИИ И ЛЯМБДЫ
+================================================================================
+
+; Лямбда (анонимная функция)
+(lambda (x) (* x x))
+
+; Короткий синтаксис (Racket специфика)
+(λ (x) (* x x))  ; λ = lambda
+
+; Применение функции
+((λ (x) (* x x)) 5)  ; 25
+
+; Параметры по умолчанию
+(define (greet name [greeting "Hello"])
+  (string-append greeting ", " name))
+
+(greet "World")           ; "Hello, World"
+(greet "World" "Hi")      ; "Hi, World"
+
+; Rest параметры (переменное число)
+(define (sum . numbers)
+  (apply + numbers))
+
+(sum 1 2 3 4 5)  ; 15
+
+; Keyword параметры
+(define (make-point #:x x #:y y)
+  (list x y))
+
+(make-point #:x 3 #:y 4)  ; (3 4)
+
+; Функции высших порядков
+(map (λ (x) (* x x)) '(1 2 3 4 5))  ; '(1 4 9 16 25)
+(filter even? '(1 2 3 4 5))         ; '(2 4)
+(foldl + 0 '(1 2 3 4 5))            ; 15
+
+================================================================================
+5. СТРУКТУРЫ И КЛАССЫ
+================================================================================
+
+; struct (неизменяемые по умолчанию)
+(struct person (name age email) #:transparent)
+(define p (person "John" 25 "john@example.com"))
+(person-name p)  ; "John"
+
+; mutable struct (изменяемые)
+(struct account (balance) #:mutable)
+(define acc (account 100))
+(set-account-balance! acc 150)
+
+; class (ООП)
+#lang racket/class
+(define% account%
+  (class object%
+    (init-field balance)
+    (define/public (deposit amount)
+      (set! balance (+ balance amount)))
+    (define/public (get-balance)
+      balance)
+    (super-new)))
+
+(define acc (new account% [balance 100]))
+(send acc deposit 50)
+(send acc get-balance)  ; 150
+
+================================================================================
+6. УПРАВЛЕНИЕ ПОТОКОМ
+================================================================================
+
+; if
+(if (> x 0)
+    "positive"
+    "non-positive")
+
+; cond (как switch)
+(cond
+  [(> x 0) "positive"]
+  [(< x 0) "negative"]
+  [else "zero"])
+
+; case (как case в других языках)
+(case x
+  [(1 2 3) "small"]
+  [(4 5 6) "medium"]
+  [else "large"])
+
+; when / unless
+(when (> x 0)
+  (displayln "positive"))
+
+(unless (= x 0)
+  (displayln "non-zero"))
+
+; for (разные варианты)
+(for ([i 5])
+  (displayln i))
+
+(for/list ([i 5])
+  (* i i))  ; '(0 1 4 9 16)
+
+(for/sum ([i 5])
+  i)  ; 10
+
+(for/hash ([i 5])
+  (values i (* i i)))  ; '#hash((0 . 0) (1 . 1) ...)
+
+; in-range, in-naturals, etc.
+(for ([i (in-range 1 10 2)])
+  (displayln i))  ; 1, 3, 5, 7, 9
+
+================================================================================
+7. МАКРОСЫ (ГИГИЕНИЧЕСКИЕ)
+================================================================================
+
+; define-syntax-rule (простые макросы)
+(define-syntax-rule (unless condition body ...)
+  (when (not condition) body ...))
+
+; define-syntax (продвинутые макросы)
+(define-syntax when
+  (syntax-rules ()
+    [(when test body ...)
+     (if test (begin body ...) (void))]))
+
+; syntax-case (ещё более продвинутые)
+(define-syntax (with-file stx)
+  (syntax-case stx ()
+    [(with-file filename mode body ...)
+     #'(let ([port (open-file filename mode)])
+         (dynamic-wind
+           void
+           (λ () body ...)
+           (λ () (close-port port))))]))
+
+; ⚡ Гигиенические макросы = нет захвата переменных!
+
+================================================================================
+8. TYPED RACKET (СИСТЕМА ТИПОВ)
+================================================================================
+
+; Переключение на Typed Racket
+#lang typed/racket
+
+; Базовые типы
+(: x Integer)
+(define x 5)
+
+(: y String)
+(define y "hello")
+
+; Функции с типами
+(: square (-> Integer Integer))
+(define (square x)
+  (* x x))
+
+; Union типы (ИЛИ)
+(: print-number-or-string (-> (U Integer String) Void))
+(define (print-number-or-string x)
+  (displayln x))
+
+; Optional типы (может быть #f)
+(: find (-> Integer (Listof Integer) (Option Integer)))
+(define (find n lst)
+  (if (member n lst) n #f))
+
+; Polymorphic типы (дженерики)
+(: identity (All (A) (-> A A)))
+(define (identity x) x)
+
+; Struct с типами
+(struct: point ([x : Integer] [y : Integer]))
+
+; Type aliases
+(define-type Point (List Integer Integer))
+(define-type MaybeString (Option String))
+
+================================================================================
+9. REFINEMENT TYPES (УТОЧНЁННЫЕ ТИПЫ)
+================================================================================
+
+; ⚠️ Racket не имеет полноценных dependent types
+; Но есть Refinement Types через contracts
+
+; require/contract для уточнённых типов
+(require racket/contract)
+
+; Positive Integer (целое > 0)
+(define/contract (factorial n)
+  (-> positive-integer? positive-integer?)
+  (if (zero? n) 1 (* n (factorial (- n 1)))))
+
+; Non-empty list
+(define/contract (first-element lst)
+  (-> (and/c list? pair?) any/c)
+  (car lst))
+
+; Range contract
+(define/contract (clamp x min-val max-val)
+  (-> real? real? real? real?)
+  (max min-val (min x max-val)))
+
+; Custom predicates
+(define (even-positive? n)
+  (and (even? n) (positive? n)))
+
+(define/contract (double-even n)
+  (-> even-positive? even-positive?)
+  (* 2 n))
+
+================================================================================
+10. CONTRACTS (КОНТРАКТЫ)
+================================================================================
+
+; Contracts = проверка типов на runtime
+; Более гибкие чем статические типы!
+
+; Базовые контракты
+(contract-define (add x y)
+  (-> integer? integer? integer?)
+  (+ x y))
+
+; Функциональные контракты
+(define/contract (map-function f lst)
+  (-> (-> any/c any/c) list? list?)
+  (map f lst))
+
+; Рекурсивные контракты
+(define/contract (tree-sum tree)
+  (-> (or/c number? list?) number?)
+  (if (number? tree)
+      tree
+      (apply + (map tree-sum tree))))
+
+; Contract комбинаторы
+(define/contract (process data)
+  (-> (or/c (listof integer?) (vectorof integer?))
+      (listof integer?))
+  (if (list? data)
+      data
+      (vector->list data)))
+
+; Blame assignment (кто нарушил контракт)
+(define/contract (divide x y)
+  (-> number? (not/c zero?) number?)
+  (/ x y))
+
+; (divide 10 0)  ; Контракт нарушен! Укажет на вызывающего
+
+================================================================================
+11. ЗАВИСИМЫЕ ТИПЫ (ОГРАНИЧЕНИЯ RACKET)
+================================================================================
+
+; ⚠️ ЧЕСТНО: Racket НЕ имеет полноценных dependent types
+; как Idris/Agda/Coq. Но есть альтернативы:
+
+; 1. Refinement Types (через contracts)
+;    Проверка на runtime, не compile-time
+
+; 2. Rosette (символическое выполнение)
+#lang rosette
+(define-symbolic x integer?)
+(define-symbolic y integer?)
+(solve (assert (= (+ x y) 10)))
+
+; 3. Type Checker с зависимостями (ограниченно)
+#lang typed/racket
+; Можно выразить некоторые зависимости через типы
+; Но не полноценные dependent types
+
+; 4. Пример "зависимого" поведения:
+(: safe-divide (-> Integer Integer (Option Integer)))
+(define (safe-divide x y)
+  (if (zero? y)
+      #f  ; Возвращаем None если деление на 0
+      (quotient x y)))
+
+; ⚡ ДЛЯ ПОЛНОЦЕННЫХ DEPENDENT TYPES используйте:
+; - Idris 2 (лучшая поддержка)
+; - Agda (теоремы + код)
+; - Coq (доказательства теорем)
+; - Lean 4 (математика + программирование)
+
+================================================================================
+12. ОБРАБОТКА ОШИБОК
+================================================================================
+
+; condition-case (try-catch)
+(with-handlers ([exn:fail?
+                 (λ (e) (displayln (exn-message e)))])
+  (error "Something went wrong"))
+
+; raise / raise-argument-error
+(define (divide x y)
+  (if (zero? y)
+      (raise-argument-error 'divide "non-zero number" y)
+      (/ x y)))
+
+; error (простая ошибка)
+(define (factorial n)
+  (if (negative? n)
+      (error "factorial" "negative number" n)
+      (if (zero? n) 1 (* n (factorial (- n 1))))))
+
+; exn:fail типы
+; exn:fail:contract, exn:fail:filesystem, etc.
+
+================================================================================
+13. ПАРАЛЛЕЛЬНЫЕ ВЫЧИСЛЕНИЯ
+================================================================================
+
+; Threads (потоки)
+(define t (thread (λ () (displayln "Hello from thread"))))
+(thread-wait t)
+
+; Places (процессы)
+(define p (place p
+           (displayln "Hello from place")
+           (place-channel-get p)))
+(place-channel-put p "data")
+(place-wait p)
+
+; Futures (ленивые вычисления)
+(define f (future (λ () (expt 2 1000))))
+(touch f)  ; Дождаться результата
+
+; Parallel map
+(require racket/future)
+(define (parallel-map f lst)
+  (map touch (map (λ (x) (future (λ () (f x)))) lst)))
+
+================================================================================
+14. ЧАСТЫЕ ОШИБКИ И ОПТИМИЗАЦИЯ
+================================================================================
+
+❌ Ошибка 1: Не тот #lang
+#lang racket  ; Динамический
+#lang typed/racket  ; Статический
+
+✓ Выберите правильный для задачи
+
+❌ Ошибка 2: Контракты вместо типов
+; Контракты = runtime проверка (медленнее)
+; Типы = compile-time проверка (быстрее)
+
+✓ Используйте Typed Racket для производительности
+
+❌ Ошибка 3: Излишнее цитирование
+'(1 2 3)  ; OK
+(quote (1 2 3))  ; Тоже OK но длиннее
+(list 1 2 3)  ; Вычисляется (тоже OK)
+
+✓ Выберите по контексту
+
+❌ Ошибка 4: Неэффективная рекурсия
+(define (sum lst)
+  (if (null? lst)
+      0
+      (+ (car lst) (sum (cdr lst)))))  ; Не tail-recursive
+
+✓ Tail-recursive версия:
+(define (sum lst [acc 0])
+  (if (null? lst)
+      acc
+      (sum (cdr lst) (+ acc (car lst)))))
+
+⚡ СОВЕТЫ ПО ОПТИМИЗАЦИИ:
+------------------------
+1. Используйте Typed Racket для производительности
+2. Tail-рекурсия вместо обычной рекурсии
+3. avoid cons в циклах (используйте accumulate)
+4. Используйте vectors вместо lists для доступа по индексу
+5. Профилируйте с (require profile)
+6. Используйте inexact->exact для точных вычислений
+
+================================================================================
+15. ПРИМЕРЫ С ТИПАМИ
+================================================================================
+
+Пример 1: Typed Racket с полиморфизмом
+---------------------------------------
+#lang typed/racket
+
+(: map (All (A B) (-> (-> A B) (Listof A) (Listof B))))
+(define (map f lst)
+  (if (null? lst)
+      '()
+      (cons (f (car lst)) (map f (cdr lst)))))
+
+(map (λ: ([x : Integer]) : Integer (* x x)) '(1 2 3 4 5))
+
+Пример 2: Contracts для валидации
+---------------------------------
+#lang racket
+(require racket/contract)
+
+(define/contract (binary-search lst target)
+  (-> (listof integer?) integer? (or/c integer? #f))
+  ; Реализация...
+  )
+
+Пример 3: Refinement через predicates
+-------------------------------------
+#lang typed/racket
+
+(: NonNegativeInteger? (-> Integer Boolean))
+(define (NonNegativeInteger? x)
+  (>= x 0))
+
+(: safe-sqrt (-> NonNegativeInteger? Real))
+(define (safe-sqrt x)
+  (sqrt x))
+
+Пример 4: Rosette для символического выполнения
+-----------------------------------------------
+#lang rosette
+
+(define-symbolic x integer?)
+(define-symbolic y integer?)
+
+(define solution
+  (solve (assert (= (+ x y) 10))
+         (assert (>= x 0))
+         (assert (>= y 0))))
+
+(evaluate x solution)  ; Конкретное значение
+
+================================================================================
+                         КОНЕЦ SYNTAX_RACKET
+================================================================================

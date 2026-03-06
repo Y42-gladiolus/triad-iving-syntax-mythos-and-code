@@ -1,0 +1,607 @@
+================================================================================
+              PERL - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Text Processing + Regex Master + TMTOWTDI
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Переменные и типы ($, @, %)
+3. Регулярные выражения (мощные!)
+4. Control Flow
+5. Функции и подпрограммы
+6. Arrays и Hashes
+7. File I/O
+8. Text Processing
+9. Modules и OOP
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры text processing стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# Комментарии (решётка)
+# Однострочные
+
+=pod
+
+Многострочные
+комментарии (POD)
+
+=cut
+
+# Точка с запятой обязательна
+my $x = 5;
+my $y = 10;
+
+# Print
+print "Hello, World!\n";
+print STDERR "Error\n";
+
+# Интерполяция переменных
+my $name = "Perl";
+print "Hello, $name!\n";  # Hello, Perl!
+print 'Hello, $name!\n';  # Hello, $name!\n (без интерполяции)
+
+# Q-строки
+q{Hello}          # 'Hello'
+qq{Hello $name}   # "Hello $name"
+qx{ls}            # `ls` (execute)
+qr{pattern}       # qr/pattern/ (regex)
+
+================================================================================
+2. ПЕРЕМЕННЫЕ И ТИПЫ ($, @, %)
+================================================================================
+
+# Скаляры ($)
+my $scalar = 42;
+my $string = "hello";
+my $float = 3.14;
+
+# Arrays (@)
+my @array = (1, 2, 3, 4, 5);
+my $first = $array[0];      # 1
+my $last = $array[-1];      # 5
+my $size = scalar @array;   # 5
+
+# Hashes (%)
+my %hash = (
+    name => "John",
+    age  => 25,
+);
+my $name = $hash{name};     # "John"
+my $age = $hash{age};       # 25
+
+# References
+my $array_ref = \@array;
+my $hash_ref = \%hash;
+my $scalar_ref = \$scalar;
+
+# Dereference
+my @copy = @$array_ref;
+my %hcopy = %$hash_ref;
+
+# Special variables
+$_      # Default variable
+$!      # Error message
+$@      # Eval error
+$$      # Process ID
+$0      # Program name
+@ARGV   # Command line arguments
+
+================================================================================
+3. РЕГУЛЯРНЫЕ ВЫРАЖЕНИЯ (МОЩНЫЕ!)
+================================================================================
+
+# Match
+if ($string =~ /pattern/) {
+    print "Matched\n";
+}
+
+# Case insensitive
+if ($string =~ /pattern/i) {
+    print "Matched (case insensitive)\n";
+}
+
+# Global match
+my @matches = ($string =~ /pattern/g);
+
+# Replace
+$string =~ s/old/new/;        # Первое вхождение
+$string =~ s/old/new/g;       # Все вхождения
+$string =~ s/old/new/gi;      # Все, case insensitive
+
+# Split
+my @parts = split /,/, $string;
+
+# Advanced regex
+# Grouping
+if ($string =~ /(\d+)-(\d+)/) {
+    my ($start, $end) = ($1, $2);
+}
+
+# Non-capturing group
+$string =~ /(?:foo|bar)/;
+
+# Lookahead/Lookbehind
+$string =~ /(?<=foo)bar/;     # Lookbehind
+$string =~ /foo(?=bar)/;      # Lookahead
+
+# Named captures
+$string =~ /(?<name>\w+)/;
+print $+{name};
+
+# Regex modifiers
+# /i - case insensitive
+# /g - global
+# /m - multiline
+# /s - single line (dot matches newline)
+# /x - extended (ignore whitespace)
+
+================================================================================
+4. CONTROL FLOW
+================================================================================
+
+# If/elsif/else
+if ($x > 10) {
+    print "Large\n";
+} elsif ($x > 5) {
+    print "Medium\n";
+} else {
+    print "Small\n";
+}
+
+# Unless (отрицание)
+unless ($x > 10) {
+    print "Not large\n";
+}
+
+# For цикл
+for (my $i = 0; $i < 10; $i++) {
+    print "$i\n";
+}
+
+# For each
+foreach my $item (@array) {
+    print "$item\n";
+}
+
+# For each с индексом
+for my $i (0 .. $#array) {
+    print "$i: $array[$i]\n";
+}
+
+# While
+while ($condition) {
+    # ...
+}
+
+# Until (отрицание while)
+until ($condition) {
+    # ...
+}
+
+# Do-while
+do {
+    # ...
+} while ($condition);
+
+# Given/when (switch)
+given ($value) {
+    when (1) { print "One\n"; }
+    when (2) { print "Two\n"; }
+    default  { print "Other\n"; }
+}
+
+================================================================================
+5. ФУНКЦИИ И ПОДПРОГРАММЫ
+================================================================================
+
+# Subroutine
+sub add {
+    my ($a, $b) = @_;
+    return $a + $b;
+}
+
+# Вызов
+my $result = add(5, 3);
+
+# @_ - массив аргументов
+sub print_args {
+    foreach my $arg (@_) {
+        print "$arg\n";
+    }
+}
+
+# Default return (последнее выражение)
+sub multiply {
+    my ($a, $b) = @_;
+    $a * $b;  # Автоматический return
+}
+
+# Prototypes
+sub add ($$) {  # Два скаляра
+    return $_[0] + $_[1];
+}
+
+# Anonymous sub
+my $code_ref = sub {
+    my ($x) = @_;
+    return $x * 2;
+};
+
+# Call anonymous sub
+my $result = $code_ref->(5);
+
+# Closures
+sub make_adder {
+    my ($n) = @_;
+    return sub {
+        my ($x) = @_;
+        return $x + $n;
+    };
+}
+
+my $add5 = make_adder(5);
+print $add5->(10);  # 15
+
+================================================================================
+6. ARRAYS И HASHES
+================================================================================
+
+# Array операции
+push @array, $value;        # Добавить в конец
+pop @array;                 # Удалить с конца
+unshift @array, $value;     # Добавить в начало
+shift @array;               # Удалить с начала
+
+# Array slice
+my @slice = @array[0, 2, 4];
+
+# Hash операции
+$hash{key} = $value;        # Добавить
+delete $hash{key};          # Удалить
+exists $hash{key};          # Проверить существование
+
+# Hash slice
+my @values = @hash{qw(key1 key2)};
+
+# Keys/Values
+my @keys = keys %hash;
+my @values = values %hash;
+
+# Each (итерация)
+while (my ($key, $value) = each %hash) {
+    print "$key: $value\n";
+}
+
+# Sort array
+my @sorted = sort @array;
+my @sorted_num = sort { $a <=> $b } @array;
+
+# Sort hash by value
+my @sorted_keys = sort { $hash{$a} <=> $hash{$b} } keys %hash;
+
+================================================================================
+7. FILE I/O
+================================================================================
+
+# Open file for reading
+open(my $fh, '<', 'file.txt') or die "Cannot open: $!";
+
+# Read line by line
+while (my $line = <$fh>) {
+    chomp $line;
+    print "$line\n";
+}
+
+# Read all lines
+my @lines = <$fh>;
+
+# Read entire file
+my $content = do { local $/; <$fh> };
+
+# Open for writing
+open(my $fh, '>', 'output.txt') or die "Cannot open: $!";
+print $fh "Hello\n";
+
+# Open for appending
+open(my $fh, '>>', 'log.txt') or die "Cannot open: $!";
+
+# Close file
+close($fh);
+
+# Three-arg open (рекомендуется)
+open(my $fh, '<', $filename) or die $!;
+
+# File tests
+-e $file      # File exists
+-f $file      # Regular file
+-d $file      # Directory
+-r $file      # Readable
+-w $file      # Writable
+-x $file      # Executable
+-s $file      # Size in bytes
+-M $file      # Age in days
+-A $file      # Access time
+-C $file      # Change time
+
+================================================================================
+8. TEXT PROCESSING
+================================================================================
+
+# Split string
+my @fields = split /,/, $csv_line;
+
+# Join array
+my $string = join ',', @fields;
+
+# Substring
+my $substr = substr($string, 0, 5);
+
+# Length
+my $len = length($string);
+
+# Index
+my $pos = index($string, "search");
+
+# Reverse
+my $rev = reverse($string);
+my @rev_array = reverse @array;
+
+# uc/lc (upper/lower case)
+my $upper = uc($string);
+my $lower = lc($string);
+
+# ucfirst/lcfirst
+my $capitalized = ucfirst($string);
+
+# Trim whitespace
+$string =~ s/^\s+|\s+$//g;
+
+# Text processing examples
+# Extract numbers
+my @numbers = ($text =~ /\d+/g);
+
+# Extract emails
+my @emails = ($text =~ /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi);
+
+# Replace multiple spaces
+$text =~ s/\s+/ /g;
+
+# Remove comments
+$text =~ s/#.*$//gm;
+
+================================================================================
+9. MODULES И OOP
+================================================================================
+
+# Use module
+use strict;
+use warnings;
+use feature 'say';
+
+use JSON;
+use LWP::UserAgent;
+use DBI;
+
+# Import specific functions
+use List::Util qw(sum max min);
+
+# Create module (MyModule.pm)
+package MyModule;
+use strict;
+use warnings;
+
+sub hello {
+    return "Hello from MyModule";
+}
+
+1;  # Module must return true
+
+# Use module
+use MyModule;
+print MyModule::hello();
+
+# OOP (bless)
+package Person;
+
+sub new {
+    my ($class, %args) = @_;
+    my $self = bless \%args, $class;
+    return $self;
+}
+
+sub name {
+    my ($self) = @_;
+    return $self->{name};
+}
+
+# Use OOP
+my $person = Person->new(name => "John", age => 25);
+print $person->name();
+
+# Modern OOP (Moose)
+use Moose;
+
+has 'name' => (is => 'ro', isa => 'Str');
+has 'age' => (is => 'rw', isa => 'Int');
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Не использовать strict/warnings
+my $x = 5;  # OK
+$y = 10;    # ОШИБКА! Глобальная переменная
+
+✓ Решение:
+use strict;
+use warnings;
+my $x = 5;
+my $y = 10;
+
+❌ Ошибка 2: Неправильный контекст
+my @array = (1, 2, 3);
+my $count = @array;      # OK (scalar context)
+my @copy = @array;       # OK (list context)
+
+❌ Ошибка 3: Regex без /g
+my $text = "a b c";
+my @matches = ($text =~ /(\w)/);  # Только первое!
+
+✓ Решение:
+my @matches = ($text =~ /(\w)/g);  # Все совпадения
+
+❌ Ошибка 4: Открытие файла без проверки
+open(my $fh, '<', $file);  # ОШИБКА! Может не открыться
+
+✓ Решение:
+open(my $fh, '<', $file) or die "Cannot open $file: $!";
+
+❌ Ошибка 5: Не закрывать файл
+open(my $fh, '<', $file);
+# Забыли close!
+
+✓ Решение:
+open(my $fh, '<', $file);
+# ...
+close($fh);
+
+❌ Ошибка 6: chomp без проверки
+my $line = <$fh>;
+chomp $line;  # OK
+
+my $scalar = 5;
+chomp $scalar;  # ОШИБКА! chomp только для строк
+
+❌ Ошибка 7: Hash без проверки
+my $value = $hash{key};  # undef если нет ключа
+
+✓ Решение:
+if (exists $hash{key}) {
+    my $value = $hash{key};
+}
+
+❌ Ошибка 8: Array index out of bounds
+my @array = (1, 2, 3);
+my $val = $array[10];  # undef
+
+✓ Решение:
+if ($index < @array) {
+    my $val = $array[$index];
+}
+
+❌ Ошибка 9: Regex в переменной
+my $pattern = "ERROR";
+if ($line =~ /$pattern/) {  # OK
+    print "Found\n";
+}
+
+❌ Ошибка 10: Не использовать three-arg open
+open(my $fh, "< $file");  # ОШИБКА! Security risk
+
+✓ Решение:
+open(my $fh, '<', $file);  # OK (three-arg)
+
+================================================================================
+11. ПРИМЕРЫ TEXT PROCESSING СТИЛЯ
+================================================================================
+
+Пример 1: Парсинг логов
+-----------------------
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+while (<>) {
+    if (/(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+\[(\w+)\]\s+(.*)/) {
+        my ($date, $time, $level, $message) = ($1, $2, $3, $4);
+        print "$date $time [$level] $message\n";
+    }
+}
+
+Пример 2: CSV обработка
+-----------------------
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Text::CSV;
+
+my $csv = Text::CSV->new({ binary => 1 });
+
+while (my $row = $csv->getline(*ARGV)) {
+    my ($name, $age, $city) = @$row;
+    print "$name is $age years old\n";
+}
+
+Пример 3: HTML парсинг
+----------------------
+#!/usr/bin/perl
+use strict;
+use warnings;
+use HTML::Parser;
+
+my $parser = HTML::Parser->new(
+    start_h => [\&start_tag, 'tagname, attr'],
+    text_h  => [\&text, 'dtext'],
+);
+
+$parser->parse_file('file.html');
+
+Пример 4: Network scraping
+--------------------------
+#!/usr/bin/perl
+use strict;
+use warnings;
+use LWP::Simple;
+
+my $url = 'http://example.com';
+my $content = get($url);
+
+if ($content =~ /<title>(.*?)<\/title>/s) {
+    print "Title: $1\n";
+}
+
+Пример 5: Database access
+-------------------------
+#!/usr/bin/perl
+use strict;
+use warnings;
+use DBI;
+
+my $dbh = DBI->connect(
+    "dbi:SQLite:dbname=test.db",
+    "", "",
+    { RaiseError => 1 }
+);
+
+my $sth = $dbh->prepare("SELECT * FROM users WHERE age > ?");
+$sth->execute(18);
+
+while (my $row = $sth->fetchrow_hashref) {
+    print "$row->{name}\n";
+}
+
+Пример 6: One-liners
+--------------------
+# Print first column
+perl -lane 'print $F[0]' file.txt
+
+# Sum numbers
+perl -lane '$s += $_ }{ print $s' numbers.txt
+
+# Replace text
+perl -pi -e 's/old/new/g' file.txt
+
+# Extract emails
+perl -lne 'print for /[\w.-]+@[\w.-]+\.\w+/g' file.txt
+
+================================================================================
+                         КОНЕЦ SYNTAX_PERL
+================================================================================

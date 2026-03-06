@@ -1,0 +1,462 @@
+================================================================================
+                    V - КЛЮЧЕВЫЕ ОСОБЕННОСТИ ЯЗЫКА
+                         Simple + Fast + Safe + Go-like Syntax
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Архитектура и дизайн
+2. Система типов
+3. Управление памятью
+4. Компиляция
+5. Error handling
+6. Concurrency model
+7. Built-in features
+8. Developer Experience
+9. Производительность
+10. Ограничения и будущее
+
+================================================================================
+1. АРХИТЕКТУРА И ДИЗАЙН
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    V ARCHITECTURE                                            │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  IMPLEMENTATION:                                                             │
+│  • Написан на V (self-hosted)                                               │
+│  • Компилируется в C (через C backend)                                      │
+│  • Native code generation                                                   │
+│  • Кроссплатформенный (Linux, macOS, Windows, FreeBSD)                      │
+│                                                                              │
+│  DESIGN PHILOSOPHY:                                                          │
+│  • Simple (простой синтаксис, легко учить)                                  │
+│  • Fast (быстрая компиляция < 1 сек)                                        │
+│  • Safe (memory safety, no GC по умолчанию)                                 │
+│  • Go-like syntax (но проще и чище)                                         │
+│  • No garbage collector (опционально)                                       │
+│  • No null (по умолчанию)                                                   │
+│  • No exceptions                                                            │
+│  • No global variables                                                      │
+│                                                                              │
+│  KEY FEATURES:                                                               │
+│  • Fast compilation (< 1 сек для большинства проектов)                      │
+│  • No GC (по умолчанию, опционально можно включить)                         │
+│  • Memory safety (без GC)                                                   │
+│  • Built-in ORM                                                             │
+│  • Built-in web framework                                                   │
+│  • Built-in JSON parsing                                                    │
+│  • C interoperability (easy FFI)                                            │
+│  • Hot code reloading                                                       │
+│  • Built-in testing                                                         │
+│                                                                              │
+│  STATUS (2024):                                                              │
+│  • Beta / active development                                                │
+│  • Production ready для многих задач                                        │
+│  • Community-driven                                                         │
+│  • Open source (MIT license)                                                │
+│  • Created by Alexander Medvednikov                                         │
+│                                                                              │
+│  COMPARISON:                                                                 │
+│  • vs Go: Быстрее компиляция, нет GC, проще синтаксис                       │
+│  • vs Rust: Проще, нет borrow checker, faster compilation                   │
+│  • vs C: Безопаснее, современнее, проще                                     │
+│  • vs Zig: Похожая философия, V проще для начинающих                        │
+│  • vs Crystal: Нет GC, быстрее компиляция                                   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+2. СИСТЕМА ТИПОВ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    V TYPE SYSTEM                                             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  STATIC TYPING:                                                              │
+│  • Все типы известны на compile-time                                        │
+│  • Type inference (не нужно annotating всё)                                 │
+│  • Strong type safety                                                       │
+│  • No runtime type errors                                                   │
+│                                                                              │
+│  BASIC TYPES:                                                                │
+│  • i8, i16, i32, i64 (signed integers)                                      │
+│  • u8, u16, u32, u64 (unsigned integers)                                    │
+│  • f32, f64 (floating point)                                                │
+│  • bool (true, false)                                                       │
+│  • string (UTF-8 strings)                                                   │
+│  • rune (Unicode character)                                                 │
+│  • byte (alias for u8)                                                      │
+│  • int (platform-dependent)                                                 │
+│  • usize (platform-dependent unsigned)                                      │
+│                                                                              │
+│  COMPOUND TYPES:                                                             │
+│  • Arrays: [1, 2, 3]                                                        │
+│  • Slices: []int                                                            │
+│  • Maps: map[string]int                                                     │
+│  • Structs: struct Point { x int }                                          │
+│  • Interfaces: interface Reader { read() }                                  │
+│  • Enums: enum Color { red green blue }                                     │
+│  • Optionals: ?string (может быть error)                                    │
+│  • Result: !string (может быть error)                                       │
+│                                                                              │
+│  NO NULL:                                                                    │
+│  • Нет null по умолчанию                                                    │
+│  • Optionals для nullable values                                            │
+│  • No null pointer exceptions                                               │
+│  • Safe by design                                                           │
+│                                                                              │
+│  TYPE INFERENCE:                                                             │
+│  • x := 5  # выводит int                                                    │
+│  • x := "hello"  # выводит string                                           │
+│  • Works across functions                                                   │
+│  • Fast inference                                                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+3. УПРАВЛЕНИЕ ПАМЯТЬЮ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    V MEMORY MANAGEMENT                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  NO GARBAGE COLLECTION (по умолчанию):                                       │
+│  • Нет GC пауз                                                              │
+│  • Predictable performance                                                  │
+│  • Manual memory management (но проще чем C)                                │
+│  • ARC (Automatic Reference Counting) опционально                           │
+│                                                                              │
+│  MEMORY SAFETY:                                                              │
+│  • No null pointers                                                         │
+│  • Bounds checking                                                          │
+│  • No buffer overflows                                                      │
+│  • No use after free                                                        │
+│  • Safe by default                                                          │
+│                                                                              │
+│  OPTIONAL GC:                                                                │
+│  • Можно включить GC если нужно                                             │
+│  • Boehm GC                                                                 │
+│  • Для случаев когда manual сложно                                          │
+│  • Trade-off между safety и performance                                     │
+│                                                                              │
+│  MANUAL CONTROL:                                                             │
+│  • malloc/free через C interop                                              │
+│  • defer для cleanup                                                        │
+│  • Resource management                                                      │
+│  • Predictable memory usage                                                 │
+│                                                                              │
+│  MEMORY FOOTPRINT:                                                           │
+│  • Low memory footprint                                                     │
+│  • No GC overhead                                                           │
+│  • Suitable for embedded systems                                            │
+│  • Predictable memory usage                                                 │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+4. КОМПИЛЯЦИЯ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    V COMPILATION                                             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  C BACKEND:                                                                  │
+│  • Компилируется в C                                                        │
+│  • Затем в native code через C компилятор                                   │
+│  • LLVM опционально (в разработке)                                          │
+│  • Кроссплатформенная компиляция                                            │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Очень быстрая компиляция (< 1 сек)                                       │
+│  • Faster than Go                                                           │
+│  • Faster than Rust                                                         │
+│  • Faster than C++                                                          │
+│  • Instant feedback                                                         │
+│                                                                              │
+│  BUILD SYSTEM:                                                               │
+│  • v (компилятор)                                                           │
+│  • v run (compile and run)                                                  │
+│  • v build (компиляция)                                                     │
+│  • v test (тестирование)                                                    │
+│  • v fmt (форматирование)                                                   │
+│  • v install (установка пакетов)                                            │
+│                                                                              │
+│  TARGETS:                                                                    │
+│  • Linux (x86_64, ARM, RISC-V)                                              │
+│  • macOS (x86_64, ARM64)                                                    │
+│  • Windows (x86_64, i386)                                                   │
+│  • FreeBSD                                                                  │
+│  • WebAssembly (в разработке)                                               │
+│  • Android/iOS (в разработке)                                               │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Hello World: < 100 ms                                                    │
+│  • Medium project: < 1 sec                                                  │
+│  • Large project: < 5 sec                                                   │
+│  • Faster than all major languages                                          │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+5. ERROR HANDLING
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    V ERROR HANDLING                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  NO EXCEPTIONS:                                                              │
+│  • Нет try/catch                                                            │
+│  • Нет unwinding                                                            │
+│  • Explicit error handling                                                  │
+│  • Predictable performance                                                  │
+│                                                                              │
+│  OPTIONALS:                                                                  │
+│  • fn foo() ?int (может вернуть error)                                      │
+│  • value := foo() or { return }                                             │
+│  • Clean error propagation                                                  │
+│  • Как Go но чище                                                           │
+│                                                                              │
+│  RESULT TYPES:                                                               │
+│  • fn foo() !int (может вернуть error)                                      │
+│  • value := foo() or { return }                                             │
+│  • Type-safe error handling                                                 │
+│  • Explicit errors                                                          │
+│                                                                              │
+│  EXAMPLE:                                                                    │
+│  • fn open(path string) ?File                                               │
+│  • file := open("file.txt") or { return }                                   │
+│  • defer file.close()                                                       │
+│                                                                              │
+│  ASSERTIONS:                                                                 │
+│  • assert(condition)                                                        │
+│  • Compile-time assertions                                                  │
+│  • Runtime assertions                                                       │
+│  • Debug builds                                                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+6. CONCURRENCY MODEL
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    V CONCURRENCY                                             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  GOROUTINES (спавны):                                                        │
+│  • spawn fn() для легковесных потоков                                       │
+│  • Channels для communication                                               │
+│  • Like Go goroutines                                                       │
+│  • Thousands of concurrent tasks                                            │
+│                                                                              │
+│  CHANNELS:                                                                   │
+│  • ch := chan int{}                                                         │
+│  • ch <- value (send)                                                       │
+│  • value := <- ch (receive)                                                 │
+│  • Buffered и unbuffered                                                    │
+│                                                                              │
+│  SELECT:                                                                     │
+│  • select {                                                                 │
+│  •   case ch1 <- value { }                                                  │
+│  •   case value := <- ch2 { }                                               │
+│  • }                                                                        │
+│                                                                              │
+│  NO THREADS:                                                                 │
+│  • Нет native threads (по умолчанию)                                        │
+│  • Single-threaded с spawn                                                  │
+│  • Simpler concurrency model                                                │
+│  • No race conditions (если нет shared state)                               │
+│                                                                              │
+│  ASYNC/AWAIT:                                                                │
+│  • async fn() для async функций                                             │
+│  • await для等待                                                            │
+│  • Non-blocking I/O                                                         │
+│  • HTTP server с async                                                      │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+7. BUILT-IN FEATURES
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    V BUILT-IN FEATURES                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  WEB FRAMEWORK:                                                              │
+│  • vweb модуль (встроенный)                                                 │
+│  • Built-in HTTP server                                                     │
+│  • Routing                                                                  │
+│  • Middleware                                                               │
+│  • No external dependencies                                                 │
+│                                                                              │
+│  ORM:                                                                        │
+│  • db модуль (встроенный)                                                   │
+│  • SQL database access                                                      │
+│  • PostgreSQL, MySQL, SQLite                                                │
+│  • Type-safe queries                                                        │
+│  • No external ORM needed                                                   │
+│                                                                              │
+│  JSON PARSING:                                                               │
+│  • json.decode() (встроенный)                                               │
+│  • json.encode()                                                            │
+│  • Type-safe JSON                                                           │
+│  • No external library needed                                               │
+│                                                                              │
+│  TESTING:                                                                    │
+│  • Built-in testing framework                                               │
+│  • v test command                                                           │
+│  • Test functions                                                           │
+│  • No external framework needed                                             │
+│                                                                              │
+│  HOT RELOAD:                                                                 │
+│  • v run -hot для hot reloading                                             │
+│  • Instant code changes                                                     │
+│  • Development productivity                                                 │
+│  • No restart needed                                                        │
+│                                                                              │
+│  C INTEROP:                                                                  │
+│  • #include "file.h"                                                        │
+│  • Call C functions directly                                                │
+│  • No bindings needed                                                       │
+│  • Seamless integration                                                     │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+8. DEVELOPER EXPERIENCE
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    V DEVELOPER EXPERIENCE                                    │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  SIMPLE SYNTAX:                                                              │
+│  • Проще чем Go                                                             │
+│  • Нет semicolons                                                           │
+│  • Нет parentheses (опционально)                                            │
+│  • Clean readability                                                        │
+│                                                                              │
+│  TOOLING:                                                                    │
+│  • v (компилятор)                                                           │
+│  • v fmt (форматирование)                                                   │
+│  • v test (тестирование)                                                    │
+│  • v install (package manager)                                              │
+│  • v doctor (diagnostics)                                                   │
+│                                                                              │
+│  DOCUMENTATION:                                                              │
+│  • Official documentation                                                   │
+│  • Clear и concise                                                          │
+│  • Examples included                                                        │
+│  • Active community docs                                                    │
+│                                                                              │
+│  LEARNING CURVE:                                                             │
+│  • Проще чем Rust                                                           │
+│  • Проще чем Go                                                             │
+│  • Familiar для C/Go разработчиков                                          │
+│  • Quick to learn                                                           │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • Discord server                                                           │
+│  • GitHub repository                                                        │
+│  • Active community                                                         │
+│  • Helpful community                                                        │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+9. ПРОИЗВОДИТЕЛЬНОСТЬ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    V PERFORMANCE                                             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  RUNTIME PERFORMANCE:                                                        │
+│  • Как C (компилируется в C)                                                │
+│  • Нет runtime overhead                                                     │
+│  • Нет GC (по умолчанию)                                                    │
+│  • Predictable performance                                                  │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Быстрее чем Go                                                           │
+│  • Быстрее чем Rust                                                         │
+│  • Быстрее чем C++                                                          │
+│  • Hello World: < 100 ms                                                    │
+│                                                                              │
+│  BINARY SIZE:                                                                │
+│  • Small binaries                                                           │
+│  • Hello World: ~100 KB                                                     │
+│  • No runtime                                                               │
+│  • Smaller than Go                                                          │
+│                                                                              │
+│  MEMORY USAGE:                                                               │
+│  • Как C                                                                    │
+│  • No GC overhead                                                           │
+│  • Predictable memory usage                                                 │
+│  • Manual control                                                           │
+│                                                                              │
+│  BENCHMARKS:                                                                 │
+│  • Numerical computations: 1x C                                             │
+│  • String processing: 1x C                                                  │
+│  • HTTP server: Faster than Go                                              │
+│  • Startup time: < 10 ms                                                    │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+10. ОГРАНИЧЕНИЯ И БУДУЩЕЕ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    V LIMITATIONS & FUTURE                                    │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CURRENT LIMITATIONS:                                                        │
+│  • Beta status (не 1.0 ещё)                                                 │
+│  • Меньше экосистема чем Go                                                 │
+│  • Windows support (улучшается)                                             │
+│  • Limited standard library                                                 │
+│  • Some features в разработке                                               │
+│                                                                              │
+│  FUTURE PLANS:                                                               │
+│  • 1.0 stable release                                                       │
+│  • More platforms (Android, iOS)                                            │
+│  • More libraries                                                           │
+│  • Better IDE support                                                       │
+│  • LLVM backend                                                             │
+│  • WebAssembly support                                                      │
+│                                                                              │
+│  ROADMAP:                                                                    │
+│  • Phase 1: Core language (готово)                                          │
+│  • Phase 2: Standard library (в разработке)                                 │
+│  • Phase 3: 1.0 release (планируется)                                       │
+│  • Long-term: Production-ready                                              │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • Discord community                                                        │
+│  • GitHub repository                                                        │
+│  • Active development                                                       │
+│  • Community-driven                                                         │
+│  • No corporate backing                                                     │
+│                                                                              │
+│  WHEN TO USE:                                                                │
+│  • ✓ CLI tools                                                              │
+│  • ✓ Web servers                                                            │
+│  • ✓ System utilities                                                       │
+│  • ✓ C replacement                                                          │
+│  • ✓ Go migration                                                           │
+│  • ✗ Production critical (beta)                                             │
+│  • ✗ Need mature ecosystem                                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                         КОНЕЦ FEATURES_V
+================================================================================

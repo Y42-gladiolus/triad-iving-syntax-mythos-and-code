@@ -1,0 +1,577 @@
+================================================================================
+              NEWLISP - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Lightweight Lisp + Batteries Included + Dynamic Scope
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (Lisp стиль)
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (define, lambda)
+5. Control Flow
+6. Contexts (namespaces)
+7. Built-in functions (HTTP, XML, JSON, SQL)
+8. Regular Expressions
+9. Error Handling
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры practical стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (LISP СТИЛЬ)
+================================================================================
+
+; Комментарии (точка с запятой)
+; Однострочные
+
+#|
+    Многострочные
+    комментарии
+|#
+
+; S-выражения (как в Lisp)
+(+ 1 2 3)  ; 6
+
+; Префиксная нотация
+(* (+ 1 2) 3)  ; 9
+
+; Define для определений
+(define x 5)
+(define name "NewLISP")
+
+; Lambda для функций
+(lambda (x) (+ x 1))
+
+; Quote (цитирование)
+'(1 2 3)  ; (1 2 3) не вычисляется
+
+; Backquote (с вычислением)
+(define x 5)
+`(1 2 ,x 4)  ; (1 2 5 4)
+
+; Begin (последовательность)
+(begin
+  (println "Hello")
+  (println "World")
+  42)  ; Возвращает 42
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ integer         │ 1, -10, 1000000                                            │
+│ float           │ 3.14, -0.5, 2.5e10                                         │
+│ string          │ "hello", "привет"                                          │
+│ symbol          │ 'foo, 'bar, 'x                                             │
+│ list            │ '(1 2 3), (list 1 2 3)                                     │
+│ array           │ (array 5 (sequence 1 5))                                   │
+│ lambda          │ (lambda (x) (+ x 1))                                       │
+│ macro           │ (define-macro (my-macro) ...)                              │
+│ context         │ (context 'MyContext)                                       │
+│ nil             │ nil (отсутствие значения)                                  │
+│ true            │ true                                                       │
+│ nil             │ nil (false в NewLISP)                                      │
+│ regex           │ (regex "pattern" "string")                                 │
+│ xml             │ (xml-parse "<tag>data</tag>")                              │
+│ json            │ (json-parse "{\"key\":\"value\"}")                         │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+; Проверка типа
+(integer? 5)      ; true
+(float? 3.14)     ; true
+(string? "hello") ; true
+(list? '(1 2 3))  ; true
+(symbol? 'x)      ; true
+
+; Преобразование
+(int "5")         ; 5
+(string 5)        ; "5"
+(float 5)         ; 5.0
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+; Global variables
+(define x 5)
+(define name "NewLISP")
+
+; Local variables (let)
+(let ((x 5)
+      (y 10))
+  (+ x y))  ; 15
+
+; Local variables (local)
+(local x y z)
+(setq x 1)
+
+; Setq (присваивание)
+(setq x 5)
+(setq x y z 10)  ; Multiple assignment
+
+; Setf (изменение)
+(setf (nth 0 mylist) 10)
+
+; Const (константы)
+(const 'PI 3.14159)
+; (setq PI 3)  ; ОШИБКА!
+
+; Dynamic scope
+(define x 5)
+(define (foo) x)
+(let ((x 10))
+  (foo))  ; 10 (dynamic scope!)
+
+; Context (namespace)
+(context 'MyContext)
+(define x 5)
+(context 'MAIN)
+(MyContext:x)  ; 5
+
+================================================================================
+4. ФУНКЦИИ (DEFINE, LAMBDA)
+================================================================================
+
+; Базовая функция
+(define (add a b)
+  (+ a b))
+
+; Lambda (анонимная)
+(lambda (x) (+ x 1))
+
+; Функция с default параметрами
+(define (greet name (greeting "Hello"))
+  (string greeting ", " name))
+
+(greet "John")        ; "Hello, John"
+(greet "John" "Hi")   ; "Hi, John"
+
+; Variadic функции
+(define (sum)
+  (apply + (args)))
+
+(sum 1 2 3 4 5)  ; 15
+
+; Функция с rest параметрами
+(define (my-func a b)
+  (println "Rest:" (args)))
+
+(my-func 1 2 3 4 5)  ; Rest: (3 4 5)
+
+; Замыкания (closures)
+(define (make-adder n)
+  (lambda (x) (+ x n)))
+
+(define add5 (make-adder 5))
+(add5 10)  ; 15
+
+; Рекурсия
+(define (factorial n)
+  (if (<= n 1)
+    1
+    (* n (factorial (- n 1)))))
+
+; Macro
+(define-macro (unless test body)
+  `(if (not ,test) ,body))
+
+(unless (> 5 3)
+  (println "This won't print"))
+
+================================================================================
+5. CONTROL FLOW
+================================================================================
+
+; If/else
+(if (> x 0)
+  (println "positive")
+  (println "non-positive"))
+
+; If с multiple expressions
+(if (> x 0)
+  (begin
+    (println "positive")
+    (* x 2))
+  0)
+
+; Cond (множественный выбор)
+(cond
+  ((= x 0) "zero")
+  ((= x 1) "one")
+  (true "other"))
+
+; Case (case statement)
+(case x
+  (0 "zero")
+  (1 "one")
+  ("other"))
+
+; When (только если истинно)
+(when (> x 0)
+  (println "positive")
+  (println "greater than zero"))
+
+; Unless (отрицание)
+(unless (= x 0)
+  (println "not zero"))
+
+; For цикл
+(for (i 0 10)
+  (println i))
+
+; For с step
+(for (i 0 10 2)
+  (println i))
+
+; While цикл
+(while (> x 0)
+  (println x)
+  (-- x))
+
+; Dolist (iterate list)
+(dolist (item '(1 2 3 4 5))
+  (println item))
+
+; Dotimes (iterate number)
+(dotimes (i 10)
+  (println i))
+
+; Doseq (iterate sequence)
+(doseq (i 1 10)
+  (println i))
+
+================================================================================
+6. CONTEXTS (NAMESPACES)
+================================================================================
+
+; Создание контекста
+(context 'MyContext)
+
+; Переменные в контексте
+(define x 5)
+(define y 10)
+
+; Возврат в MAIN контекст
+(context 'MAIN)
+
+; Доступ к переменным контекста
+(MyContext:x)  ; 5
+(MyContext:y)  ; 10
+
+; Функции в контексте
+(context 'Math)
+(define (add a b) (+ a b))
+(define (mul a b) (* a b))
+(context 'MAIN)
+
+(Math:add 5 3)  ; 8
+(Math:mul 5 3)  ; 15
+
+; Наследование контекстов
+(context 'ChildContext 'ParentContext)
+
+; Удаление контекста
+(delete-context 'MyContext)
+
+; Список контекстов
+(contexts)
+
+================================================================================
+7. BUILT-IN FUNCTIONS (HTTP, XML, JSON, SQL)
+================================================================================
+
+; HTTP client
+(http-get "http://example.com")
+(http-post "http://example.com" "data")
+
+; HTTP server
+(define (handler req)
+  (println req)
+  "Hello, World!")
+
+(http-start 8080 handler)
+
+; XML parsing
+(xml-parse "<root><item>data</item></root>")
+(xml-type-tag xml-tree)
+
+; JSON parsing
+(json-parse "{\"key\":\"value\"}")
+(json-serialize '(("key" "value")))
+
+; SQL (SQLite)
+(sql-connect "database.db")
+(sql-select "SELECT * FROM users")
+(sql-exec "INSERT INTO users VALUES (1, 'John')")
+(sql-close)
+
+; Regular expressions
+(regex "pattern" "string")
+(find-all "pattern" "string")
+(replace "pattern" "string" "replacement")
+
+; Network
+(net-listen 8080)
+(net-connect "example.com" 80)
+(net-send socket "data")
+(net-receive socket 1024)
+
+; File I/O
+(read-file "file.txt")
+(write-file "file.txt" "content")
+(append-file "file.txt" "more content")
+(delete-file "file.txt")
+
+; Date/Time
+(date)
+(date-value)
+(time-of-day)
+(sys-info)
+
+================================================================================
+8. REGULAR EXPRESSIONS
+================================================================================
+
+; Basic regex
+(regex "pattern" "string")
+; Returns: (match start end) or nil
+
+; Find all matches
+(find-all "\\d+" "abc123def456")
+; Returns: ("123" "456")
+
+; Replace
+(replace "\\d+" "abc123def" "NUM")
+; Returns: "abcNUMdef"
+
+; Capture groups
+(regex "(\\w+)@(\\w+\\.\\w+)" "test@example.com")
+; Returns: ("test@example.com" "test" "example.com")
+
+; Regex flags
+(regex "pattern" "string" 1)  ; Case insensitive
+(regex "pattern" "string" 2)  ; Multiline
+
+; Regex in conditions
+(if (regex "\\d+" string)
+  (println "Contains digits"))
+
+; Regex with find
+(find "\\d+" "abc123def" 0 1)  ; Returns position
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+; Catch errors
+(catch
+  (risky-operation)
+  'error-var)
+
+(if error-var
+  (println "Error:" error-var)
+  (println "Success"))
+
+; Error function
+(error "Custom error message")
+
+; Assert
+(assert (= x 5) "x should be 5")
+
+; Try/catch pattern
+(define (safe-divide a b)
+  (catch
+    (if (= b 0)
+      (error "Division by zero")
+      (/ a b))
+    'err)
+  (if err
+    (begin
+      (println "Error:" err)
+      nil)
+    (println "Success")))
+
+; Exit codes
+(exit 0)   ; Success
+(exit 1)   ; Error
+
+; Command line args
+(argv)  ; Get command line arguments
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Dynamic scope surprise
+(define x 5)
+(define (foo) x)
+(let ((x 10))
+  (foo))  ; 10, не 5! (dynamic scope)
+
+✓ Решение:
+Понимать dynamic scope
+Использовать letex для lexical-like behavior
+
+❌ Ошибка 2: Забыли quote
+(define x (1 2 3))  ; ОШИБКА! Вызывает функцию 1
+
+✓ Решение:
+(define x '(1 2 3))  ; OK (quoted list)
+
+❌ Ошибка 3: Неправильный setq
+(setq x)  ; ОШИБКА! Нет значения
+
+✓ Решение:
+(setq x 5)  ; OK
+
+❌ Ошибка 4: Context leak
+(context 'MyContext)
+(define x 5)
+; Забыли вернуться в MAIN!
+
+✓ Решение:
+(context 'MyContext)
+(define x 5)
+(context 'MAIN)  ; Вернуться
+
+❌ Ошибка 5: Regex без escape
+(regex "\d+" "123")  ; ОШИБКА! \d не экранирован
+
+✓ Решение:
+(regex "\\d+" "123")  ; OK (double escape)
+
+❌ Ошибка 6: File не закрыт
+(open "file.txt" "r")
+; Забыли close!
+
+✓ Решение:
+(setq f (open "file.txt" "r"))
+(read-line f)
+(close f)
+
+❌ Ошибка 7: HTTP server без handler
+(http-start 8080)  ; ОШИБКА! Нет handler
+
+✓ Решение:
+(define (handler req) "Hello")
+(http-start 8080 handler)
+
+❌ Ошибка 8: JSON без proper format
+(json-parse "{key:value}")  ; ОШИБКА! Не valid JSON
+
+✓ Решение:
+(json-parse "{\"key\":\"value\"}")  ; OK
+
+❌ Ошибка 9: SQL без connect
+(sql-select "SELECT * FROM users")  ; ОШИБКА! Нет connection
+
+✓ Решение:
+(sql-connect "database.db")
+(sql-select "SELECT * FROM users")
+(sql-close)
+
+❌ Ошибка 10: Macro без backquote
+(define-macro (my-if test then else)
+  (if test then else))  ; ОШИБКА! Вычисляется сразу
+
+✓ Решение:
+(define-macro (my-if test then else)
+  `(if ,test ,then ,else))
+
+================================================================================
+11. ПРИМЕРЫ PRACTICAL СТИЛЯ
+================================================================================
+
+Пример 1: Web scraper
+---------------------
+#!/usr/bin/newlisp
+(import "libcurl.so")
+
+(define (fetch-url url)
+  (curl:get url))
+
+(define (parse-html html)
+  (regex "<title>(.*?)</title>" html))
+
+(define url "http://example.com")
+(println (parse-html (fetch-url url)))
+
+Пример 2: REST API client
+-------------------------
+#!/usr/bin/newlisp
+
+(define (api-get endpoint)
+  (json-parse (http-get (string "https://api.example.com" endpoint))))
+
+(define (api-post endpoint data)
+  (json-parse (http-post (string "https://api.example.com" endpoint)
+                        (json-serialize data))))
+
+(define user (api-get "/users/1"))
+(println user)
+
+Пример 3: HTTP server
+---------------------
+#!/usr/bin/newlisp
+
+(define (handler req)
+  (case (req:path)
+    ("/" "Hello, World!")
+    ("/api/data" (json-serialize '(("key" "value"))))
+    (true "404 Not Found")))
+
+(println "Server starting on port 8080...")
+(http-start 8080 handler)
+(println "Press Ctrl+C to stop")
+(wait)
+
+Пример 4: Database app
+----------------------
+#!/usr/bin/newlisp
+
+(sql-connect "users.db")
+(sql-exec "CREATE TABLE IF NOT EXISTS users (id INTEGER, name TEXT)")
+(sql-exec "INSERT INTO users VALUES (1, 'John')")
+(sql-exec "INSERT INTO users VALUES (2, 'Jane')")
+
+(define users (sql-select "SELECT * FROM users"))
+(dolist (user users)
+  (println user))
+
+(sql-close)
+
+Пример 5: Text processor
+------------------------
+#!/usr/bin/newlisp
+
+(define (process-file input output)
+  (let ((content (read-file input)))
+    (setq content (replace "\\d+" content "NUM"))
+    (setq content (replace "hello" content "Hello" 0 1))
+    (write-file output content)))
+
+(process-file "input.txt" "output.txt")
+
+Пример 6: System monitor
+------------------------
+#!/usr/bin/newlisp
+
+(define (get-cpu-usage)
+  (sys-info))
+
+(define (get-memory-usage)
+  (exec "free -m"))
+
+(define (get-disk-usage)
+  (exec "df -h"))
+
+(println "CPU:" (get-cpu-usage))
+(println "Memory:" (get-memory-usage))
+(println "Disk:" (get-disk-usage))
+
+================================================================================
+                         КОНЕЦ SYNTAX_NEWLISP
+================================================================================

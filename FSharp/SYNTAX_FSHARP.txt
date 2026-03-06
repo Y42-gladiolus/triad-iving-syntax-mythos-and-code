@@ -1,0 +1,589 @@
+================================================================================
+              F# - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Functional-First + .NET + Type Inference
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (lambda, partial application)
+5. Pattern Matching
+6. Control Flow
+7. Collections (List, Array, Seq)
+8. Modules и Namespaces
+9. Error Handling (Result, Option)
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры functional стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии (две slashes)
+// Однострочные
+
+(*
+    Многострочные
+    комментарии
+*)
+
+/// XML документация
+/// <summary>Описание</summary>
+
+// Отступы важны (как Python)
+let x = 5
+let y = 10
+
+// Точка с запятой опциональна
+let a = 1; let b = 2  // Избегайте!
+
+// Модуль
+module MyModule =
+    let value = 5
+
+// Namespace
+namespace MyNamespace
+
+// Main функция
+[<EntryPoint>]
+let main argv =
+    printfn "Hello, F#!"
+    0
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ int             │ 1, -10, 1_000_000                                          │
+│ int64           │ 1L, -10L (64-bit)                                          │
+│ float           │ 3.14, -0.5, 2.5e10                                         │
+│ decimal         │ 3.14m (высокая точность)                                   │
+│ bool            │ true, false                                                │
+│ char            │ 'a', 'б'                                                   │
+│ string          │ "hello", "привет"                                          │
+│ byte            │ 0xFFuy                                                     │
+│ uint32          │ 100u                                                       │
+│ list            │ [1; 2; 3] (immutable linked list)                          │
+│ array           │ [|1; 2; 3|] (mutable array)                                │
+│ seq             │ seq { 1..10 } (lazy sequence)                              │
+│ tuple           │ (1, "a", true)                                             │
+│ record          │ { Name = "John"; Age = 25 }                                │
+│ union           │ type Shape = Circle | Rectangle                            │
+│ option          │ Some 5, None                                               │
+│ result          │ Ok 5, Error "msg"                                          │
+│ function        │ int -> int                                                 │
+│ async           │ async { return 5 }                                         │
+│ task            │ task { return 5 }                                          │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Проверка типа
+let x : int = 5
+typeof<x>  // System.Int32
+
+// Type inference
+let y = 5  // y : int (автоматически)
+
+// Приведение типов
+let z = float 5  // 5.0
+let w = int 5.5  // 5
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// let - неизменяемая (по умолчанию)
+let x = 5
+// x <- 6  // ОШИБКА!
+
+// mutable - изменяемая
+let mutable y = 10
+y <- 15  // OK
+
+// let с аннотацией типа
+let z : int = 5
+
+// let в scope
+let result =
+    let a = 5
+    let b = 10
+    a + b
+
+// Константы
+let PI = 3.14159
+let MAX_SIZE = 100
+
+// Destructuring
+let (x, y) = (1, 2)
+let [a; b; c] = [1; 2; 3]
+let { Name = name; Age = age } = person
+
+// Shadowing (переопределение)
+let x = 5
+let x = 10  // OK в новом scope
+
+// Reference cells
+let counter = ref 0
+counter := 1  // Изменить
+!counter  // Прочитать (1)
+
+================================================================================
+4. ФУНКЦИИ (LAMBDA, PARTIAL APPLICATION)
+================================================================================
+
+// Базовая функция
+let add a b = a + b
+
+// С аннотацией типа
+let multiply (a : int) (b : int) : int = a * b
+
+// Lambda (анонимная функция)
+let square = fun x -> x * x
+
+// Частичное применение (curry)
+let add5 = add 5
+add5 10  // 15
+
+// Default параметры (через overloading)
+let greet ?(greeting = "Hello") name =
+    sprintf "%s, %s!" greeting name
+
+// Varargs
+let sum numbers = List.sum numbers
+sum [1; 2; 3; 4; 5]  // 15
+
+// Замыкания (closures)
+let makeAdder n =
+    fun x -> x + n
+
+let add5 = makeAdder 5
+add5 10  // 15
+
+// Рекурсия
+let rec factorial n =
+    if n <= 1 then 1
+    else n * factorial (n - 1)
+
+// Tail-рекурсия (оптимизирована)
+let factorialTail n =
+    let rec loop acc n =
+        if n <= 1 then acc
+        else loop (acc * n) (n - 1)
+    loop 1 n
+
+// Inline функции
+[<Inline>]
+let add a b = a + b
+
+================================================================================
+5. PATTERN MATCHING
+================================================================================
+
+// Базовый match
+let describe x =
+    match x with
+    | 0 -> "zero"
+    | 1 -> "one"
+    | _ -> "other"
+
+// Match с кортежами
+let point = (3, 4)
+match point with
+| (0, 0) -> "origin"
+| (0, y) -> sprintf "on y-axis: %d" y
+| (x, 0) -> sprintf "on x-axis: %d" x
+| (x, y) -> sprintf "at (%d, %d)" x y
+
+// Match со списками
+let rec sum list =
+    match list with
+    | [] -> 0
+    | head :: tail -> head + sum tail
+
+// Match с guards (условия)
+let classify n =
+    match n with
+    | n when n < 0 -> "negative"
+    | 0 -> "zero"
+    | n when n > 0 -> "positive"
+
+// Match с records
+type Person = { Name : string; Age : int }
+
+let greet person =
+    match person with
+    | { Name = name; Age = age } when age >= 18 ->
+        sprintf "Hello, %s!" name
+    | { Name = name } ->
+        sprintf "Hello, young %s!" name
+
+// Match с union types
+type Shape =
+    | Circle of float
+    | Rectangle of float * float
+
+let area shape =
+    match shape with
+    | Circle r -> System.Math.PI * r * r
+    | Rectangle (w, h) -> w * h
+
+// Active Patterns
+let (|Even|Odd|) n =
+    if n % 2 = 0 then Even else Odd
+
+let describe n =
+    match n with
+    | Even -> "even"
+    | Odd -> "odd"
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+// If/else (возвращает значение!)
+let result =
+    if x > 0 then "positive"
+    else "non-positive"
+
+// Elif
+let describe x =
+    if x < 0 then "negative"
+    elif x = 0 then "zero"
+    else "positive"
+
+// For циклы
+for i = 1 to 10 do
+    printfn "%d" i
+
+for i = 10 downto 1 do
+    printfn "%d" i
+
+// For each
+for item in list do
+    printfn "%A" item
+
+// While циклы
+let mutable i = 0
+while i < 10 do
+    printfn "%d" i
+    i <- i + 1
+
+// Try/with (exception handling)
+try
+    riskyOperation()
+with
+| :? System.DivideByZeroException ->
+    printfn "Division by zero"
+| :? System.Exception as ex ->
+    printfn "Error: %s" ex.Message
+
+// Try/finally
+try
+    let file = System.IO.File.OpenRead("file.txt")
+    // работа с файлом
+finally
+    file.Dispose()
+
+// Use (автоматическое Dispose)
+use file = System.IO.File.OpenRead("file.txt")
+// файл автоматически закроется
+
+================================================================================
+7. COLLECTIONS (LIST, ARRAY, SEQ)
+================================================================================
+
+// List (immutable linked list)
+let list = [1; 2; 3; 4; 5]
+
+// List операции
+List.length list  // 5
+List.head list    // 1
+List.tail list    // [2; 3; 4; 5]
+List.rev list     // [5; 4; 3; 2; 1]
+List.append list [6; 7]  // [1; 2; 3; 4; 5; 6; 7]
+
+// List transformation
+List.map (fun x -> x * 2) list  // [2; 4; 6; 8; 10]
+List.filter (fun x -> x > 2) list  // [3; 4; 5]
+List.fold (+) 0 list  // 15
+List.foldBack (+) list 0  // 15
+
+// Array (mutable array)
+let array = [|1; 2; 3; 4; 5|]
+
+// Array операции
+Array.length array  // 5
+Array.get array 0   // 1
+Array.set array 0 0 // Изменить
+Array.rev array     // [|5; 4; 3; 2; 1|]
+
+// Seq (lazy sequence)
+let seq = seq { 1..10 }
+
+// Seq операции
+Seq.length seq    // 10
+Seq.map (fun x -> x * 2) seq
+Seq.filter (fun x -> x > 5) seq
+Seq.fold (+) 0 seq
+
+// List comprehensions
+let squares = [for i in 1..10 -> i * i]
+let evenSquares = [for i in 1..10 do if i % 2 = 0 then yield i * i]
+
+// Array comprehensions
+let squares = [|for i in 1..10 -> i * i|]
+
+// Seq comprehensions
+let squares = seq { for i in 1..10 -> i * i }
+
+================================================================================
+8. MODULES И NAMESPACES
+================================================================================
+
+// Module
+module Math =
+    let add a b = a + b
+    let multiply a b = a * b
+
+// Использование
+let result = Math.add 5 3
+
+// Open module
+open Math
+let result = add 5 3  // Без префикса
+
+// Namespace
+namespace MyCompany.MyProject
+
+// Module в namespace
+namespace MyCompany.MyProject
+
+module Utils =
+    let helper x = x * 2
+
+// Internal (видимо только в сборке)
+module internal InternalModule =
+    let value = 5
+
+// Private функции
+module MyModule =
+    let private helper x = x * 2
+    let public func x = helper x
+
+// Signature file (.fsi)
+// MyModule.fsi
+module MyModule
+val func : int -> int
+
+// MyModule.fs
+module MyModule =
+    let func x = x * 2
+
+================================================================================
+9. ERROR HANDLING (RESULT, OPTION)
+================================================================================
+
+// Option тип
+let findUser id =
+    if id = 1 then Some { Name = "John"; Age = 25 }
+    else None
+
+// Обработка Option
+match findUser 1 with
+| Some user -> printfn "Found: %s" user.Name
+| None -> printfn "Not found"
+
+// Option утилиты
+let name =
+    findUser 1
+    |> Option.map (fun u -> u.Name)
+    |> Option.defaultValue "Unknown"
+
+// Result тип
+let divide a b =
+    if b = 0 then Error "Division by zero"
+    else Ok (a / b)
+
+// Обработка Result
+match divide 10 2 with
+| Ok result -> printfn "Result: %d" result
+| Error msg -> printfn "Error: %s" msg
+
+// Result утилиты
+let result =
+    divide 10 2
+    |> Result.map (fun x -> x * 2)
+    |> Result.defaultValue 0
+
+// Computation expressions
+let safeDivide a b =
+    async {
+        if b = 0 then
+            return Error "Division by zero"
+        else
+            return Ok (a / b)
+    }
+
+// TryFind (Option из Try)
+let tryFind list predicate =
+    try
+        Some (List.find predicate list)
+    with
+    | :? System.Collections.Generic.KeyNotFoundException -> None
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable без mutable
+let x = 5
+x <- 6  // ОШИБКА! let immutable по умолчанию
+
+✓ Решение:
+let mutable x = 5
+x <- 6  // OK
+
+❌ Ошибка 2: Неполный pattern matching
+let describe x =
+    match x with
+    | 0 -> "zero"
+    | 1 -> "one"
+    // Забыли wildcard!
+
+✓ Решение:
+let describe x =
+    match x with
+    | 0 -> "zero"
+    | 1 -> "one"
+    | _ -> "other"
+
+❌ Ошибка 3: Option без обработки
+let user = findUser 1
+printfn "%s" user.Name  // ОШИБКА! user может быть None
+
+✓ Решение:
+match findUser 1 with
+| Some user -> printfn "%s" user.Name
+| None -> printfn "Not found"
+
+❌ Ошибка 4: Рекурсия без rec
+let factorial n =
+    if n <= 1 then 1
+    else n * factorial (n - 1)  // ОШИБКА! Нужно rec
+
+✓ Решение:
+let rec factorial n =
+    if n <= 1 then 1
+    else n * factorial (n - 1)
+
+❌ Ошибка 5: Неправильный список
+let list = [1, 2, 3]  // ОШИБКА! Запятые вместо точек с запятой
+
+✓ Решение:
+let list = [1; 2; 3]  // Точки с запятой для списка
+
+❌ Ошибка 6: Mutable array в functional коде
+let array = [|1; 2; 3|]
+array.[0] <- 0  // Избегайте в functional стиле!
+
+✓ Решение:
+let newArray = Array.map (fun x -> if x = 1 then 0 else x) array
+
+❌ Ошибка 7: Игнорирование Result
+divide 10 0  // Игнорируется ошибка!
+
+✓ Решение:
+match divide 10 0 with
+| Ok result -> use result
+| Error msg -> handle error
+
+❌ Ошибка 8: Неправильный tuple
+let tuple = (1, 2)
+let x = tuple.0  // ОШИБКА! F# использует pattern matching
+
+✓ Решение:
+let (x, y) = tuple
+или
+let x = fst tuple
+
+❌ Ошибка 9: Async без let!
+async {
+    let! result = asyncOperation()
+    return result
+}
+
+❌ Ошибка 10: Неправильный порядок файлов
+// Module2.fs использует Module1
+// Но Module2 компилируется первым!
+
+✓ Решение:
+Указать порядок в .fsproj:
+<Compile Include="Module1.fs" />
+<Compile Include="Module2.fs" />
+
+================================================================================
+11. ПРИМЕРЫ FUNCTIONAL СТИЛЯ
+================================================================================
+
+Пример 1: Pipeline обработка данных
+------------------------------------
+let process data =
+    data
+    |> List.filter (fun x -> x > 0)
+    |> List.map (fun x -> x * 2)
+    |> List.sum
+
+Пример 2: Function composition
+------------------------------
+let add1 x = x + 1
+let double x = x * 2
+
+let addThenDouble = double << add1
+addThenDouble 5  // 12
+
+Пример 3: Currying
+------------------
+let add a b = a + b
+let add5 = add 5
+add5 10  // 15
+
+Пример 4: Immutability
+----------------------
+type State = { Count : int; Name : string }
+
+let increment state = { state with Count = state.Count + 1 }
+let setName name state = { state with Name = name }
+
+Пример 5: Async workflow
+------------------------
+let fetchData url =
+    async {
+        let! response = HttpClient.GetAsync(url)
+        let! content = response.Content.ReadAsStringAsync()
+        return content
+    }
+
+Пример 6: Computation expression
+--------------------------------
+type OptionBuilder() =
+    member _.Bind(opt, f) =
+        match opt with
+        | Some x -> f x
+        | None -> None
+    member _.Return x = Some x
+
+let option = OptionBuilder()
+
+let safeDivide a b =
+    option {
+        let! result = if b = 0 then None else Some (a / b)
+        return result * 2
+    }
+
+================================================================================
+                         КОНЕЦ SYNTAX_FSHARP
+================================================================================

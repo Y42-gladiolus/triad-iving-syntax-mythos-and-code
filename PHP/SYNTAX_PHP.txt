@@ -1,0 +1,586 @@
+================================================================================
+              PHP - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Web Development + Huge Ecosystem + Easy to Learn
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции
+5. Classes и OOP
+6. Control Flow
+7. Arrays
+8. Error handling
+9. Web features
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры PHP-style
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+<?php
+// Комментарии (двойной слэш)
+// Однострочные
+
+# Комментарии (решётка)
+# Тоже работают
+
+/*
+    Многострочные
+    комментарии
+*/
+
+// Точка с запятой обязательна
+$x = 5;
+$y = 10;
+
+// Закрывающий тег опционально в pure PHP
+// ?> не нужен в .php файлах с pure PHP
+
+// Echo (вывод)
+echo "Hello, PHP!";
+print "Hello!";  // Тоже работает
+
+// Short echo tag
+<?= $variable ?>  // В HTML templates
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ int             │ 1, -10, 1_000_000                                          │
+│ float           │ 3.14, -0.5, 2.5e10                                         │
+│ string          │ "hello", 'привет', <<<EOD (heredoc)                        │
+│ bool            │ true, false                                                │
+│ null            │ null                                                       │
+│ array           │ [1, 2, 3], ['key' => 'value']                              │
+│ object          │ new MyClass()                                              │
+│ callable        │ function, closure, method                                  │
+│ iterable        │ array, Iterator                                            │
+│ mixed           │ любой тип (PHP 8+)                                         │
+│ never           │ никогда не возвращает (PHP 8+)                             │
+│ void            │ нет возвращаемого значения                                 │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+# Проверка типа
+is_int($x)
+is_string($x)
+is_array($x)
+gettype($x)
+
+# Преобразование
+(int) "5"      # 5
+(string) 5     # "5"
+(float) "3.14" # 3.14
+(bool) 1       # true
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+# Переменные (с $)
+$name = "John";
+$age = 25;
+
+# Type declarations (PHP 7+)
+function add(int $a, int $b): int {
+    return $a + $b;
+}
+
+# Strict types
+declare(strict_types=1);
+
+# Constants
+define('PI', 3.14159);
+const MAX_SIZE = 100;
+
+# Variable variables
+$var = 'name';
+$$var = 'John';  # $name = 'John'
+
+# References
+$a = 5;
+$b = &$a;  # $b ссылается на $a
+$b = 10;   # $a тоже 10
+
+# Destructuring (PHP 7.1+)
+[$a, $b] = [1, 2];
+['name' => $name, 'age' => $age] = ['name' => 'John', 'age' => 25];
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+# Базовая функция
+function add($a, $b) {
+    return $a + $b;
+}
+
+# С type declarations
+function add(int $a, int $b): int {
+    return $a + $b;
+}
+
+# Default параметры
+function greet($name, $greeting = "Hello") {
+    return "$greeting, $name!";
+}
+
+# Variadic функции
+function sum(...$nums) {
+    return array_sum($nums);
+}
+
+# Anonymous функции
+$add = function($a, $b) {
+    return $a + $b;
+};
+
+# Arrow функции (PHP 7.4+)
+$add = fn($a, $b) => $a + $b;
+
+# Closures с use
+$multiplier = 2;
+$multiply = fn($x) => $x * $multiplier;
+
+# Generator функции
+function range($start, $end) {
+    for ($i = $start; $i <= $end; $i++) {
+        yield $i;
+    }
+}
+
+================================================================================
+5. CLASSES И OOP
+================================================================================
+
+class Person {
+    // Properties
+    public string $name;
+    private int $age;
+    protected string $email;
+    
+    // Constructor (PHP 8+ constructor property promotion)
+    public function __construct(
+        public string $name,
+        private int $age,
+        protected string $email
+    ) {}
+    
+    // Methods
+    public function greet(): string {
+        return "Hello, {$this->name}!";
+    }
+    
+    // Getters/Setters
+    public function getAge(): int {
+        return $this->age;
+    }
+    
+    public function setAge(int $age): void {
+        $this->age = $age;
+    }
+    
+    // Static methods
+    public static function create(string $name): self {
+        return new self($name, 0, '');
+    }
+}
+
+# Inheritance
+class Employee extends Person {
+    private float $salary;
+    
+    public function __construct(
+        string $name,
+        int $age,
+        string $email,
+        float $salary
+    ) {
+        parent::__construct($name, $age, $email);
+        $this->salary = $salary;
+    }
+}
+
+# Interfaces
+interface Printable {
+    public function print(): string;
+}
+
+# Traits
+trait Loggable {
+    public function log(string $message): void {
+        error_log($message);
+    }
+}
+
+class UserService {
+    use Loggable;
+}
+
+# Abstract classes
+abstract class Shape {
+    abstract public function area(): float;
+}
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+# If/elseif/else
+if ($x > 5) {
+    echo "greater";
+} elseif ($x == 5) {
+    echo "equal";
+} else {
+    echo "less";
+}
+
+# Match expression (PHP 8+)
+$result = match($x) {
+    1 => 'one',
+    2 => 'two',
+    default => 'other',
+};
+
+# Switch
+switch ($x) {
+    case 1:
+        echo "one";
+        break;
+    case 2:
+        echo "two";
+        break;
+    default:
+        echo "other";
+}
+
+# For
+for ($i = 0; $i < 10; $i++) {
+    echo $i;
+}
+
+# Foreach
+foreach ($array as $value) {
+    echo $value;
+}
+
+foreach ($array as $key => $value) {
+    echo "$key: $value";
+}
+
+# While
+while ($x > 0) {
+    echo $x;
+    $x--;
+}
+
+# Break/continue
+foreach ($array as $value) {
+    if ($value == 5) continue;
+    if ($value == 8) break;
+    echo $value;
+}
+
+================================================================================
+7. ARRAYS
+================================================================================
+
+# Indexed arrays
+$array = [1, 2, 3];
+$array = array(1, 2, 3);  # Старый синтаксис
+
+# Associative arrays
+$array = ['name' => 'John', 'age' => 25];
+
+# Array operations
+count($array);           # Длина
+array_push($array, 4);   # Добавить
+array_pop($array);       # Удалить последний
+array_merge($arr1, $arr2);
+array_map(fn($x) => $x * 2, $array);
+array_filter($array, fn($x) => $x > 2);
+array_reduce($array, fn($carry, $x) => $carry + $x, 0);
+
+# Array unpacking (PHP 7.4+)
+$array = [1, 2, 3];
+$first = $array[0];
+$rest = array_slice($array, 1);
+
+# Null coalescing (PHP 7+)
+$name = $_GET['name'] ?? 'default';
+
+# Null coalescing assignment (PHP 7.4+)
+$data['name'] ??= 'default';
+
+================================================================================
+8. ERROR HANDLING
+================================================================================
+
+# Exceptions
+try {
+    riskyOperation();
+} catch (InvalidArgumentException $e) {
+    echo "Invalid argument: " . $e->getMessage();
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+} finally {
+    echo "Always executed";
+}
+
+# Custom exceptions
+class MyException extends Exception {}
+
+# Throw
+throw new MyException("Error message");
+
+# Error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+# Custom error handler
+set_error_handler(function($errno, $errstr) {
+    echo "Error: $errstr";
+});
+
+# Assertions
+assert($x > 0, "x must be positive");
+
+================================================================================
+9. WEB FEATURES
+================================================================================
+
+# Superglobals
+$_GET['param'];      # Query parameters
+$_POST['field'];     # Form data
+$_SESSION['user'];   # Session data
+$_COOKIE['name'];    # Cookies
+$_FILES['upload'];   # Uploaded files
+$_SERVER['REQUEST_METHOD'];  # Server variables
+
+# Session management
+session_start();
+$_SESSION['user'] = 'John';
+session_destroy();
+
+# Headers
+header('Content-Type: application/json');
+header('Location: /redirect');
+
+# Output buffering
+ob_start();
+echo "Hello";
+$content = ob_get_clean();
+
+# JSON
+$json = json_encode(['name' => 'John']);
+$data = json_decode($json, true);
+
+# HTTP requests (Guzzle)
+$client = new \GuzzleHttp\Client();
+$response = $client->get('https://api.example.com');
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Забыли $
+name = "John";  # ОШИБКА! Нужно $name
+
+✓ Решение:
+$name = "John";
+
+❌ Ошибка 2: Array vs string
+$array = "hello";
+$array[] = "world";  # ОШИБКА!
+
+✓ Решение:
+$array = ["hello"];
+$array[] = "world";
+
+❌ Ошибка 3: Reference без &
+function modify($var) {
+    $var = 10;  # Не изменяет оригинал
+}
+
+✓ Решение:
+function modify(&$var) {
+    $var = 10;  # Изменяет оригинал
+}
+
+❌ Ошибка 4: Equality vs identity
+if ($x == "5")  # Type juggling!
+
+✓ Решение:
+if ($x === 5)  # Strict comparison
+
+❌ Ошибка 5: Array keys
+$array = ['name' => 'John'];
+echo $array['Name'];  # nil! Case sensitive
+
+✓ Решение:
+echo $array['name'];
+
+❌ Ошибка 6: Session без start
+$_SESSION['user'] = 'John';  # ОШИБКА!
+
+✓ Решение:
+session_start();
+$_SESSION['user'] = 'John';
+
+❌ Ошибка 7: SQL injection
+$query = "SELECT * FROM users WHERE id = " . $_GET['id'];
+
+✓ Решение:
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->execute([$_GET['id']]);
+
+❌ Ошибка 8: Deprecated функции
+mysql_connect();  # Устарело!
+
+✓ Решение:
+PDO или mysqli
+
+❌ Ошибка 9: Output before headers
+echo "Hello";
+header('Location: /redirect');  # ОШИБКА!
+
+✓ Решение:
+header('Location: /redirect');
+echo "Hello";
+
+❌ Ошибка 10: Memory limit
+$data = file_get_contents('large_file.txt');  # Может превысить limit
+
+✓ Решение:
+$handle = fopen('large_file.txt', 'r');
+while (($line = fgets($handle)) !== false) {
+    // Process line by line
+}
+fclose($handle);
+
+================================================================================
+11. ПРИМЕРЫ PHP-STYLE
+================================================================================
+
+Пример 1: Laravel Controller
+----------------------------
+<?php
+namespace App\Http\Controllers;
+
+class UserController extends Controller
+{
+    public function index()
+    {
+        $users = User::all();
+        return view('users.index', compact('users'));
+    }
+    
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+        ]);
+        
+        User::create($validated);
+        return redirect()->route('users.index');
+    }
+}
+
+Пример 2: REST API
+------------------
+<?php
+header('Content-Type: application/json');
+
+$method = $_SERVER['REQUEST_METHOD'];
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+if ($method === 'GET' && $path === '/api/users') {
+    $users = User::all();
+    echo json_encode($users);
+} elseif ($method === 'POST' && $path === '/api/users') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $user = User::create($data);
+    echo json_encode($user);
+}
+
+Пример 3: WordPress Plugin
+--------------------------
+<?php
+/**
+ * Plugin Name: My Plugin
+ */
+
+add_action('init', function() {
+    // Initialization code
+});
+
+add_shortcode('my_shortcode', function($atts) {
+    return "Shortcode output";
+});
+
+Пример 4: Symfony Service
+-------------------------
+<?php
+namespace App\Service;
+
+class UserService
+{
+    public function __construct(
+        private EntityManagerInterface $em
+    ) {}
+    
+    public function createUser(string $name, string $email): User
+    {
+        $user = new User();
+        $user->setName($name);
+        $user->setEmail($email);
+        
+        $this->em->persist($user);
+        $this->em->flush();
+        
+        return $user;
+    }
+}
+
+Пример 5: CLI Script
+--------------------
+#!/usr/bin/env php
+<?php
+require 'vendor/autoload.php';
+
+$application = new Symfony\Component\Console\Application();
+$application->add(new MyCommand());
+$application->run();
+
+Пример 6: Database Layer
+------------------------
+<?php
+class Database
+{
+    private PDO $pdo;
+    
+    public function __construct(string $dsn, string $user, string $pass)
+    {
+        $this->pdo = new PDO($dsn, $user, $pass);
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    }
+    
+    public function query(string $sql, array $params = []): array
+    {
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+
+================================================================================
+                         КОНЕЦ SYNTAX_PHP
+================================================================================

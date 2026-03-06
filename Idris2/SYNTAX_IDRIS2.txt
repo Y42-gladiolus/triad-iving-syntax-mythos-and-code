@@ -1,0 +1,598 @@
+================================================================================
+              IDRIS2 - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ И ЗАВИСИМЫМ ТИПАМ
+                    С расширенными примерами и типичными ошибками
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных (включая зависимые!)
+3. Переменные и присваивание
+4. Функции с зависимыми типами
+5. Pattern Matching с доказательствами
+6. Векторы (зависимый тип!)
+7. Доказательства и теоремы
+8. Totality checking (тотальность)
+9. Интерактивное доказательство
+10. Эффекты и IO
+11. Типичные ошибки (РАСШИРЕНО!)
+12. Примеры зависимых типов в действии
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+-- Комментарии (как в Haskell)
+-- Однострочные
+
+{-
+    Многострочные
+    комментарии
+-}
+
+-- Точка с запятой НЕ нужна
+x : Integer
+x = 5
+
+-- Объявление типа перед функцией (обязательно в Idris!)
+add : Integer -> Integer -> Integer
+add x y = x + y
+
+-- :printType в REPL покажет тип
+-- Main> :printType add
+-- add : Integer -> Integer -> Integer
+
+================================================================================
+2. ТИПЫ ДАННЫХ (ВКЛЮЧАЯ ЗАВИСИМЫЕ!)
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Integer         │ 1, -10, 1000000 (произвольная точность)                    │
+│ Int             │ 1, -10 (машинные целые, быстрее)                           │
+│ Nat             │ 0, 1, 2, ... (натуральные числа, ТОЛЬКО неотрицательные!)  │
+│ Float           │ 3.14, -0.5 (вещественные)                                  │
+│ Double          │ 3.14 (двойная точность)                                    │
+│ Bool            │ True, False                                                │
+│ Char            │ 'a', 'б'                                                   │
+│ String          │ "hello", "привет"                                          │
+│ List a          │ [1, 2, 3], ["a", "b"] (списки)                             │
+│ Vect n a        │ [1, 2, 3] : Vect 3 Integer (векторы с длиной в типе!)      │
+│ Maybe a         │ Just 5, Nothing (как Option)                               │
+│ Either e a      │ Left "error", Right 5 (как Result)                         │
+│ Pair a b        │ (1, "a") или (1 ** "a") (зависимые пары!)                  │
+│ Sigma           │ (n ** Vect n Integer) (зависимая пара!)                    │
+│ Dec             │ Yes proof, No counterexample (решаемые предикаты)          │
+│ So              │ So (x > 0) (доказательство что x > 0)                      │
+│ Refl            │ refl (доказательство равенства)                            │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+-- Проверка типа в REPL:
+Main> :printType 5
+Integer : Type
+
+Main> :printType [1, 2, 3]
+List Integer : Type
+
+Main> :printType the (Vect 3 Integer) [1, 2, 3]
+Vect 3 Integer : Type
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+-- let - локальная связка
+add : Integer -> Integer -> Integer
+add x y =
+  let z = x + y in
+  z * 2
+
+-- where - локальные определения
+square : Integer -> Integer
+square x = x * x
+  where
+    helper : Integer -> Integer
+    helper n = n * n
+
+-- mutually - взаимная рекурсия
+mutual
+  even : Nat -> Bool
+  even Z = True
+  even (S k) = odd k
+  
+  odd : Nat -> Bool
+  odd Z = False
+  odd (S k) = even k
+
+-- implicit параметры (в фигурных скобках)
+replicate : {a : Type} -> (n : Nat) -> (x : a) -> Vect n a
+replicate Z x = []
+replicate (S k) x = x :: replicate k x
+
+-- default значения
+greet : (name : String) -> (greeting : String := "Hello") -> String
+greet name greeting = greeting ++ ", " ++ name
+
+================================================================================
+4. ФУНКЦИИ С ЗАВИСИМЫМИ ТИПАМИ
+================================================================================
+
+-- ⚡ ЗАВИСИМЫЕ ТИПЫ: тип зависит от значения!
+
+-- Вектор с длиной в типе
+data Vect : Nat -> Type -> Type where
+  Nil : Vect Z a
+  (::) : a -> Vect n a -> Vect (S n) a
+
+-- Функция которая принимает вектор ТОЛЬКО определённой длины
+head : Vect (S n) a -> a
+head (x :: xs) = x
+
+-- head [] НЕ СКОМПИЛИРУЕТСЯ! (длина 0 ≠ S n)
+
+-- append для векторов (длина сохраняется в типе!)
+append : Vect n a -> Vect m a -> Vect (n + m) a
+append [] ys = ys
+append (x :: xs) ys = x :: append xs ys
+
+-- Тип гарантирует что результат имеет правильную длину!
+
+-- reverse с доказательством длины
+reverse : Vect n a -> Vect n a
+reverse [] = []
+reverse (x :: xs) = append (reverse xs) [x]
+
+-- ⚡ Компилятор ПРОВЕРЯЕТ что длина сохраняется!
+
+-- Функция с доказательством в типе
+plusCommutes : (n, m : Nat) -> n + m = m + n
+plusCommutes Z m = sym (plusZeroRightNeutral m)
+plusCommutes (S k) m = 
+  let ih = plusCommutes k m in
+  cong ih
+
+-- ⚡ Это и код И доказательство одновременно!
+
+================================================================================
+5. PATTERN MATCHING С ДОКАЗАТЕЛЬСТВАМИ
+================================================================================
+
+-- Базовый match
+describe : Nat -> String
+describe Z = "zero"
+describe (S k) = "successor of " ++ show k
+
+-- Match с зависимыми типами
+fin : Nat -> Type
+fin Z = Void  -- Нет элементов
+fin (S k) = Maybe (fin k)
+
+-- access с доказательством bounds
+index : Fin n -> Vect n a -> a
+index FZ (x :: xs) = x
+index (FS k) (x :: xs) = index k xs
+
+-- index FZ [] НЕ СКОМПИЛИРУЕТСЯ! (нельзя индексировать пустой вектор)
+
+-- Match с уравнениями (proof by reflection)
+isEven : Nat -> Bool
+isEven Z = True
+isEven (S Z) = False
+isEven (S (S k)) = isEven k
+
+-- Decidable propositions
+isEvenDec : (n : Nat) -> Dec (isEven n = True)
+isEvenDec Z = Yes Refl
+isEvenDec (S Z) = No (λ p => replace {P = \x => x = False} p Refl)
+isEvenDec (S (S k)) = isEvenDec k
+
+-- Case trees (автоматическая генерация)
+compare : Nat -> Nat -> Ordering
+compare Z Z = EQ
+compare Z (S _) = LT
+compare (S _) Z = GT
+compare (S k) (S j) = compare k j
+
+================================================================================
+6. ВЕКТОРЫ (ЗАВИСИМЫЙ ТИП!)
+================================================================================
+
+-- Определение Vect (встроено в Prelude)
+data Vect : Nat -> Type -> Type where
+  Nil : Vect Z a
+  (::) : a -> Vect n a -> Vect (S n) a
+
+-- Создание векторов
+v1 : Vect 3 Integer
+v1 = [1, 2, 3]  -- Синтаксический сахар для 1 :: 2 :: 3 :: Nil
+
+v2 : Vect 2 String
+v2 = ["hello", "world"]
+
+-- Операции с векторами
+length : Vect n a -> Nat
+length [] = Z
+length (x :: xs) = S (length xs)
+
+-- map сохраняет длину
+map : (a -> b) -> Vect n a -> Vect n n b
+map f [] = []
+map f (x :: xs) = f x :: map f xs
+
+-- zip требует одинаковой длины
+zip : Vect n a -> Vect n b -> Vect n (a, b)
+zip [] [] = []
+zip (x :: xs) (y :: ys) = (x, y) :: zip xs ys
+
+-- zip [] [1] НЕ СКОМПИЛИРУЕТСЯ! (разная длина)
+
+-- transpose для матриц (доказательство корректности в типе!)
+transpose : Vect n (Vect m a) -> Vect m (Vect n a)
+transpose [] = replicate m []
+transpose (xs :: xss) = zipWith (::) xs (transpose xss)
+
+-- ⚡ Тип гарантирует что транспонирование корректно!
+
+================================================================================
+7. ДОКАЗАТЕЛЬСТВА И ТЕОРЕМЫ
+================================================================================
+
+-- Равенство типов
+data (=) : a -> b -> Type where
+  Refl : x = x
+
+-- Доказательство коммутативности сложения
+plusCommutes : (n, m : Nat) -> n + m = m + n
+plusCommutes Z m = sym (plusZeroRightNeutral m)
+plusCommutes (S k) m = 
+  let ih = plusCommutes k m in
+  cong {f = S} ih
+
+-- Использование доказательств в коде
+safeDivide : (x, y : Integer) -> (prf : y /= 0) -> Integer
+safeDivide x y prf = x `div` y
+
+-- Вызов с доказательством:
+-- safeDivide 10 2 Refl  -- OK
+-- safeDivide 10 0 Refl  -- НЕ СКОМПИЛИРУЕТСЯ!
+
+-- Decidable propositions
+data Dec : Type -> Type where
+  Yes : (prf : prop) -> Dec prop
+  No : (contra : prop -> Void) -> Dec prop
+
+-- Пример: решаемость равенства
+natEqDec : (n, m : Nat) -> Dec (n = m)
+natEqDec Z Z = Yes Refl
+natEqDec Z (S k) = No (λ p => case p of {})
+natEqDec (S k) Z = No (λ p => case p of {})
+natEqDec (S k) (S j) = 
+  case natEqDec k j of
+    Yes Refl => Yes Refl
+    No contra => No (λ p => contra (cong {f = pred} p))
+
+-- So тип (доказательство что Bool = True)
+data So : Bool -> Type where
+  Oh : So True
+
+-- Функция с предусловием
+safeHead : (xs : List a) -> (prf : So (length xs > 0)) -> a
+safeHead (x :: xs) Oh = x
+
+================================================================================
+8. TOTALITY CHECKING (ТОТАЛЬНОСТЬ)
+================================================================================
+
+-- ⚡ Idris проверяет что функции тотальны (всегда завершаются)!
+
+-- total - функция должна быть тотальной
+total
+factorial : Nat -> Nat
+factorial Z = 1
+factorial (S k) = (S k) * factorial k
+
+-- partial - функция может не завершаться
+partial
+infinite : Nat -> Nat
+infinite n = infinite n
+
+-- covering - все случаи покрыты
+covering
+head : List a -> a
+head (x :: xs) = x
+head [] = head []  -- Покрывает случай но не тотально
+
+-- unreachable - случай невозможен
+finElim : Fin Z -> a
+finElim x impossible  -- Нет элементов Fin Z
+
+-- Проверка тотальности в REPL:
+Main> :total factorial
+Main.factorial is total
+
+Main> :total infinite
+Main.infinite is possibly not total
+
+-- ⚡ total функции можно использовать в доказательствах!
+
+================================================================================
+9. ИНТЕРАКТИВНОЕ ДОКАЗАТЕЛЬСТВО
+================================================================================
+
+-- В REPL можно строить доказательства интерактивно:
+
+Main> :prove plusCommutes
+------ Proof plusCommutes ------
+n : Nat
+m : Nat
+<1> plusCommutes n m : n + m = m + n
+
+-- Команды для доказательств:
+-- :intro - ввести переменную
+-- :refine - уточнить тип
+-- :exact - точное доказательство
+-- :rewrite - переписать с равенством
+-- :compute - вычислить
+-- :qed - завершить доказательство
+
+-- Пример сессии:
+Main> :prove plusCommutes
+n : Nat
+m : Nat
+<1> plusCommutes n m : n + m = m + n
+
+Main> :intro n
+Main> :intro m
+Main> :induction n
+-- И так далее...
+
+================================================================================
+10. ЭФФЕКТЫ И IO
+================================================================================
+
+-- IO тип (как в Haskell)
+main : IO ()
+main = putStrLn "Hello, World!"
+
+-- Чтение ввода
+getName : IO String
+getName = do
+  putStr "What is your name? "
+  getLine
+
+-- Комбинирование
+greet : IO ()
+greet = do
+  name <- getName
+  putStrLn ("Hello, " ++ name ++ "!")
+
+-- Обработка ошибок в IO
+readNumber : IO (Maybe Integer)
+readNumber = do
+  input <- getLine
+  case parseInteger input of
+    Just n => pure (Just n)
+    Nothing => pure Nothing
+
+-- Custom effects (продвинутая система)
+-- См. библиотеку effects
+
+-- State эффект
+counter : Eff State [STATE := Int] ()
+counter = do
+  n <- get
+  put (n + 1)
+
+-- Exception эффект
+divide : (x, y : Integer) -> Eff Exception [EXCEPTION := String] Integer
+divide x 0 = throw "Division by zero"
+divide x y = pure (x `div` y)
+
+================================================================================
+11. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Забыть объявление типа
+add x y = x + y
+-- ОШИБКА: Can't infer type for x
+
+✓ Решение:
+add : Integer -> Integer -> Integer
+add x y = x + y
+
+❌ Ошибка 2: Неправильный тип для Nat
+factorial : Nat -> Nat
+factorial (-1) = 1  -- ОШИБКА: -1 не Nat!
+
+✓ Решение:
+factorial : Nat -> Nat
+factorial Z = 1  -- Используйте Z для 0
+
+❌ Ошибка 3: Длина вектора не совпадает
+v : Vect 3 Integer
+v = [1, 2]  -- ОШИБКА: длина 2 ≠ 3
+
+✓ Решение:
+v : Vect 3 Integer
+v = [1, 2, 3]
+
+❌ Ошибка 4: head на пустом списке
+head : List a -> a
+head [] = head []  -- ОШИБКА: не тотально!
+
+✓ Решение:
+head : Vect (S n) a -> a  -- Тип гарантирует непустоту!
+head (x :: xs) = x
+
+❌ Ошибка 5: Неправильное использование Refl
+proof : 2 + 2 = 5
+proof = Refl  -- ОШИБКА: 2+2 ≠ 5!
+
+✓ Решение:
+proof : 2 + 2 = 4
+proof = Refl  -- OK!
+
+❌ Ошибка 6: Missing cases в pattern matching
+describe : Nat -> String
+describe (S k) = "successor"
+-- ОШИБКА: Missing case Z
+
+✓ Решение:
+describe : Nat -> String
+describe Z = "zero"
+describe (S k) = "successor"
+
+❌ Ошибка 7: Неправильное использование implicit параметров
+replicate : {a : Type} -> (n : Nat) -> (x : a) -> Vect n a
+replicate n x = ...  -- ОШИБКА: a не в scope
+
+✓ Решение:
+replicate : {a : Type} -> (n : Nat) -> (x : a) -> Vect n a
+replicate {a} n x = ...  -- Явно указать implicit
+
+❌ Ошибка 8: total функция не завершается
+total
+infinite : Nat -> Nat
+infinite n = infinite n  -- ОШИБКА: не завершается!
+
+✓ Решение:
+partial  -- Или сделайте функцию тотальной
+infinite : Nat -> Nat
+infinite n = n  -- Завершается
+
+❌ Ошибка 9: Неправильное доказательство равенства
+wrong : (n : Nat) -> n + 0 = 0
+wrong n = Refl  -- ОШИБКА: n+0 ≠ 0 для n>0!
+
+✓ Решение:
+correct : (n : Nat) -> n + 0 = n
+correct n = plusZeroRightNeutral n
+
+❌ Ошибка 10: Fin индекс за пределами
+index : Fin n -> Vect n a -> a
+index FZ [] = ?hole  -- ОШИБКА: FZ не может индексировать []
+
+✓ Решение:
+index : Fin (S n) -> Vect (S n) a -> a
+index FZ (x :: xs) = x
+
+❌ Ошибка 11: So без доказательства
+safeHead : (xs : List a) -> (prf : So (length xs > 0)) -> a
+safeHead xs prf = head xs  -- ОШИБКА: prf не используется!
+
+✓ Решение:
+safeHead : (xs : List a) -> (prf : So (length xs > 0)) -> a
+safeHead (x :: xs) Oh = x  -- Oh требует length > 0 = True
+
+❌ Ошибка 12: Dec без обработки No
+checkEven : (n : Nat) -> Dec (isEven n = True)
+checkEven n = Yes Refl  -- ОШИБКА: не для всех n!
+
+✓ Решение:
+checkEven : (n : Nat) -> Dec (isEven n = True)
+checkEven Z = Yes Refl
+checkEven (S Z) = No (λ p => ?contradiction)
+checkEven (S (S k)) = checkEven k
+
+❌ Ошибка 13: Неправильное использование rewrite
+proof : (n : Nat) -> n + 0 = n
+proof n = rewrite plusZeroRightNeutral n in Refl
+-- ОШИБКА: rewrite не нужен если тип уже совпадает
+
+✓ Решение:
+proof : (n : Nat) -> n + 0 = n
+proof n = plusZeroRightNeutral n
+
+❌ Ошибка 14: Смешение Integer и Nat
+add : Nat -> Nat -> Nat
+add x y = x + y  -- ОШИБКА: + для Integer не Nat
+
+✓ Решение:
+add : Nat -> Nat -> Nat
+add x y = x `plus` y  -- plus для Nat
+
+❌ Ошибка 15: Игнорирование warnings компилятора
+-- Warning: Unused variable x
+function : (x : Integer) -> Integer
+function x = 5  -- x не используется!
+
+✓ Решение:
+function : (x : Integer) -> Integer
+function _ = 5  -- _ для неиспользуемых
+
+================================================================================
+12. ПРИМЕРЫ ЗАВИСИМЫХ ТИПОВ В ДЕЙСТВИИ
+================================================================================
+
+Пример 1: Безопасный доступ к массиву
+-------------------------------------
+-- Тип гарантирует что индекс в bounds
+safeIndex : (i : Fin n) -> Vect n a -> a
+safeIndex FZ (x :: xs) = x
+safeIndex (FS k) (x :: xs) = safeIndex k xs
+
+-- Вызов:
+-- safeIndex FZ [1, 2, 3]  -- OK: возвращает 1
+-- safeIndex (FS FZ) [1, 2, 3]  -- OK: возвращает 2
+
+Пример 2: Доказательство сортировки
+-----------------------------------
+data Sorted : List Integer -> Type where
+  SortedNil : Sorted []
+  SortedOne : Sorted [x]
+  SortedCons : (y : Integer) -> (xs : List Integer) -> 
+               Sorted xs -> (allGreater : All (> y) xs) ->
+               Sorted (y :: xs)
+
+-- Функция возвращает ТОЛЬКО если список отсортирован
+insertSorted : (x : Integer) -> (xs : List Integer) -> 
+               Sorted xs -> (ys : List Integer ** Sorted ys)
+insertSorted x [] SortedNil = ([x] ** SortedOne)
+insertSorted x (y :: ys) (SortedCons y ys sorted prf) =
+  if x <= y then
+    ((x :: y :: ys) ** SortedCons x (y :: ys) (SortedCons y ys sorted prf) ?prf1)
+  else
+    let (ys' ** sorted') = insertSorted x ys sorted in
+    (y :: ys' ** SortedCons y ys' sorted' ?prf2)
+
+Пример 3: Типизированный DSL для выражений
+------------------------------------------
+data Expr : Type -> Type where
+  Val : a -> Expr a
+  Add : Expr Integer -> Expr Integer -> Expr Integer
+  Mul : Expr Integer -> Expr Integer -> Expr Integer
+  If : Expr Bool -> Expr a -> Expr a -> Expr a
+
+eval : Expr t -> t
+eval (Val x) = x
+eval (Add x y) = eval x + eval y
+eval (Mul x y) = eval x * eval y
+eval (If cond t e) = if eval cond then eval t else eval e
+
+-- НЕВОЗМОЖНО создать некорректное выражение!
+-- Add (Val "hello") (Val 5) НЕ СКОМПИЛИРУЕТСЯ!
+
+Пример 4: Доказательство корректности reverse
+---------------------------------------------
+reverseAppend : (xs, ys : Vect n a) -> reverse (xs ++ ys) = reverse ys ++ reverse xs
+reverseAppend [] ys = rewrite appendNilRightNeutral (reverse ys) in Refl
+reverseAppend (x :: xs) ys = 
+  let ih = reverseAppend xs ys in
+  rewrite ih in
+  rewrite appendAssociative (reverse ys) [x] (reverse xs) in
+  Refl
+
+Пример 5: Состояние с зависимыми типами
+---------------------------------------
+data State : Type -> Type -> Type where
+  MkState : (value : a) -> (proof : Predicate value) -> State a proof
+
+-- value всегда удовлетворяет proof!
+update : (f : a -> a) -> (p : Predicate (f value)) -> 
+         State a proof -> State a p
+update f p (MkState value prf) = MkState (f value) p
+
+================================================================================
+                         КОНЕЦ SYNTAX_IDRIS2
+================================================================================

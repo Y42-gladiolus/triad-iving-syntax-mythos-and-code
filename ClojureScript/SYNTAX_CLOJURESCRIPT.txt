@@ -1,0 +1,567 @@
+================================================================================
+              CLOJURESCRIPT - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Lisp + JavaScript Target + Immutable + Functional
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (Lisp стиль)
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (fn, defn)
+5. Collections (List, Vector, Map, Set)
+6. JavaScript интероперабельность
+7. Control Flow
+8. Immutability и Persistent Data Structures
+9. Async (Promise, core.async)
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры functional стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (LISP СТИЛЬ)
+================================================================================
+
+; Комментарии (точка с запятой)
+; Однострочные
+
+#_{:clj-kondo/ignore [:unused-binding]}
+(comment
+  Многострочные
+  комментарии
+)
+
+; S-выражения (как в Lisp)
+(+ 1 2 3)  ; 6
+
+; Префиксная нотация
+(* (+ 1 2) 3)  ; 9
+
+; Def для определений
+(def x 5)
+(def name "ClojureScript")
+
+; Fn для функций
+(fn [x] (+ x 1))
+
+; Quote (цитирование)
+'(1 2 3)  ; (1 2 3) не вычисляется
+
+; Quasiquote (с вычислением)
+(def x 5)
+`(1 2 ~x 4)  ; (1 2 5 4)
+
+; Do (последовательность)
+(do
+  (println "Hello")
+  (println "World")
+  42)  ; Возвращает 42
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ number          │ 1, -10, 3.14, 2.5e10                                       │
+│ integer         │ 1, -10, 1000000                                            │
+│ string          │ "hello", "привет"                                          │
+│ boolean         │ true, false                                                │
+│ keyword         │ :name, :age, :user/id                                      │
+│ char            │ \a, \б                                                     │
+│ list            │ '(1 2 3) (linked list)                                     │
+│ vector          │ [1 2 3] (array-like)                                       │
+│ map             │ {:name "John" :age 25}                                     │
+│ set             │ #{1 2 3} (уникальные)                                      │
+│ nil             │ nil (null/undefined)                                       │
+│ symbol          │ 'foo, 'bar (идентификаторы)                                │
+│ function        │ #(+ % 1) (анонимная)                                       │
+│ atom            │ (atom 0) (mutable reference)                               │
+│ promise         │ (promise) (async)                                          │
+│ js/Value        │ js/Date, js/console (JavaScript)                           │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+; Проверка типа
+(number? x)      ; число?
+(string? x)      ; строка?
+(vector? x)      ; вектор?
+(map? x)         ; map?
+(nil? x)         ; nil?
+
+; Приведение типов
+(str 5)          ; "5"
+(int "5")        ; 5
+(float 5)        ; 5.0
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+; Def (глобальные)
+(def x 5)
+(def name "ClojureScript")
+
+; Let (локальные переменные)
+(let [x 5
+      y 10]
+  (+ x y))  ; 15
+
+; Defn (функции)
+(defn add [a b]
+  (+ a b))
+
+; Const (константы по соглашению)
+(def PI 3.14159)
+(def MAX-SIZE 100)
+
+; Atom (mutable reference)
+(def counter (atom 0))
+(swap! counter inc)  ; Увеличить
+@counter  ; Прочитать (1)
+
+; Destructuring
+(let [[x y] [1 2]]
+  x)  ; 1
+
+(let [{:keys [name age]} {:name "John" :age 25}]
+  name)  ; "John"
+
+; Shadowing (переопределение)
+(let [x 5]
+  (let [x 10]
+    x))  ; 10
+
+================================================================================
+4. ФУНКЦИИ (FN, DEFN)
+================================================================================
+
+; Базовая функция
+(defn add [a b]
+  (+ a b))
+
+; Fn (анонимная)
+(fn [x] (+ x 1))
+
+; Reader macro (короткий синтаксис)
+#(+ % 1)  ; % = первый аргумент
+#(+ %1 %2)  ; %1, %2 = первый, второй
+
+; Частичное применение (curry)
+(def add5 (partial + 5))
+(add5 10)  ; 15
+
+; Default параметры
+(defn greet [name & [greeting]]
+  (str (or greeting "Hello") ", " name))
+
+(greet "John")  ; "Hello, John"
+(greet "John" "Hi")  ; "Hi, John"
+
+; Varargs
+(defn sum [& nums]
+  (apply + nums))
+
+(sum 1 2 3 4 5)  ; 15
+
+; Замыкания (closures)
+(defn make-adder [n]
+  (fn [x] (+ x n)))
+
+(def add5 (make-adder 5))
+(add5 10)  ; 15
+
+; Рекурсия
+(defn factorial [n]
+  (if (<= n 1)
+    1
+    (* n (recur (- n 1)))))
+
+; Tail-рекурсия (loop/recur)
+(defn factorial-tail [n]
+  (loop [n n acc 1]
+    (if (<= n 1)
+      acc
+      (recur (- n 1) (* acc n)))))
+
+================================================================================
+5. COLLECTIONS (LIST, VECTOR, MAP, SET)
+================================================================================
+
+; List (linked list)
+(def lst '(1 2 3 4 5))
+
+; List операции
+(first lst)      ; 1
+(rest lst)       ; (2 3 4 5)
+(cons 0 lst)     ; (0 1 2 3 4 5)
+(count lst)      ; 5
+(nth lst 2)      ; 3
+
+; Vector (array-like)
+(def vec [1 2 3 4 5])
+
+; Vector операции
+(first vec)      ; 1
+(rest vec)       ; (2 3 4 5)
+(conj vec 6)     ; [1 2 3 4 5 6]
+(count vec)      ; 5
+(nth vec 2)      ; 3
+(assoc vec 2 10) ; [1 2 10 4 5]
+
+; Map (hash map)
+(def m {:name "John" :age 25})
+
+; Map операции
+(get m :name)    ; "John"
+(:name m)        ; "John" (короткий синтаксис)
+(assoc m :age 26) ; {:name "John" :age 26}
+(dissoc m :age)  ; {:name "John"}
+(keys m)         ; (:name :age)
+(vals m)         ; ("John" 25)
+
+; Set (уникальные)
+(def s #{1 2 3 4 5})
+
+; Set операции
+(conj s 6)       ; #{1 2 3 4 5 6}
+(disj s 3)       ; #{1 2 4 5}
+(contains? s 3)  ; true
+(get s 3)        ; 3
+
+; Collection функции
+(map inc [1 2 3])        ; (2 3 4)
+(filter even? [1 2 3 4]) ; (2 4)
+(reduce + 0 [1 2 3])     ; 6
+(every? even? [2 4 6])   ; true
+(some even? [1 3 5])     ; nil
+
+================================================================================
+6. JAVASCRIPT ИНТЕРОПЕРАБЕЛЬНОСТЬ
+================================================================================
+
+; Доступ к JavaScript объектам
+js/Date.  ; new Date()
+js/console.log "Hello"  ; console.log("Hello")
+
+; Вызов JS функций
+(.js-function arg1 arg2)
+(js-function arg1 arg2)  ; Короче
+
+; Доступ к свойствам
+(.-property js-object)
+(.-length "hello")  ; 5
+
+; Создание JS объектов
+(js-obj "key" "value")
+#js {:key "value"}
+
+; JavaScript массивы
+(clj->js [1 2 3])  ; [1, 2, 3] в JS
+(js->clj #js [1 2 3])  ; [1 2 3] в Clojure
+
+; Promise
+(.then promise (fn [result] ...))
+(.catch promise (fn [error] ...))
+
+; Async/await (core.async)
+(go
+  (let [result (<! promise)]
+    (println result)))
+
+; React интероперабельность
+(require '[reagent.core :as r])
+(def component (r/create-class {...}))
+
+================================================================================
+7. CONTROL FLOW
+================================================================================
+
+; If/else
+(if (> x 0)
+  (println "positive")
+  (println "non-positive"))
+
+; If возвращает значение
+(let [result (if (> x 0) "positive" "non-positive")]
+  (println result))
+
+; When (только если истинно)
+(when (> x 0)
+  (println "positive")
+  (println "greater than zero"))
+
+; Unless (отрицание)
+(when-not (= x 0)
+  (println "not zero"))
+
+; Cond (множественный выбор)
+(cond
+  (= x 0) "zero"
+  (= x 1) "one"
+  :else "other")
+
+; Case (case statement)
+(case x
+  0 "zero"
+  1 "one"
+  "other")
+
+; For (цикл)
+(for [i (range 10)]
+  (println i))
+
+; For с условиями
+(for [i (range 10)
+      :when (even? i)]
+  i)  ; (0 2 4 6 8)
+
+; Doseq (side effects)
+(doseq [i (range 10)]
+  (println i))
+
+; Loop/recur (tail-рекурсия)
+(loop [i 0 acc 0]
+  (if (>= i 10)
+    acc
+    (recur (inc i) (+ acc i))))
+
+================================================================================
+8. IMMUTABILITY И PERSISTENT DATA STRUCTURES
+================================================================================
+
+; Все структуры данных immutable по умолчанию
+(def v1 [1 2 3])
+(def v2 (conj v1 4))  ; v1 не изменился!
+
+v1  ; [1 2 3]
+v2  ; [1 2 3 4]
+
+; Persistent data structures
+; - Эффективное копирование (structural sharing)
+; - O(log32 n) для доступа
+
+; Atom для mutable state
+(def state (atom {:count 0}))
+
+; Update atom
+(swap! state update :count inc)
+(swap! state assoc :name "John")
+
+; Watch atom
+(add-watch state :key
+  (fn [key atom old-state new-state]
+    (println "Changed from" old-state "to" new-state)))
+
+; Reset atom
+(reset! state {:count 0})
+
+; Volatile (быстрее чем atom, нет watches)
+(def v (volatile! 0))
+(vreset! v 1)
+@v  ; 1
+
+; Transient (быстрое изменение, затем immutable)
+(def v (transient [1 2 3]))
+(conj! v 4)
+(persistent! v)  ; [1 2 3 4]
+
+================================================================================
+9. ASYNC (PROMISE, CORE.ASYNC)
+================================================================================
+
+; Promise
+(def p (promise))
+(deliver p 42)
+@d p  ; 42
+
+; Core.async channels
+(require '[cljs.core.async :refer [go chan >! <!]])
+
+(def ch (chan))
+
+(go
+  (let [value (<! ch)]
+    (println value)))
+
+(>! ch "Hello")
+
+; Go block (async)
+(go
+  (let [a (<! chan1)
+        b (<! chan2)]
+    (+ a b)))
+
+; Alt! (выбор из нескольких каналов)
+(alt!
+  chan1 ([v] (println "chan1:" v))
+  chan2 ([v] (println "chan2:" v)))
+
+; Pipeline
+(defn pipeline [input-ch output-ch]
+  (go
+    (while true
+      (let [value (<! input-ch)]
+        (>! output-ch (process value))))))
+
+; Promise interop
+(defn fetch-data [url]
+  (let [p (promise)]
+    (js/fetch url
+      (fn [response]
+        (.then response #(.json %)
+          (fn [data]
+            (deliver p data)))))
+    p))
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Mutable без atom
+(def counter 0)
+(def counter (inc counter))  ; ОШИБКА! Immutable
+
+✓ Решение:
+(def counter (atom 0))
+(swap! counter inc)
+
+❌ Ошибка 2: Неправильный destructuring
+(let [[x y] [1 2  3]]
+  x)  ; OK
+
+(let [{:keys [name age]} {:name "John"}]
+  age)  ; nil (ключ отсутствует)
+
+✓ Решение:
+(let [{:keys [name age] :or {age 0}} {:name "John"}]
+  age)  ; 0 (default)
+
+❌ Ошибка 3: JS interop без js/
+(console.log "Hello")  ; ОШИБКА!
+
+✓ Решение:
+(js/console.log "Hello")
+
+❌ Ошибка 4: Recur без loop
+(defn factorial [n]
+  (if (<= n 1)
+    1
+    (recur (- n 1) (* n acc))))  ; ОШИБКА! recur вне loop
+
+✓ Решение:
+(defn factorial [n]
+  (loop [n n acc 1]
+    (if (<= n 1)
+      acc
+      (recur (- n 1) (* acc n)))))
+
+❌ Ошибка 5: Conj на list vs vector
+(conj '(1 2 3) 4)  ; (4 1 2 3) (добавляет в начало!)
+(conj [1 2 3] 4)   ; [1 2 3 4] (добавляет в конец)
+
+✓ Решение:
+Понимать разницу между list и vector!
+
+❌ Ошибка 6: Nil в арифметике
+(+ nil 5)  ; ОШИБКА!
+
+✓ Решение:
+(+ (or nil 0) 5)  ; 5
+
+❌ Ошибка 7: Map ключи keywords
+(def m {"name" "John"})
+(:name m)  ; nil (ключ строка, не keyword!)
+
+✓ Решение:
+(def m {:name "John"})
+(:name m)  ; "John"
+
+❌ Ошибка 8: Async без go
+(let [result (<! chan)]  ; ОШИБКА! <! только в go block
+  (println result))
+
+✓ Решение:
+(go
+  (let [result (<! chan)]
+    (println result)))
+
+❌ Ошибка 9: Atom без deref
+(def state (atom 0))
+(println state)  ; #object[Atom ...]
+
+✓ Решение:
+(println @state)  ; 0
+
+❌ Ошибка 10: CLJS vs CLJ
+(defn java-only []
+  (java.util.Date.))  ; ОШИБКА! В ClojureScript нет Java!
+
+✓ Решение:
+(defn js-only []
+  (js/Date.))  ; OK в ClojureScript
+
+================================================================================
+11. ПРИМЕРЫ FUNCTIONAL СТИЛЯ
+================================================================================
+
+Пример 1: Functional pipeline
+-----------------------------
+(defn process-data [data]
+  (->> data
+       (filter active?)
+       (map transform)
+       (reduce + 0)))
+
+Пример 2: Immutability
+----------------------
+(defn update-user [user updates]
+  (merge user updates))  ; user не изменился!
+
+Пример 3: Reagent component
+---------------------------
+(require '[reagent.core :as r])
+
+(defn counter []
+  (let [count (r/atom 0)]
+    (fn []
+      [:div
+       [:p "Count: " @count]
+       [:button {:on-click #(swap! count inc)} "Increment"]])))
+
+Пример 4: core.async pipeline
+-----------------------------
+(defn async-process [input-ch output-ch]
+  (go
+    (while true
+      (let [value (<! input-ch)]
+        (>! output-ch (process value))))))
+
+Пример 5: JavaScript interop
+----------------------------
+(defn fetch-users []
+  (-> (js/fetch "/api/users")
+      (.then #(.json %))
+      (.then #(js->clj % :keywordize-keys true))))
+
+Пример 6: Re-frame pattern
+--------------------------
+(require '[re-frame.core :as rf])
+
+(rf/reg-event-db
+  :initialize-db
+  (fn [_ _]
+    {:count 0}))
+
+(rf/reg-event-db
+  :increment
+  (fn [db _]
+    (update db :count inc)))
+
+(rf/reg-sub
+  :count
+  (fn [db _]
+    (:count db)))
+
+================================================================================
+                         КОНЕЦ SYNTAX_CLOJURESCRIPT
+================================================================================

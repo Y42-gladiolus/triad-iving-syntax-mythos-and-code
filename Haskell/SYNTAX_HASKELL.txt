@@ -1,0 +1,553 @@
+================================================================================
+              HASKELL - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Pure Functional + Lazy Evaluation + Type Safety
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и функции
+4. Pattern matching
+5. Type classes
+6. Control Flow
+7. Lists и comprehensions
+8. Monads
+9. Error handling
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры functional стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+-- Комментарии (двойной дефис)
+-- Однострочные
+
+{-
+    Многострочные
+    комментарии
+-}
+
+-- Module declaration
+module Main where
+
+-- Imports
+import Data.List (sort, nub)
+import qualified Data.Map as Map
+
+-- Main функция
+main :: IO ()
+main = putStrLn "Hello, Haskell!"
+
+-- Function application (без parentheses)
+result = add 5 3  -- не add(5, 3)
+
+-- Function composition
+result = (f . g) x  -- f(g(x))
+
+-- Pipeline operator
+result = x |> f |> g  -- g(f(x))
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Int             │ 1, -10, 1000 (fixed-precision)                             │
+│ Integer         │ 1, -10, 1000000 (arbitrary precision)                      │
+│ Float           │ 3.14 (single-precision)                                    │
+│ Double          │ 3.14 (double-precision)                                    │
+│ Bool            │ True, False                                                │
+│ Char            │ 'a', 'б' (Unicode)                                         │
+│ String          │ "hello", "привет" ([Char])                                 │
+│ ()              │ () (unit type)                                             │
+│ Maybe a         │ Just 5 | Nothing                                           │
+│ Either a b      │ Left "error" | Right 5                                     │
+│ [a]             │ [1, 2, 3] (lists)                                          │
+│ (a, b)          │ (1, "a") (tuples)                                          │
+│ IO a            │ IO String (IO actions)                                     │
+│ a -> b          │ Int -> String (functions)                                  │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+-- Type annotations
+x :: Int
+x = 5
+
+-- Type inference
+y = 10  -- Haskell выводит Integer
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ФУНКЦИИ
+================================================================================
+
+-- Variables (immutable)
+x = 5
+y = 10
+
+-- Functions
+add :: Int -> Int -> Int
+add a b = a + b
+
+-- Lambda functions
+add = \a b -> a + b
+
+-- Partial application
+add5 = add 5
+result = add5 10  -- 15
+
+-- Pattern matching в функциях
+factorial :: Integer -> Integer
+factorial 0 = 1
+factorial n = n * factorial (n - 1)
+
+-- Guards
+describe :: Int -> String
+describe n
+  | n < 0     = "negative"
+  | n == 0    = "zero"
+  | otherwise = "positive"
+
+-- Where clause
+quadratic :: Double -> Double -> Double -> (Double, Double)
+quadratic a b c = (x1, x2)
+  where
+    discriminant = b * b - 4 * a * c
+    x1 = (-b + sqrt discriminant) / (2 * a)
+    x2 = (-b - sqrt discriminant) / (2 * a)
+
+-- Let bindings
+result =
+  let x = 5
+      y = 10
+  in x + y
+
+================================================================================
+4. PATTERN MATCHING
+================================================================================
+
+-- Lists
+head :: [a] -> a
+head (x:xs) = x
+head [] = error "empty list"
+
+-- Tuples
+fst :: (a, b) -> a
+fst (x, _) = x
+
+-- Case expressions
+describe :: Int -> String
+describe x = case x of
+  0 -> "zero"
+  1 -> "one"
+  _ -> "other"
+
+-- Maybe
+safeDivide :: Int -> Int -> Maybe Int
+safeDivide _ 0 = Nothing
+safeDivide x y = Just (x `div` y)
+
+-- Either
+divide :: Int -> Int -> Either String Int
+divide _ 0 = Left "Division by zero"
+divide x y = Right (x `div` y)
+
+-- Algebraic data types
+data Color = Red | Green | Blue
+
+data Shape = Circle Double | Rectangle Double Double
+
+area :: Shape -> Double
+area (Circle r) = pi * r * r
+area (Rectangle w h) = w * h
+
+-- Record syntax
+data Person = Person
+  { name :: String
+  , age :: Int
+  , email :: String
+  }
+
+-- Pattern guards
+classify :: Int -> String
+classify n
+  | n < 0     = "negative"
+  | n == 0    = "zero"
+  | otherwise = "positive"
+
+================================================================================
+5. TYPE CLASSES
+================================================================================
+
+-- Defining type classes
+class Eq a where
+  (==) :: a -> a -> Bool
+  (/=) :: a -> a -> Bool
+
+-- Instances
+instance Eq Color where
+  Red == Red = True
+  Green == Green = True
+  Blue == Blue = True
+  _ == _ = False
+
+-- Deriving
+data Color = Red | Green | Blue
+  deriving (Eq, Show, Read)
+
+-- Functor
+class Functor f where
+  fmap :: (a -> b) -> f a -> f b
+
+instance Functor Maybe where
+  fmap _ Nothing = Nothing
+  fmap f (Just x) = Just (f x)
+
+-- Monad
+class Monad m where
+  return :: a -> m a
+  (>>=) :: m a -> (a -> m b) -> m b
+
+instance Monad Maybe where
+  return = Just
+  Nothing >>= _ = Nothing
+  Just x >>= f = f x
+
+-- Common type classes
+-- Eq: (==), (/=)
+-- Ord: (<), (>), (<=), (>=)
+-- Show: show
+-- Read: read
+-- Num: (+), (-), (*)
+-- Integral: div, mod
+-- Fractional: (/)
+-- Floating: sin, cos, exp
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+-- If/else (должен быть else)
+result = if x > 5 then "greater" else "less"
+
+-- Case expressions
+result = case x of
+  0 -> "zero"
+  1 -> "one"
+  _ -> "other"
+
+-- Guards
+describe n
+  | n < 0     = "negative"
+  | n == 0    = "zero"
+  | otherwise = "positive"
+
+-- Recursion (вместо loops)
+sum :: [Int] -> Int
+sum [] = 0
+sum (x:xs) = x + sum xs
+
+-- Map/Filter/Reduce
+result = map (*2) [1, 2, 3]  -- [2, 4, 6]
+result = filter even [1, 2, 3, 4]  -- [2, 4]
+result = foldl (+) 0 [1, 2, 3]  -- 6
+
+-- List comprehensions
+squares = [x * x | x <- [1..10]]
+evenSquares = [x * x | x <- [1..10], even x]
+
+-- Monadic do notation
+main :: IO ()
+main = do
+  putStrLn "What's your name?"
+  name <- getLine
+  putStrLn ("Hello, " ++ name ++ "!")
+
+================================================================================
+7. LISTS И COMPREHENSIONS
+================================================================================
+
+-- List creation
+list1 = [1, 2, 3, 4, 5]
+list2 = 1 : 2 : 3 : []  -- cons operator
+
+-- List operations
+head [1, 2, 3]  -- 1
+tail [1, 2, 3]  -- [2, 3]
+length [1, 2, 3]  -- 3
+reverse [1, 2, 3]  -- [3, 2, 1]
+take 2 [1, 2, 3, 4]  -- [1, 2]
+drop 2 [1, 2, 3, 4]  -- [3, 4]
+
+-- List comprehensions
+squares = [x * x | x <- [1..10]]
+evenSquares = [x * x | x <- [1..10], even x]
+pairs = [(x, y) | x <- [1..3], y <- [1..3]]
+
+-- Infinite lists
+ones = repeat 1
+numbers = [1..]  -- infinite list
+take 5 numbers  -- [1, 2, 3, 4, 5]
+
+-- Lazy evaluation
+firstEven = head (filter even [1..])  -- 2 (не вычисляет весь список)
+
+-- List functions
+map :: (a -> b) -> [a] -> [b]
+filter :: (a -> Bool) -> [a] -> [a]
+foldl :: (b -> a -> b) -> b -> [a] -> [b]
+foldr :: (a -> b -> b) -> b -> [a] -> [b]
+zip :: [a] -> [b] -> [(a, b)]
+unzip :: [(a, b)] -> ([a], [b])
+
+================================================================================
+8. MONADS
+================================================================================
+
+-- Maybe monad
+safeDivide :: Int -> Int -> Maybe Int
+safeDivide _ 0 = Nothing
+safeDivide x y = Just (x `div` y)
+
+chain :: Maybe Int
+chain = do
+  x <- safeDivide 10 2
+  y <- safeDivide x 2
+  return y
+
+-- Either monad
+divide :: Int -> Int -> Either String Int
+divide _ 0 = Left "Division by zero"
+divide x y = Right (x `div` y)
+
+chainEither :: Either String Int
+chainEither = do
+  x <- divide 10 2
+  y <- divide x 2
+  return y
+
+-- IO monad
+main :: IO ()
+main = do
+  putStrLn "What's your name?"
+  name <- getLine
+  putStrLn ("Hello, " ++ name ++ "!")
+
+-- List monad
+pairs :: [(Int, Int)]
+pairs = do
+  x <- [1, 2, 3]
+  y <- [1, 2, 3]
+  return (x, y)
+
+-- Common monads
+-- Maybe: optional values
+-- Either: error handling
+-- IO: I/O operations
+-- List: non-deterministic computation
+-- State: stateful computation
+-- Reader: read-only environment
+-- Writer: logging
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+-- Maybe для optional values
+safeHead :: [a] -> Maybe a
+safeHead [] = Nothing
+safeHead (x:xs) = Just x
+
+-- Either для error handling
+divide :: Int -> Int -> Either String Int
+divide _ 0 = Left "Division by zero"
+divide x y = Right (x `div` y)
+
+-- Exceptions в IO
+main :: IO ()
+main = do
+  result <- try (readFile "file.txt")
+  case result of
+    Left (e :: IOException) -> putStrLn "File not found"
+    Right content -> putStrLn content
+
+-- Custom error types
+data MyError = DivisionByZero | InvalidInput
+
+divide :: Int -> Int -> Either MyError Int
+divide _ 0 = Left DivisionByZero
+divide x y = Right (x `div` y)
+
+-- Error function (не рекомендуется)
+error :: String -> a
+error "Something went wrong"
+
+-- assert
+assert :: Bool -> a -> a
+assert True x = x
+assert False _ = error "Assertion failed"
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Missing else
+result = if x > 5 then "greater"  -- ОШИБКА! Нужен else
+
+✓ Решение:
+result = if x > 5 then "greater" else "less"
+
+❌ Ошибка 2: Type mismatch
+add :: Int -> Int -> Int
+add a b = a + b
+result = add 5 "hello"  -- ОШИБКА!
+
+✓ Решение:
+result = add 5 10
+
+❌ Ошибка 3: Pattern match non-exhaustive
+head :: [a] -> a
+head (x:xs) = x  -- Забыли пустой список!
+
+✓ Решение:
+head :: [a] -> a
+head (x:xs) = x
+head [] = error "empty list"
+
+❌ Ошибка 4: Indentation error
+result =
+  let x = 5
+  y = 10  -- ОШИБКА! Wrong indentation
+  in x + y
+
+✓ Решение:
+result =
+  let x = 5
+      y = 10
+  in x + y
+
+❌ Ошибка 5: Mutable variables
+x = 5
+x = 10  -- ОШИБКА! Immutable
+
+✓ Решение:
+x = 5
+y = 10  -- Новая переменная
+
+❌ Ошибка 6: IO без do notation
+main =
+  putStrLn "Hello"
+  putStrLn "World"  -- ОШИБКА!
+
+✓ Решение:
+main = do
+  putStrLn "Hello"
+  putStrLn "World"
+
+❌ Ошибка 7: Forget to return in do
+main = do
+  name <- getLine
+  "Hello, " ++ name  -- ОШИБКА! Нужно return
+
+✓ Решение:
+main = do
+  name <- getLine
+  return ("Hello, " ++ name)
+
+❌ Ошибка 8: Space leaks с lazy evaluation
+sum :: [Int] -> Int
+sum xs = foldl (+) 0 xs  -- Может вызвать space leak
+
+✓ Решение:
+sum :: [Int] -> Int
+sum xs = foldl' (+) 0 xs  -- Strict foldl
+
+❌ Ошибка 9: Wrong type class instance
+instance Eq Color where
+  Red == Red = True  -- Забыли другие случаи!
+
+✓ Решение:
+instance Eq Color where
+  Red == Red = True
+  Green == Green = True
+  Blue == Blue = True
+  _ == _ = False
+
+❌ Ошибка 10: Forget import
+result = sort [3, 1, 2]  -- ОШИБКА! Нет import Data.List
+
+✓ Решение:
+import Data.List (sort)
+result = sort [3, 1, 2]
+
+================================================================================
+11. ПРИМЕРЫ FUNCTIONAL СТИЛЯ
+================================================================================
+
+Пример 1: QuickSort
+-------------------
+quicksort :: (Ord a) => [a] -> [a]
+quicksort [] = []
+quicksort (x:xs) =
+  let smaller = quicksort [a | a <- xs, a <= x]
+      larger = quicksort [a | a <- xs, a > x]
+  in smaller ++ [x] ++ larger
+
+Пример 2: Fibonacci
+-------------------
+fibonacci :: [Integer]
+fibonacci = 0 : 1 : zipWith (+) fibonacci (tail fibonacci)
+
+Пример 3: Parser combinator
+---------------------------
+newtype Parser a = Parser (String -> Maybe (a, String))
+
+instance Monad Parser where
+  return x = Parser (\s -> Just (x, s))
+  (Parser p) >>= f = Parser (\s ->
+    case p s of
+      Just (x, s') -> case f x of
+        Parser p' -> p' s'
+      Nothing -> Nothing)
+
+Пример 4: State monad
+---------------------
+newtype State s a = State { runState :: s -> (a, s) }
+
+instance Monad (State s) where
+  return x = State (\s -> (x, s))
+  (State h) >>= f = State (\s ->
+    let (a, s') = h s
+        State h' = f a
+    in h' s')
+
+Пример 5: Lens
+--------------
+data Person = Person
+  { _name :: String
+  , _age :: Int
+  }
+
+makeLenses ''Person
+
+-- Usage
+person ^. age  -- Get
+person & age .~ 26  -- Set
+person & age +~ 1  -- Modify
+
+Пример 6: Concurrent programming
+--------------------------------
+import Control.Concurrent
+
+main :: IO ()
+main = do
+  forkIO $ do
+    putStrLn "Running in thread"
+  threadDelay 1000000
+  putStrLn "Main thread"
+
+================================================================================
+                         КОНЕЦ SYNTAX_HASKELL
+================================================================================

@@ -1,0 +1,699 @@
+================================================================================
+              JAVA - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    ООП + Функциональные возможности (Java 8-21+)
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (методы)
+5. Классы и ООП
+6. Records (Java 14+)
+7. Pattern Matching (Java 16+)
+8. Generics
+9. Streams и Lambda (Java 8+)
+10. Error Handling
+11. Модули (Java 9+)
+12. Типичные ошибки (РАСШИРЕНО!)
+13. Примеры современного стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Комментарии
+// Однострочные
+
+/*
+    Многострочные
+    комментарии
+*/
+
+/**
+ * Javadoc (документация)
+ * @param name описание
+ * @return описание
+ */
+
+// Точка с запятой обязательна
+int x = 5;
+int y = 10;
+
+// main метод (точка входа)
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, Java!");
+    }
+}
+
+// Импорт
+import java.util.*;
+import java.io.File;
+import static java.lang.Math.*;
+
+// Package (должен быть первым!)
+package com.example.myapp;
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ byte            │ 8-bit: -128 to 127                                         │
+│ short           │ 16-bit: -32,768 to 32,767                                  │
+│ int             │ 32-bit: -2^31 to 2^31-1                                    │
+│ long            │ 64-bit: 100L                                               │
+│ float           │ 32-bit: 3.14f                                              │
+│ double          │ 64-bit: 3.14 (по умолчанию)                                │
+│ char            │ 16-bit Unicode: 'a', 'б'                                   │
+│ boolean         │ true, false                                                │
+│ String          │ "hello", "привет" (неизменяемый)                           │
+│ Object          │ Базовый тип для всех (как Any)                             │
+│ var             │ Вывод типа (Java 10+): var x = 5                           │
+│ Optional<T>     │ Контейнер для nullable значений                            │
+│ List<T>         │ ArrayList, LinkedList                                      │
+│ Set<T>          │ HashSet, TreeSet                                           │
+│ Map<K,V>        │ HashMap, TreeMap                                           │
+│ Array           │ int[], String[]                                            │
+│ Enum            │ enum Color { RED, GREEN, BLUE }                            │
+│ Record          │ record Point(int x, int y) (Java 14+)                      │
+│ Sealed Class    │ sealed class Shape (Java 17+)                              │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Проверка типа
+x instanceof String
+x.getClass().getName()
+
+// Приведение типов
+Object obj = "hello";
+String str = (String) obj;  // Явное приведение
+
+// Autoboxing/Unboxing
+Integer boxed = 5;  // Autoboxing
+int primitive = boxed;  // Unboxing
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+// final - неизменяемая
+final int x = 5;
+// x = 6;  // ОШИБКА!
+
+// var - вывод типа (Java 10+)
+var y = 10;  // int
+var z = "hello";  // String
+
+// Область видимости
+{
+    int local = 5;  // Локальная переменная
+}
+// local не доступна здесь
+
+// Static переменная (классовая)
+class Counter {
+    static int count = 0;  // Общая для всех экземпляров
+}
+
+// Константы (final + static)
+public static final int MAX_SIZE = 100;
+
+// Underscore в числах (для читаемости)
+int million = 1_000_000;
+double pi = 3.141_592_653;
+
+// Text Blocks (Java 15+)
+String json = """
+    {
+        "name": "John",
+        "age": 25
+    }
+    """;
+
+================================================================================
+4. ФУНКЦИИ (МЕТОДЫ)
+================================================================================
+
+// Базовый метод
+public static int add(int a, int b) {
+    return a + b;
+}
+
+// Varargs (переменное число аргументов)
+public static int sum(int... numbers) {
+    int total = 0;
+    for (int n : numbers) {
+        total += n;
+    }
+    return total;
+}
+
+sum(1, 2, 3, 4, 5);
+
+// Метод с generic
+public static <T> T identity(T value) {
+    return value;
+}
+
+// Lambda (Java 8+)
+Function<Integer, Integer> square = x -> x * x;
+
+// Method reference
+list.forEach(System.out::println);
+
+// Default метод в интерфейсе (Java 8+)
+interface MyInterface {
+    default void greet() {
+        System.out.println("Hello");
+    }
+}
+
+// Static метод в интерфейсе
+interface MyInterface {
+    static void staticMethod() {
+        System.out.println("Static");
+    }
+}
+
+// Private метод в интерфейсе (Java 9+)
+interface MyInterface {
+    private void helper() {
+        // ...
+    }
+}
+
+================================================================================
+5. КЛАССЫ И ООП
+================================================================================
+
+// Базовый класс
+public class Person {
+    // Поля
+    private String name;
+    private int age;
+    
+    // Конструктор
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    // Getter
+    public String getName() {
+        return name;
+    }
+    
+    // Setter
+    public void setAge(int age) {
+        this.age = age;
+    }
+    
+    // Метод
+    public void greet() {
+        System.out.println("Hello, I'm " + name);
+    }
+    
+    // Static метод
+    public static Person createAdult(String name) {
+        return new Person(name, 18);
+    }
+}
+
+// Наследование
+public class Employee extends Person {
+    private String company;
+    
+    public Employee(String name, int age, String company) {
+        super(name, age);
+        this.company = company;
+    }
+    
+    @Override
+    public void greet() {
+        super.greet();
+        System.out.println("I work at " + company);
+    }
+}
+
+// Abstract класс
+public abstract class Shape {
+    public abstract double area();
+    
+    public void describe() {
+        System.out.println("I'm a shape");
+    }
+}
+
+// Interface
+public interface Printable {
+    void print();  // Public abstract по умолчанию
+    
+    default void log() {  // Default метод
+        System.out.println("Logging...");
+    }
+    
+    static void staticMethod() {  // Static метод
+        System.out.println("Static");
+    }
+}
+
+// Implements
+public class Document implements Printable {
+    @Override
+    public void print() {
+        System.out.println("Printing...");
+    }
+}
+
+// Enum
+public enum Color {
+    RED("#FF0000"),
+    GREEN("#00FF00"),
+    BLUE("#0000FF");
+    
+    private final String hex;
+    
+    Color(String hex) {
+        this.hex = hex;
+    }
+    
+    public String getHex() {
+        return hex;
+    }
+}
+
+================================================================================
+6. RECORDS (JAVA 14+)
+================================================================================
+
+// ⚡ Records = неизменяемые data classes (как в Kotlin)
+
+// Базовый record
+public record Point(int x, int y) {}
+
+// Использование
+Point p = new Point(3, 4);
+int x = p.x();  // Getter (автоматически)
+int y = p.y();
+
+// Record с методами
+public record Person(String name, int age) {
+    // Компактный конструктор
+    public Person {
+        if (age < 0) {
+            throw new IllegalArgumentException("Age must be positive");
+        }
+    }
+    
+    // Метод
+    public boolean isAdult() {
+        return age >= 18;
+    }
+    
+    // Static метод
+    public static Person createAdult(String name) {
+        return new Person(name, 18);
+    }
+}
+
+// Record implements interface
+public record Rectangle(double width, double height) implements Shape {
+    @Override
+    public double area() {
+        return width * height;
+    }
+}
+
+// Record с generic
+public record Pair<T, U>(T first, U second) {}
+
+================================================================================
+7. PATTERN MATCHING (JAVA 16+)
+================================================================================
+
+// ⚡ Pattern matching для instanceof (Java 16+)
+
+// Старый способ
+if (obj instanceof String) {
+    String str = (String) obj;
+    System.out.println(str.length());
+}
+
+// Новый способ (pattern matching)
+if (obj instanceof String str) {
+    System.out.println(str.length());  // str уже приведён!
+}
+
+// Pattern matching для switch (Java 21+)
+String result = switch (obj) {
+    case Integer i -> "Integer: " + i;
+    case String s -> "String: " + s;
+    case null -> "null";
+    default -> "Unknown";
+};
+
+// Sealed classes (Java 17+)
+public sealed class Shape permits Circle, Rectangle, Triangle {}
+
+public final class Circle extends Shape {
+    private final double radius;
+}
+
+public final class Rectangle extends Shape {
+    private final double width, height;
+}
+
+// Switch с sealed classes
+public double area(Shape shape) {
+    return switch (shape) {
+        case Circle c -> Math.PI * c.radius * c.radius;
+        case Rectangle r -> r.width * r.height;
+        case Triangle t -> 0.5 * t.base * t.height;
+    };
+}
+
+================================================================================
+8. GENERICS
+================================================================================
+
+// Generic класс
+public class Container<T> {
+    private T value;
+    
+    public Container(T value) {
+        this.value = value;
+    }
+    
+    public T getValue() {
+        return value;
+    }
+    
+    public void setValue(T value) {
+        this.value = value;
+    }
+}
+
+// Generic метод
+public static <T> T getFirst(List<T> list) {
+    return list.get(0);
+}
+
+// Type bounds
+public static <T extends Number> double sum(List<T> numbers) {
+    return numbers.stream().mapToDouble(Number::doubleValue).sum();
+}
+
+// Wildcards
+public static void printList(List<?> list) {  // Любой тип
+    for (Object obj : list) {
+        System.out.println(obj);
+    }
+}
+
+public static void addNumbers(List<? super Integer> list) {  // Integer или выше
+    list.add(5);
+}
+
+public static Integer getFirstNumber(List<? extends Number> list) {  // Number или ниже
+    return list.get(0);
+}
+
+// Generic record
+public record Result<T, E>(T value, E error) {}
+
+================================================================================
+9. STREAMS И LAMBDA (JAVA 8+)
+================================================================================
+
+// Lambda выражения
+Function<Integer, Integer> square = x -> x * x;
+BiFunction<Integer, Integer, Integer> add = (a, b) -> a + b;
+
+// Stream API
+List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+// Filter
+List<Integer> evens = numbers.stream()
+    .filter(n -> n % 2 == 0)
+    .toList();
+
+// Map
+List<Integer> squares = numbers.stream()
+    .map(n -> n * n)
+    .toList();
+
+// Reduce
+int sum = numbers.stream()
+    .reduce(0, Integer::sum);
+
+// Collect
+Map<Boolean, List<Integer>> grouped = numbers.stream()
+    .collect(Collectors.partitioningBy(n -> n % 2 == 0));
+
+// Parallel streams
+int parallelSum = numbers.parallelStream()
+    .mapToInt(n -> n)
+    .sum();
+
+// Optional
+Optional<Integer> first = numbers.stream()
+    .filter(n -> n > 5)
+    .findFirst();
+
+first.ifPresent(System.out::println);
+int value = first.orElse(0);
+
+// Stream builders
+List<String> list = Stream.of("a", "b", "c")
+    .map(String::toUpperCase)
+    .collect(Collectors.toList());
+
+================================================================================
+10. ERROR HANDLING
+================================================================================
+
+// Try-catch-finally
+try {
+    int result = 10 / 0;
+} catch (ArithmeticException e) {
+    System.out.println("Error: " + e.getMessage());
+} finally {
+    System.out.println("Always executed");
+}
+
+// Multi-catch (Java 7+)
+try {
+    // ...
+} catch (IOException | SQLException e) {
+    System.out.println("Error: " + e.getMessage());
+}
+
+// Try-with-resources (Java 7+)
+try (FileReader fr = new FileReader("file.txt");
+     BufferedReader br = new BufferedReader(fr)) {
+    String line = br.readLine();
+}  // Автоматическое закрытие!
+
+// Throw
+throw new IllegalArgumentException("Invalid argument");
+
+// Custom exception
+public class MyException extends Exception {
+    public MyException(String message) {
+        super(message);
+    }
+}
+
+// Throws
+public void readFile() throws IOException {
+    // ...
+}
+
+// Optional вместо null
+public Optional<String> findName(int id) {
+    return Optional.ofNullable(database.get(id));
+}
+
+findName(1).ifPresent(System.out::println);
+
+================================================================================
+11. МОДУЛИ (JAVA 9+)
+================================================================================
+
+// module-info.java
+module com.example.myapp {
+    requires java.sql;
+    requires com.google.guava;
+    
+    exports com.example.myapp.api;
+    
+    opens com.example.myapp.internal to com.example.test;
+}
+
+// Компиляция с модулями
+javac --module-path mods -d out src/module-info.java src/com/example/...
+
+// Запуск с модулями
+java --module-path mods -m com.example.myapp/com.example.myapp.Main
+
+// JLink (создание custom runtime)
+jlink --module-path mods --add-modules com.example.myapp --output custom-jre
+
+================================================================================
+12. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: NullPointer Exception
+String str = null;
+int len = str.length();  // ОШИБКА!
+
+✓ Решение:
+Optional<String> str = Optional.ofNullable(getValue());
+int len = str.map(String::length).orElse(0);
+
+❌ Ошибка 2: Raw types
+List list = new ArrayList();  // Raw type!
+
+✓ Решение:
+List<String> list = new ArrayList<>();
+
+❌ Ошибка 3: Не закрыт ресурс
+FileReader fr = new FileReader("file.txt");
+// Забыли close!
+
+✓ Решение:
+try (FileReader fr = new FileReader("file.txt")) {
+    // ...
+}
+
+❌ Ошибка 4: Неправильный equals
+public boolean equals(Object o) {
+    return this.name == ((MyClass) o).name;  // ОШИБКА!
+}
+
+✓ Решение:
+@Override
+public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof MyClass)) return false;
+    MyClass other = (MyClass) o;
+    return Objects.equals(name, other.name);
+}
+
+❌ Ошибка 5: Mutable в Stream
+list.stream().map(e -> {
+    e.setValue(e.getValue() * 2);  // Mutable!
+    return e;
+});
+
+✓ Решение:
+list.stream().map(e -> new Element(e.getValue() * 2));
+
+❌ Ошибка 6: Parallel stream не всегда быстрее
+list.parallelStream().forEach(System.out::println);  // Порядок не гарантирован!
+
+✓ Решение:
+list.parallelStream().forEachOrdered(System.out::println);
+
+❌ Ошибка 7: Generic array creation
+List<String>[] array = new List<String>[10];  // ОШИБКА!
+
+✓ Решение:
+List<List<String>> list = new ArrayList<>();
+
+❌ Ошибка 8: Autoboxing в цикле
+Integer sum = 0;
+for (int i = 0; i < 1000; i++) {
+    sum += i;  // Autoboxing каждый раз!
+}
+
+✓ Решение:
+int sum = 0;
+for (int i = 0; i < 1000; i++) {
+    sum += i;
+}
+
+❌ Ошибка 9: Игнорирование warnings
+List list = new ArrayList();  // Warning: raw type
+
+✓ Решение:
+List<String> list = new ArrayList<>();
+
+❌ Ошибка 10: Неправильный hashCode
+@Override
+public int hashCode() {
+    return 42;  // Все объекты имеют одинаковый hash!
+}
+
+✓ Решение:
+@Override
+public int hashCode() {
+    return Objects.hash(name, age);
+}
+
+================================================================================
+13. ПРИМЕРЫ СОВРЕМЕННОГО СТИЛЯ
+================================================================================
+
+Пример 1: Record + Pattern Matching
+-----------------------------------
+public sealed class Result permits Success, Error {}
+public record Success(String data) implements Result {}
+public record Error(String message) implements Result {}
+
+public String handle(Result result) {
+    return switch (result) {
+        case Success(String data) -> "Success: " + data;
+        case Error(String message) -> "Error: " + message;
+    };
+}
+
+Пример 2: Stream Pipeline
+-------------------------
+public List<String> processUsers(List<User> users) {
+    return users.stream()
+        .filter(u -> u.age() >= 18)
+        .map(User::name)
+        .map(String::toUpperCase)
+        .sorted()
+        .toList();
+}
+
+Пример 3: Optional Chain
+------------------------
+public String getCity(User user) {
+    return Optional.ofNullable(user)
+        .map(User::address)
+        .map(Address::city)
+        .orElse("Unknown");
+}
+
+Пример 4: Text Blocks
+---------------------
+public String getSQL() {
+    return """
+        SELECT * FROM users
+        WHERE age >= 18
+        ORDER BY name
+        """;
+}
+
+Пример 5: Virtual Threads (Java 21+)
+------------------------------------
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    List<Future<Integer>> futures = new ArrayList<>();
+    for (int i = 0; i < 1000; i++) {
+        futures.add(executor.submit(() -> {
+            Thread.sleep(1000);
+            return i;
+        }));
+    }
+}
+
+================================================================================
+                         КОНЕЦ SYNTAX_JAVA
+================================================================================

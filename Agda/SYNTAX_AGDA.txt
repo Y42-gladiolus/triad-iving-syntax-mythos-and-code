@@ -1,0 +1,588 @@
+================================================================================
+              AGDA - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ И ЗАВИСИМЫМ ТИПАМ
+                    С максимальным расширением интерактивного доказательства
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных (зависимые!)
+3. Переменные и определения
+4. Функции с зависимыми типами
+5. Inductive типы (W-типы)
+6. Pattern Matching с доказательствами
+7. Interактивное доказательство (Holes)
+8. Доказательства равенства
+9. Векторы и зависимые контейнеры
+10. Модули и импорты
+11. Cubical Agda (гомотопическая теория типов)
+12. Типичные ошибки (РАСШИРЕНО!)
+13. Примеры зависимых типов в действии
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+-- Комментарии в Agda
+-- Однострочные
+
+{-
+    Многострочные
+    комментарии
+-}
+
+-- Объявление модуля
+module MyModule where
+
+-- Импорт библиотек
+open import Data.Nat
+open import Data.Bool
+open import Relation.Binary.PropositionalEquality
+
+-- Unicode символы (ОБЯЗАТЕЛЬНЫ в Agda!)
+-- В Emacs: C-c C-a для автозаполнения Unicode
+
+-- Греческие буквы:
+-- α = \alpha, β = \beta, γ = \gamma
+-- → = \to, ← = \leftarrow, ∀ = \all
+-- ∃ = \ex, λ = \lambda, ≡ = \==
+
+-- Объявление типа
+x : ℕ
+x = 5
+
+-- Функция с типом
+add : ℕ → ℕ → ℕ
+add a b = a + b
+
+-- Точка с запятой НЕ нужна
+
+================================================================================
+2. ТИПЫ ДАННЫХ (ЗАВИСИМЫЕ!)
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ ℕ               │ 0, 1, 2, ... (натуральные числа, Peano)                    │
+│ ℤ               │ -10, 0, 10 (целые со знаком)                               │
+│ ℚ               │ 1/2, 3/4 (рациональные)                                    │
+│ ℝ               │ 3.14, √2 (вещественные)                                    │
+│ Bool            │ true, false                                                │
+│ Char            │ 'a', 'б'                                                   │
+│ String          │ "hello"                                                    │
+│ List A          │ [] , x ∷ xs (списки)                                       │
+│ Vec A n         │ Вектор длины n (зависимый тип!)                            │
+│ Maybe A         │ nothing, just x                                            │
+│ A × B           │ (a , b) (произведение)                                     │
+│ A ⊎ B           │ inj₁ a , inj₂ b (сумма)                                    │
+│ x ≡ y           │ Доказательство равенства                                   │
+│ ⊥               │ Пустой тип (противоречие)                                  │
+│ ⊤               │ Единичный тип (истина)                                     │
+│ Σ[ x ∈ A ] B x  │ Зависимая пара (существование)                             │
+│ Π[ x ∈ A ] B x  │ Зависимая функция (∀)                                      │
+│ Fin n           │ {0, 1, ..., n-1} (индексы с доказательством bounds)        │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+-- Проверка типа:
+-- C-c C-d в Emacs покажет тип
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ОПРЕДЕЛЕНИЯ
+================================================================================
+
+-- data - объявление типа данных
+data ℕ : Set where
+  zero : ℕ
+  succ : ℕ → ℕ
+
+-- pattern synonyms (удобные обозначения)
+pattern 1 = succ zero
+pattern 2 = succ (succ zero)
+pattern 3 = succ (succ (succ zero))
+
+-- record - структура
+record Point : Set where
+  field
+    x : ℕ
+    y : ℕ
+
+-- Создание
+p : Point
+p = record { x = 3 ; y = 4 }
+
+-- Доступ
+open Point
+xₚ : ℕ
+xₚ = x p
+
+-- let - локальное определение
+double : ℕ → ℕ
+double n =
+  let m = n * 2 in
+  m + n
+
+-- where - локальные определения
+factorial : ℕ → ℕ
+factorial zero = 1
+factorial (succ n) = (succ n) * factorial n
+  where
+    helper : ℕ → ℕ
+    helper m = m * m
+
+-- mutual - взаимная рекурсия
+mutual
+  even : ℕ → Bool
+  even zero = true
+  even (succ n) = odd n
+  
+  odd : ℕ → Bool
+  odd zero = false
+  odd (succ n) = even n
+
+================================================================================
+4. ФУНКЦИИ С ЗАВИСИМЫМИ ТИПАМИ
+================================================================================
+
+-- ⚡ ЗАВИСИМЫЕ ТИПЫ = тип зависит от значения!
+
+-- Вектор с длиной в типе
+data Vec (A : Set) : ℕ → Set where
+  []  : Vec A 0
+  _∷_ : {n : ℕ} → A → Vec A n → Vec A (succ n)
+
+-- Функция принимает ТОЛЬКО непустой вектор
+head : {A : Set} {n : ℕ} → Vec A (succ n) → A
+head (x ∷ xs) = x
+
+-- head [] НЕ СКОМПИЛИРУЕТСЯ! (длина 0 ≠ succ n)
+
+-- append для векторов (длина сохраняется в типе!)
+_++_ : {A : Set} {m n : ℕ} → Vec A m → Vec A n → Vec A (m + n)
+[] ++ ys = ys
+(x ∷ xs) ++ ys = x ∷ (xs ++ ys)
+
+-- ⚡ Тип гарантирует что результат имеет правильную длину!
+
+-- reverse с доказательством длины
+reverse : {A : Set} {n : ℕ} → Vec A n → Vec A n
+reverse [] = []
+reverse (x ∷ xs) = reverse xs ++ (x ∷ [])
+
+-- ⚡ Компилятор ПРОВЕРЯЕТ что длина сохраняется!
+
+-- Функция с доказательством в типе
+safeDiv : (x y : ℕ) → (y ≢ 0) → ℕ
+safeDiv x zero y≢0 = ⊥-elim (y≢0 refl)
+safeDiv x (succ y) _ = x div succ y
+
+-- ⚡ Вызов с доказательством:
+-- safeDiv 10 2 (λ ())  -- OK
+-- safeDiv 10 0 (λ ())  -- НЕ СКОМПИЛИРУЕТСЯ!
+
+================================================================================
+5. INDUCTIVE ТИПЫ (W-ТИПЫ)
+================================================================================
+
+-- Простой индуктивный тип
+data Bool : Set where
+  true  : Bool
+  false : Bool
+
+-- Индуктивный тип с параметрами
+data Maybe (A : Set) : Set where
+  nothing : Maybe A
+  just    : A → Maybe A
+
+-- Индуктивный тип с индексами (зависимый!)
+data _≡_ {A : Set} (x : A) : A → Set where
+  refl : x ≡ x
+
+-- Индуктивное определение отношений
+data Even : ℕ → Set where
+  even-zero : Even 0
+  even-succ : {n : ℕ} → Even n → Even (succ (succ n))
+
+-- Использование:
+-- even-zero : Even 0
+-- even-succ even-zero : Even 2
+
+-- Индуктивное определение списков
+data List (A : Set) : Set where
+  []   : List A
+  _∷_  : A → List A → List A
+
+-- W-типы (well-founded trees)
+data W (A : Set) (B : A → Set) : Set where
+  sup : (a : A) → (B a → W A B) → W A B
+
+-- ⚡ W-типы позволяют определять сложные индуктивные структуры!
+
+================================================================================
+6. PATTERN MATCHING С ДОКАЗАТЕЛЬСТВАМИ
+================================================================================
+
+-- Базовый match
+describe : ℕ → String
+describe zero = "zero"
+describe (succ zero) = "one"
+describe (succ (succ n)) = "greater than 1"
+
+-- Match с зависимыми типами
+vecLength : {A : Set} {n : ℕ} → Vec A n → ℕ
+vecLength [] = 0
+vecLength (x ∷ xs) = succ (vecLength xs)
+
+-- Match с доказательствами равенства
+subst : {A : Set} {x y : A} → x ≡ y → (P : A → Set) → P x → P y
+subst refl P px = px
+
+-- Match с Fin (безопасные индексы)
+finAccess : {A : Set} {n : ℕ} → Fin n → Vec A n → A
+finAccess fzero (x ∷ xs) = x
+finAccess (fsuc i) (x ∷ xs) = finAccess i xs
+
+-- ⚡ finAccess на пустом векторе НЕ СКОМПИЛИРУЕТСЯ!
+
+-- Match с доказательством неравенства
+data _≢_ {A : Set} (x y : A) : Set where
+  ¬≡ : (x ≡ y → ⊥) → x ≢ y
+
+-- Exhaustive checking (компилятор проверит все случаи!)
+safeHead : {A : Set} {n : ℕ} → (xs : Vec A n) → (n ≢ 0) → A
+safeHead (x ∷ xs) _ = x
+safeHead [] ¬≡ = ⊥-elim (¬≡ refl)
+
+================================================================================
+7. ИНТЕРАКТИВНОЕ ДОКАЗАТЕЛЬСТВО (HOLES)
+================================================================================
+
+-- ⚡ HOLES = интерактивное построение доказательств!
+
+-- Создать hole (незавершенное доказательство)
+theorem1 : ∀ n → n + 0 ≡ n
+theorem1 n = ?
+
+-- В Emacs: C-c C-, покажет контекст и цель
+-- C-c C-r рефинирует hole
+-- C-c C-a пытается автоматическое доказательство
+
+-- Пошаговое доказательство:
+theorem2 : ∀ n m → n + m ≡ m + n
+theorem2 zero m = ?
+theorem2 (succ n) m = ?
+
+-- Заполнение holes:
+theorem3 : ∀ n → n + 0 ≡ n
+theorem3 zero = refl
+theorem3 (succ n) = cong succ (theorem3 n)
+
+-- Использование case splits:
+theorem4 : ∀ n → n + 0 ≡ n
+theorem4 n with n
+... | zero = refl
+... | succ m = ?
+
+-- ⚡ Интерактивное доказательство = диалог с компилятором!
+
+================================================================================
+8. ДОКАЗАТЕЛЬСТВА РАВЕНСТВА
+================================================================================
+
+-- Рефлексивность
+refl : {A : Set} {x : A} → x ≡ x
+refl = refl
+
+-- Симметрия
+sym : {A : Set} {x y : A} → x ≡ y → y ≡ x
+sym refl = refl
+
+-- Транзитивность
+trans : {A : Set} {x y z : A} → x ≡ y → y ≡ z → x ≡ z
+trans refl refl = refl
+
+-- Конгруэнтность
+cong : {A B : Set} (f : A → B) {x y : A} → x ≡ y → f x ≡ f y
+cong f refl = refl
+
+-- Подстановка
+subst : {A : Set} {x y : A} → x ≡ y → (P : A → Set) → P x → P y
+subst refl P px = px
+
+-- Доказательство коммутативности сложения
++-comm : ∀ m n → m + n ≡ n + m
++-comm zero n = sym (+-identityʳ n)
++-comm (succ m) n = cong succ (+-comm m n)
+
+-- Доказательство ассоциативности
++-assoc : ∀ m n p → m + (n + p) ≡ (m + n) + p
++-assoc zero n p = refl
++-assoc (succ m) n p = cong succ (+-assoc m n p)
+
+-- ⚡ Доказательства = программы в Agda!
+
+================================================================================
+9. ВЕКТОРЫ И ЗАВИСИМЫЕ КОНТЕЙНЕРЫ
+================================================================================
+
+-- Векторы (массивы с длиной в типе)
+data Vec (A : Set) : ℕ → Set where
+  []  : Vec A 0
+  _∷_ : {n : ℕ} → A → Vec A n → Vec A (succ n)
+
+-- Безопасный доступ
+lookup : {A : Set} {n : ℕ} → Fin n → Vec A n → A
+lookup fzero (x ∷ xs) = x
+lookup (fsuc i) (x ∷ xs) = lookup i xs
+
+-- Матрицы (вектор векторов)
+Matrix : Set → ℕ → ℕ → Set
+Matrix A m n = Vec (Vec A n) m
+
+-- Транспонирование с доказательством корректности
+transpose : {A : Set} {m n : ℕ} → Matrix A m n → Matrix A n m
+transpose [] = []
+transpose (x ∷ xs) = transposeHelper x (transpose xs)
+
+-- ⚡ Тип гарантирует что транспонирование корректно!
+
+-- Зависимые пары (существование)
+Σ : (A : Set) → (A → Set) → Set
+Σ A B = Σ[ x ∈ A ] B x
+
+-- Пример: существование четного числа
+evenExists : Σ ℕ Even
+evenExists = 0 , even-zero
+
+-- Извлечение из зависимой пары
+proj₁ : {A : Set} {B : A → Set} → Σ A B → A
+proj₁ (x , y) = x
+
+proj₂ : {A : Set} {B : A → Set} → (p : Σ A B) → B (proj₁ p)
+proj₂ (x , y) = y
+
+================================================================================
+10. МОДУЛИ И ИМПОРТЫ
+================================================================================
+
+-- Импорт модуля
+open import Data.Nat
+open import Data.Bool
+open import Data.List
+open import Relation.Binary.PropositionalEquality
+
+-- Открытие модуля
+open Data.Nat using (ℕ; zero; succ; _+_; _*_)
+
+-- Параметризованный модуль
+module MyModule (A : Set) where
+  data Container : Set where
+    empty : Container
+    fill  : A → Container
+
+-- Использование
+open MyModule Bool
+
+-- Частичное открытие
+open import Data.Nat using (ℕ) renaming (zero to z; succ to s)
+
+-- Приватные определения
+module Private where
+  private
+    secret : ℕ
+    secret = 42
+
+================================================================================
+11. CUBICAL AGDA (ГОМОТОПИЧЕСКАЯ ТЕОРИЯ ТИПОВ)
+================================================================================
+
+-- ⚡ Cubical Agda = расширенная версия с HoTT поддержкой!
+
+-- Требует: --cubical флаг
+
+{-# OPTIONS --cubical #-}
+
+module CubicalExample where
+
+open import Cubical.Core.Everything
+
+-- Пути (paths) вместо равенства
+Path : {A : Set} → A → A → Set
+Path = _≡_
+
+-- Univalence axiom
+univalence : {A B : Set} → (A ≃ B) → A ≡ B
+
+-- Higher inductive types
+data S¹ : Set where
+  base : S¹
+  loop : base ≡ base
+
+-- ⚡ Cubical Agda позволяет доказывать больше теорем!
+
+================================================================================
+12. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Неправильный индекс вектора
+v : Vec ℕ 3
+v = 1 ∷ 2 ∷ []  -- ОШИБКА: длина 2 ≠ 3!
+
+✓ Решение:
+v : Vec ℕ 3
+v = 1 ∷ 2 ∷ 3 ∷ []
+
+❌ Ошибка 2: head на пустом векторе
+head : {A : Set} {n : ℕ} → Vec A n → A
+head [] = ?  -- ОШИБКА: невозможно заполнить!
+
+✓ Решение:
+head : {A : Set} {n : ℕ} → Vec A (succ n) → A
+head (x ∷ xs) = x
+
+❌ Ошибка 3: Неполное доказательство
+theorem : ∀ n → n + 0 ≡ n
+theorem n = ?  -- ОШИБКА: hole не заполнен!
+
+✓ Решение:
+theorem : ∀ n → n + 0 ≡ n
+theorem zero = refl
+theorem (succ n) = cong succ (theorem n)
+
+❌ Ошибка 4: Неправильное использование refl
+wrong : 2 + 2 ≡ 5
+wrong = refl  -- ОШИБКА: 2+2 ≠ 5!
+
+✓ Решение:
+correct : 2 + 2 ≡ 4
+correct = refl
+
+❌ Ошибка 5: Missing cases в pattern matching
+describe : ℕ → String
+describe (succ n) = "positive"
+-- ОШИБКА: Не покрыт случай zero!
+
+✓ Решение:
+describe : ℕ → String
+describe zero = "zero"
+describe (succ n) = "positive"
+
+❌ Ошибка 6: Неправильный импорт
+open import Data.Nat  -- ОШИБКА: если стандартная библиотека не установлена!
+
+✓ Решение:
+agda install standard-library
+open import Data.Nat
+
+❌ Ошибка 7: Unicode символы не работают
+test : Nat -> Nat -> Nat  -- ОШИБКА: Nat не определён!
+
+✓ Решение:
+test : ℕ → ℕ → ℕ  -- Использовать Unicode из стандартной библиотеки
+
+❌ Ошибка 8: Termination check failed
+div : ℕ → ℕ → ℕ
+div x y = div (x - y) y  -- ОШИБКА: не доказано завершение!
+
+✓ Решение:
+div : ℕ → ℕ → ℕ
+div x zero = zero
+div x (succ y) with x ≤? succ y
+... | true = zero
+... | false = succ (div (x ∸ succ y) (succ y))
+
+❌ Ошибка 9: Неправильное использование subst
+wrongSubst : {A : Set} {x y : A} → x ≡ y → x ≡ y
+wrongSubst p = subst (λ z → x ≡ z) p refl  -- ОШИБКА типов!
+
+✓ Решение:
+correctSubst : {A : Set} {x y : A} → x ≡ y → x ≡ y
+correctSubst refl = refl
+
+❌ Ошибка 10: Игнорирование warnings компилятора
+-- Warning: Unused variable x
+function : (x : ℕ) → ℕ
+function x = 5  -- x не используется!
+
+✓ Решение:
+function : (x : ℕ) → ℕ
+function _ = 5  -- _ для неиспользуемых
+
+================================================================================
+13. ПРИМЕРЫ ЗАВИСИМЫХ ТИПОВ В ДЕЙСТВИИ
+================================================================================
+
+Пример 1: Безопасный доступ к массиву
+-------------------------------------
+safeLookup : {A : Set} {n : ℕ} → (i : Fin n) → Vec A n → A
+safeLookup fzero (x ∷ xs) = x
+safeLookup (fsuc i) (x ∷ xs) = safeLookup i xs
+
+-- Вызов:
+-- safeLookup fzero (1 ∷ 2 ∷ 3 ∷ [])  -- OK: возвращает 1
+
+Пример 2: Доказательство сортировки
+-----------------------------------
+data Sorted : List ℕ → Set where
+  sorted-nil : Sorted []
+  sorted-one : Sorted [ x ]
+  sorted-cons : (y : ℕ) → (xs : List ℕ) → 
+                Sorted xs → (allGreater : All (y <_) xs) →
+                Sorted (y ∷ xs)
+
+-- Функция возвращает ТОЛЬКО если список отсортирован
+insertSorted : (x : ℕ) → (xs : List ℕ) → 
+               Sorted xs → Σ (List ℕ) Sorted
+insertSorted x [] sorted-nil = [ x ] , sorted-one
+insertSorted x (y ∷ ys) (sorted-cons y ys sorted prf) =
+  if x ≤ y then
+    (x ∷ y ∷ ys) , sorted-cons x (y ∷ ys) (sorted-cons y ys sorted prf) ?prf1
+  else
+    let (ys' , sorted') = insertSorted x ys sorted in
+    y ∷ ys' , sorted-cons y ys' sorted' ?prf2
+
+Пример 3: Типизированный DSL для выражений
+------------------------------------------
+data Expr : Set → Set where
+  val : {A : Set} → A → Expr A
+  add : Expr ℕ → Expr ℕ → Expr ℕ
+  mul : Expr ℕ → Expr ℕ → Expr ℕ
+  if_ : {A : Set} → Expr Bool → Expr A → Expr A → Expr A
+
+eval : {A : Set} → Expr A → A
+eval (val x) = x
+eval (add x y) = eval x + eval y
+eval (mul x y) = eval x * eval y
+eval (if cond t e) = if eval cond then eval t else eval e
+
+-- НЕВОЗМОЖНО создать некорректное выражение!
+-- add (val "hello") (val 5) НЕ СКОМПИЛИРУЕТСЯ!
+
+Пример 4: Доказательство корректности reverse
+---------------------------------------------
+reverseAppend : {A : Set} {m n : ℕ} → 
+                (xs : Vec A m) → (ys : Vec A n) → 
+                reverse (xs ++ ys) ≡ reverse ys ++ reverse xs
+reverseAppend [] ys = refl
+reverseAppend (x ∷ xs) ys = 
+  let ih = reverseAppend xs ys in
+  trans (cong (λ zs → zs ++ (x ∷ [])) ih) 
+        (appendAssoc (reverse ys) (reverse xs) (x ∷ []))
+
+Пример 5: Состояние с зависимыми типами
+---------------------------------------
+record State (A : Set) (P : A → Set) : Set where
+  field
+    value : A
+    proof : P value
+
+-- value всегда удовлетворяет proof!
+update : {A : Set} {P Q : A → Set} → 
+         (f : (a : A) → P a → Q (f a)) → 
+         State A P → State A Q
+update f (record { value = v ; proof = p }) = 
+  record { value = f v ; proof = f v p }
+
+================================================================================
+                         КОНЕЦ SYNTAX_AGDA
+================================================================================

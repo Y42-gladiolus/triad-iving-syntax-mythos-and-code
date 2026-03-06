@@ -1,0 +1,490 @@
+================================================================================
+                    SWIFT - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и константы
+4. Опционалы (Optionals) - КРИТИЧЕСКИ ВАЖНО
+5. Управление потоком
+6. Функции
+7. Структуры и Классы
+8. Протоколы и Расширения
+9. Коллекции (Array, Dictionary, Set)
+10. Обработка ошибок
+11. Замыкания (Closures)
+12. Частые ошибки
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+// Однострочный комментарий
+/* Многострочный
+   комментарий */
+
+// Точка с запятой НЕ обязательна (в отличие от MiniZinc!)
+let x = 5
+let y = 10
+
+// Но можно использовать для нескольких выражений в строке
+let a = 1; let b = 2
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Int             │ Целые: 5, -10, 0, 1_000_000                                │
+│ Double          │ Вещественные: 3.14, -0.5, 2.5e10                           │
+│ Float           │ Вещественные одинарной точности                            │
+│ Bool            │ true, false                                                │
+│ String          │ "Hello", "Привет"                                          │
+│ Character       │ "a", "б", "!"                                              │
+│ Array           │ [1, 2, 3]                                                  │
+│ Dictionary      │ ["key": "value"]                                           │
+│ Set             │ Set([1, 2, 3])                                             │
+│ Tuple           │ (1, "hello", true)                                         │
+│ Optional        │ Int? (может быть nil)                                      │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+// Явное указание типа
+let age: Int = 25
+let price: Double = 99.99
+let name: String = "Swift"
+
+// Вывод типа (type inference)
+let count = 10          // Int
+let pi = 3.14159        // Double
+let greeting = "Hi"     // String
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И КОНСТАНТЫ
+================================================================================
+
+// let - константа (неизменяемая)
+let maxUsers = 100
+// maxUsers = 200  // ОШИБКА!
+
+// var - переменная (изменяемая)
+var currentUser = 1
+currentUser = 2  // OK
+
+// ПРАВИЛО: Всегда используйте let, если не нужно изменять
+// Это делает код безопаснее
+
+================================================================================
+4. ОПЦИОНАЛЫ (OPTIONALS) - КРИТИЧЕСКИ ВАЖНО!
+================================================================================
+
+// Опционал = значение ИЛИ nil (отсутствие значения)
+var email: String? = "user@example.com"
+email = nil  // OK
+
+// ⚠️ ПОДВОДНЫЙ КАМЕНЬ №1: Нельзя использовать опционал напрямую
+// let len = email.count  // ОШИБКА!
+
+// Способ 1: Forced Unwrapping (ОПАСНО!)
+let len1 = email!.count  // Краш если email = nil!
+
+// Способ 2: Optional Binding (БЕЗОПАСНО)
+if let safeEmail = email {
+    print(safeEmail.count)
+} else {
+    print("Email не установлен")
+}
+
+// Способ 3: Guard (для раннего выхода)
+func process(email: String?) {
+    guard let safeEmail = email else {
+        return  // Выход если nil
+    }
+    print(safeEmail)
+}
+
+// Способ 4: Nil Coalescing (значение по умолчанию)
+let displayEmail = email ?? "no-email@example.com"
+
+// Способ 5: Optional Chaining
+class User {
+    var profile: Profile?
+}
+class Profile {
+    var bio: String?
+}
+let user = User()
+let bioLength = user.profile?.bio?.count  // Int? (может быть nil)
+
+================================================================================
+5. УПРАВЛЕНИЕ ПОТОКОМ
+================================================================================
+
+// if-else
+let age = 18
+if age >= 18 {
+    print("Совершеннолетний")
+} else if age >= 13 {
+    print("Подросток")
+} else {
+    print("Ребёнок")
+}
+
+// switch (более мощный чем в C/Java)
+let status = 200
+switch status {
+case 200:
+    print("OK")
+case 400...499:  // Диапазон
+    print("Ошибка клиента")
+case 500...599:
+    print("Ошибка сервера")
+default:
+    print("Неизвестно")
+}
+
+// for-in
+let numbers = [1, 2, 3, 4, 5]
+for num in numbers {
+    print(num)
+}
+
+// for с диапазоном
+for i in 0..<5 {  // 0,1,2,3,4 (5 не включается)
+    print(i)
+}
+
+for i in 0...5 {  // 0,1,2,3,4,5 (5 включается)
+    print(i)
+}
+
+// while
+var counter = 0
+while counter < 5 {
+    counter += 1
+}
+
+// repeat-while (do-while в других языках)
+repeat {
+    counter += 1
+} while counter < 10
+
+================================================================================
+6. ФУНКЦИИ
+================================================================================
+
+// Базовая функция
+func greet(name: String) -> String {
+    return "Hello, \(name)!"
+}
+
+// Вызов
+let message = greet(name: "World")
+
+// Без имени параметра
+func greet(_ name: String) -> String {
+    return "Hello, \(name)!"
+}
+greet("World")  // Без имени
+
+// Несколько возвращаемых значений (tuple)
+func getMinMax(numbers: [Int]) -> (min: Int, max: Int) {
+    return (numbers.min()!, numbers.max()!)
+}
+let result = getMinMax(numbers: [1, 5, 3])
+print(result.min)  // 1
+print(result.max)  // 5
+
+// Параметры по умолчанию
+func greet(name: String, greeting: String = "Hello") -> String {
+    return "\(greeting), \(name)!"
+}
+greet(name: "World")           // "Hello, World!"
+greet(name: "World", greeting: "Hi")  // "Hi, World!"
+
+// Variadic параметры (переменное число)
+func sum(_ numbers: Int...) -> Int {
+    return numbers.reduce(0, +)
+}
+sum(1, 2, 3, 4, 5)  // 15
+
+// In-out параметры (изменение внутри функции)
+func swapValues(_ a: inout Int, _ b: inout Int) {
+    let temp = a
+    a = b
+    b = temp
+}
+var x = 1, y = 2
+swapValues(&x, &y)  // Обратите на &
+
+================================================================================
+7. СТРУКТУРЫ И КЛАССЫ
+================================================================================
+
+// Struct (значение, копируется при передаче)
+struct User {
+    var id: Int
+    var name: String
+    var email: String?
+    
+    // Вычисляемое свойство
+    var displayName: String {
+        return email ?? name
+    }
+    
+    // Метод
+    func greet() -> String {
+        return "Hi, I'm \(name)"
+    }
+}
+
+var user1 = User(id: 1, name: "John", email: "john@example.com")
+var user2 = user1  // КОПИЯ! Изменения не повлияют на user1
+user2.name = "Jane"
+print(user1.name)  // "John" (не изменился!)
+
+// Class (ссылка, передаётся по ссылке)
+class Account {
+    var balance: Double = 0
+    
+    func deposit(_ amount: Double) {
+        balance += amount
+    }
+}
+
+let acc1 = Account()
+let acc2 = acc1  // ССЫЛКА! Оба указывают на один объект
+acc2.deposit(100)
+print(acc1.balance)  // 100 (изменился!)
+
+// ⚠️ ПОДВОДНЫЙ КАМЕНЬ №2: Struct vs Class
+// Struct: безопаснее, нет циклических ссылок, копируется
+// Class: нужен когда нужна ссылка, наследование, делегаты
+
+// Когда использовать Struct:
+// ✓ Модели данных (User, Product, Order)
+// ✓ Небольшие объекты
+// ✓ Потокобезопасность важна
+
+// Когда использовать Class:
+// ✓ Нужно наследование
+// ✓ Делегаты и протоколы с классами
+// ✓ Объекты с состоянием (Database connection)
+
+================================================================================
+8. ПРОТОКОЛЫ И РАСШИРЕНИЯ
+================================================================================
+
+// Протокол (интерфейс)
+protocol Printable {
+    func printInfo() -> String
+}
+
+// Реализация протокола
+struct Product: Printable {
+    var name: String
+    var price: Double
+    
+    func printInfo() -> String {
+        return "\(name): $\(price)"
+    }
+}
+
+// Расширение (добавить функциональность без изменения исходного кода)
+extension String {
+    var reversed: String {
+        return String(self.reversed())
+    }
+    
+    func repeatTimes(_ n: Int) -> String {
+        return String(repeating: self, count: n)
+    }
+}
+
+"Hello".reversed           // "olleH"
+"Hi".repeatTimes(3)        // "HiHiHi"
+
+// Расширение протокола
+extension Printable {
+    func printAndLog() {
+        print(printInfo())
+    }
+}
+
+================================================================================
+9. КОЛЛЕКЦИИ
+================================================================================
+
+// Array (массив)
+var numbers: [Int] = [1, 2, 3]
+numbers.append(4)
+numbers[0] = 10
+let first = numbers.first  // Int?
+let count = numbers.count
+
+// Dictionary (словарь)
+var user: [String: Any] = [
+    "name": "John",
+    "age": 25,
+    "active": true
+]
+user["email"] = "john@example.com"
+let name = user["name"] as? String  // String?
+
+// Typed dictionary (лучше)
+var scores: [String: Int] = [
+    "Alice": 95,
+    "Bob": 87
+]
+scores["Charlie"] = 92
+
+// Set (множество уникальных)
+var uniqueNumbers: Set<Int> = [1, 2, 3, 3, 4]
+print(uniqueNumbers)  // [1, 2, 3, 4] (без дубликатов)
+
+// Операции с множествами
+let set1: Set = [1, 2, 3]
+let set2: Set = [3, 4, 5]
+let union = set1.union(set2)           // [1, 2, 3, 4, 5]
+let intersection = set1.intersection(set2)  // [3]
+let difference = set1.subtracting(set2)     // [1, 2]
+
+================================================================================
+10. ОБРАБОТКА ОШИБОК
+================================================================================
+
+// Определение ошибки
+enum FileError: Error {
+    case notFound
+    case noPermission
+    case invalidFormat(String)
+}
+
+// Функция которая может выбросить ошибку
+func readFile(path: String) throws -> String {
+    if path.isEmpty {
+        throw FileError.notFound
+    }
+    return "Content"
+}
+
+// Обработка ошибок
+do {
+    let content = try readFile(path: "file.txt")
+    print(content)
+} catch FileError.notFound {
+    print("Файл не найден")
+} catch FileError.invalidFormat(let reason) {
+    print("Неверный формат: \(reason)")
+} catch {
+    print("Другая ошибка: \(error)")
+}
+
+// try? (преобразует ошибку в nil)
+let content = try? readFile(path: "file.txt")  // String?
+
+// try! (игнорирует ошибку - ОПАСНО!)
+let content = try! readFile(path: "file.txt")  // Краш если ошибка!
+
+================================================================================
+11. ЗАМЫКАНИЯ (CLOSURES)
+================================================================================
+
+// Базовое замыкание
+let greet = { (name: String) -> String in
+    return "Hello, \(name)!"
+}
+greet("World")
+
+// С замыканием в функции
+func operate(_ a: Int, _ b: Int, operation: (Int, Int) -> Int) -> Int {
+    return operation(a, b)
+}
+operate(5, 3, operation: { $0 + $1 })  // 8
+
+// Синтаксический сахар
+operate(5, 3) { $0 + $1 }  // Замыкание в конце можно вынести
+
+// Capture list (захват значений)
+var multiplier = 2
+let multiply = { [multiplier] (x: Int) in
+    return x * multiplier  // Захватывает значение на момент создания
+}
+multiplier = 3
+multiply(5)  // 10 (не 15!)
+
+// ⚠️ ПОДВОДНЫЙ КАМЕНЬ №3: Циклические ссылки в замыканиях
+class ViewController {
+    var callback: (() -> Void)?
+    
+    func setup() {
+        // ПЛОХО - циклическая ссылка!
+        callback = {
+            self.doSomething()  // self удерживает callback, callback удерживает self
+        }
+        
+        // ХОРОШО - weak self
+        callback = { [weak self] in
+            self?.doSomething()
+        }
+    }
+}
+
+================================================================================
+12. ЧАСТЫЕ ОШИБКИ
+================================================================================
+
+❌ Ошибка 1: Forced Unwrapping
+let email: String? = nil
+print(email!)  // CRASH!
+
+✓ Решение:
+if let email = email { print(email) }
+
+❌ Ошибка 2: Изменение в цикле for-in
+var numbers = [1, 2, 3]
+for num in numbers {
+    num = num * 2  // ОШИБКА! num - константа
+}
+
+✓ Решение:
+for i in 0..<numbers.count {
+    numbers[i] *= 2
+}
+
+❌ Ошибка 3: Циклические ссылки
+class A {
+    var b: B?
+}
+class B {
+    var a: A?  // Цикл!
+}
+
+✓ Решение:
+class B {
+    weak var a: A?  // weak breaking цикл
+}
+
+❌ Ошибка 4: Не тот тип коллекции
+let dict: [String: Int] = ["a": 1]
+let value = dict["a"]  // Int?, не Int!
+print(value + 1)  // ОШИБКА!
+
+✓ Решение:
+if let value = dict["a"] {
+    print(value + 1)
+}
+
+❌ Ошибка 5: Mutable в immutable
+let array: [Int] = [1, 2, 3]
+array.append(4)  // ОШИБКА! let = константа
+
+✓ Решение:
+var array: [Int] = [1, 2, 3]
+
+================================================================================
+                         КОНЕЦ SYNTAX_SWIFT
+================================================================================

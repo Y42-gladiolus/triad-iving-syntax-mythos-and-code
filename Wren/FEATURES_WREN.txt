@@ -1,0 +1,444 @@
+================================================================================
+                    WREN - КЛЮЧЕВЫЕ ОСОБЕННОСТИ ЯЗЫКА
+                         Small + Fast + Class-based + Embeddable
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Архитектура и дизайн
+2. Система типов
+3. Управление памятью
+4. Компиляция
+5. Error handling
+6. Concurrency model
+7. Embedding API
+8. Developer Experience
+9. Производительность
+10. Ограничения и будущее
+
+================================================================================
+1. АРХИТЕКТУРА И ДИЗАЙН
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    WREN ARCHITECTURE                                         │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  IMPLEMENTATION:                                                             │
+│  • Написан на C (для встраиваемости и переносимости)                        │
+│  • Байт-код интерпретатор                                                   │
+│  • Нет JIT (для простоты)                                                   │
+│  • Кроссплатформенный (Linux, macOS, Windows)                               │
+│                                                                              │
+│  DESIGN PHILOSOPHY:                                                          │
+│  • Small (маленький, легко встроить)                                        │
+│  • Fast (быстрый для скриптового языка)                                     │
+│  • Simple (простой синтаксис)                                               │
+│  • Class-based (не prototype-based как JavaScript)                          │
+│  • Embeddable (легко встроить в приложения)                                 │
+│  • No GC pauses (предсказуемая производительность)                          │
+│                                                                              │
+│  KEY FEATURES:                                                               │
+│  • Class-based OOP                                                          │
+│  • Fibers (легковесные потоки)                                              │
+│  • Closures                                                                 │
+│  • Dynamic typing                                                           │
+│  • Automatic memory management                                              │
+│  • Small footprint (~50 KB)                                                 │
+│  • Fast startup                                                             │
+│                                                                              │
+│  STATUS (2024):                                                              │
+│  • Stable release                                                           │
+│  • Активная разработка                                                      │
+│  • Production ready                                                         │
+│  • Community-driven                                                         │
+│  • Open source (MIT license)                                                │
+│  • Created by Bob Nystrom (автор "Crafting Interpreters")                   │
+│                                                                              │
+│  COMPARISON:                                                                 │
+│  • vs Lua: Class-based (не prototype), проще API                            │
+│  • vs Python: Меньше, быстрее, проще встроить                               │
+│  • vs JavaScript: Class-based, нет prototype confusion                      │
+│  • vs Ruby: Меньше, быстрее, проще                                          │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+2. СИСТЕМА ТИПОВ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    WREN TYPE SYSTEM                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  DYNAMIC TYPING:                                                             │
+│  • Типы проверяются на runtime                                              │
+│  • Нет type annotations                                                     │
+│  • Flexible и гибкий                                                        │
+│  • Как Python, Ruby, Lua                                                    │
+│                                                                              │
+│  BASIC TYPES:                                                                │
+│  • Num (numbers, double precision)                                          │
+│  • String (UTF-8 strings)                                                   │
+│  • Bool (true, false)                                                       │
+│  • Null (null value)                                                        │
+│  • Class (class instances)                                                  │
+│  • List (dynamic arrays)                                                    │
+│  • Map (hash maps)                                                          │
+│  • Fiber (coroutines)                                                       │
+│  • Foreign (C pointers)                                                     │
+│                                                                              │
+│  NO STATIC TYPES:                                                            │
+│  • Нет compile-time type checking                                           │
+│  • Runtime type errors возможны                                             │
+│  • Testing important                                                        │
+│  • Faster development                                                       │
+│                                                                              │
+│  TYPE OPERATIONS:                                                            │
+│  • is operator (type checking)                                              │
+│  • toString() (string conversion)                                           │
+│  • Dynamic dispatch                                                         │
+│  • Duck typing                                                              │
+│                                                                              │
+│  FOREIGN TYPES:                                                              │
+│  • C pointers через Foreign class                                           │
+│  • Embedding API для C integration                                          │
+│  • Custom types через C API                                                 │
+│  • Seamless C integration                                                   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+3. УПРАВЛЕНИЕ ПАМЯТЬЮ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    WREN MEMORY MANAGEMENT                                    │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  AUTOMATIC MEMORY MANAGEMENT:                                                │
+│  • Garbage collection (mark-and-sweep)                                      │
+│  • No manual memory management                                              │
+│  • No memory leaks (если нет C Foreign)                                     │
+│  • Predictable GC pauses                                                    │
+│                                                                              │
+│  GC CHARACTERISTICS:                                                         │
+│  • Mark-and-sweep collector                                                 │
+│  • Small GC pauses                                                          │
+│  • Tunable GC parameters                                                    │
+│  • Low memory overhead                                                      │
+│                                                                              │
+│  FOREIGN MEMORY:                                                             │
+│  • Foreign class для C pointers                                             │
+│  • Manual memory management для Foreign                                     │
+│  • Finalizers для cleanup                                                   │
+│  • C integration с memory safety                                            │
+│                                                                              │
+│  NO REFERENCE COUNTING:                                                      │
+│  • Нет reference counting (как Python)                                      │
+│  • Нет circular reference problems                                          │
+│  • Simpler than reference counting                                          │
+│  • Better performance                                                       │
+│                                                                              │
+│  MEMORY FOOTPRINT:                                                           │
+│  • Small VM (~50 KB)                                                        │
+│  • Low memory usage                                                         │
+│  • Suitable for embedded systems                                            │
+│  • Predictable memory usage                                                 │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+4. КОМПИЛЯЦИЯ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    WREN COMPILATION                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  BYTECODE INTERPRETER:                                                       │
+│  • Компилируется в байт-код                                                 │
+│  • Интерпретируется (нет JIT)                                               │
+│  • Fast for scripting                                                       │
+│  • Simple implementation                                                    │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Очень быстрая компиляция                                                 │
+│  • Нет long compile times                                                   │
+│  • Instant feedback                                                         │
+│  • Like Lua, Python                                                         │
+│                                                                              │
+│  NO JIT:                                                                     │
+│  • Нет JIT компиляции                                                       │
+│  • Simpler implementation                                                   │
+│  • More predictable                                                         │
+│  • Smaller footprint                                                        │
+│  • Slower than JIT но быстрее чем pure interpretation                       │
+│                                                                              │
+│  EMBEDDING:                                                                  │
+│  • Легко встроить в C/C++ приложения                                        │
+│  • Small API surface                                                        │
+│  • No complex build system                                                  │
+│  • Single header file                                                       │
+│                                                                              │
+│  TARGETS:                                                                    │
+│  • Linux                                                                    │
+│  • macOS                                                                    │
+│  • Windows                                                                  │
+│  • Embedded systems                                                         │
+│  • Any platform с C compiler                                                │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+5. ERROR HANDLING
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    WREN ERROR HANDLING                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  EXCEPTIONS:                                                                 │
+│  • Runtime exceptions                                                       │
+│  • Try/catch blocks                                                         │
+│  • Fiber.abort() для ошибок                                                 │
+│  • Как Python, Ruby                                                         │
+│                                                                              │
+│  FIBER ERRORS:                                                               │
+│  • Fiber.abort(message)                                                     │
+│  • Fiber.try() для обработки                                                │
+│  • Fiber error propagation                                                  │
+│  • Isolated fiber errors                                                    │
+│                                                                              │
+│  NO ERROR TYPES:                                                             │
+│  • Нет typed exceptions                                                     │
+│  • String error messages                                                    │
+│  • Simple error handling                                                    │
+│  • Less verbose than Java                                                   │
+│                                                                              │
+│  ASSERTIONS:                                                                 │
+│  • Assert в C API                                                           │
+│  • Runtime checks                                                           │
+│  • Debug builds                                                             │
+│  • Development assistance                                                   │
+│                                                                              │
+│  ERROR MESSAGES:                                                             │
+│  • Clear error messages                                                     │
+│  • Line numbers                                                             │
+│  • Stack traces                                                             │
+│  • Helpful for debugging                                                    │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+6. CONCURRENCY MODEL
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    WREN CONCURRENCY                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  FIBERS (COROUTINES):                                                        │
+│  • Легковесные потоки                                                       │
+│  • Cooperative multitasking                                                 │
+│  • No threads (по умолчанию)                                                │
+│  • Like Lua coroutines                                                      │
+│                                                                              │
+│  FIBER OPERATIONS:                                                           │
+│  • Fiber.new() для создания                                                 │
+│  • Fiber.call() для запуска                                                 │
+│  • Fiber.yield() для pause                                                  │
+│  • Fiber.try() для error handling                                           │
+│                                                                              │
+│  NO THREADS:                                                                 │
+│  • Нет native threads                                                       │
+│  • Single-threaded по умолчанию                                             │
+│  • Simpler concurrency model                                                │
+│  • No race conditions                                                       │
+│                                                                              │
+│  EMBEDDING THREADS:                                                          │
+│  • Можно запускать в multiple threads                                       │
+│  • Один VM per thread                                                       │
+│  • No shared state между VMs                                                │
+│  • Thread-safe с proper isolation                                           │
+│                                                                              │
+│  ASYNC PROGRAMMING:                                                          │
+│  • Нет built-in async/await                                                 │
+│  • Fibers для cooperative multitasking                                      │
+│  • Event loop через C API                                                   │
+│  • Custom async implementations                                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+7. EMBEDDING API
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    WREN EMBEDDING API                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  C API:                                                                      │
+│  • Simple C API для встраивания                                             │
+│  • wrenVM для VM management                                                 │
+│  • wrenInterpret для выполнения кода                                        │
+│  • wrenGetVariable для доступа к переменным                                 │
+│                                                                              │
+│  FOREIGN CLASSES:                                                            │
+│  • Создание C classes для Wren                                              │
+│  • Foreign class для C pointers                                             │
+│  • Method binding к C функциям                                              │
+│  • Seamless C integration                                                   │
+│                                                                              │
+│  MODULE SYSTEM:                                                              │
+│  • Module loading через C API                                               │
+│  • Custom module loaders                                                    │
+│  • Module isolation                                                         │
+│  • Secure sandboxing                                                        │
+│                                                                              │
+│  MEMORY MANAGEMENT:                                                          │
+│  • VM memory management                                                     │
+│  • GC integration                                                           │
+│  • Foreign memory cleanup                                                   │
+│  • No memory leaks                                                          │
+│                                                                              │
+│  USE CASES:                                                                  │
+│  • Game scripting (Celeste использует Wren)                                 │
+│  • Application scripting                                                    │
+│  • Plugin systems                                                           │
+│  • Configuration с logic                                                    │
+│  • Embedded systems                                                         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+8. DEVELOPER EXPERIENCE
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    WREN DEVELOPER EXPERIENCE                                 │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  SIMPLE SYNTAX:                                                              │
+│  • Проще чем Python                                                         │
+│  • Class-based OOP                                                          │
+│  • No semicolons (опционально)                                              │
+│  • Clean readability                                                        │
+│                                                                              │
+│  TOOLING:                                                                    │
+│  • wren (CLI interpreter)                                                   │
+│  • wren_embedded.h (C API)                                                  │
+│  • No package manager                                                       │
+│  • Simple build system                                                      │
+│                                                                              │
+│  DOCUMENTATION:                                                              │
+│  • Official documentation                                                   │
+│  • Clear и concise                                                          │
+│  • Examples included                                                        │
+│  • "Crafting Interpreters" book                                             │
+│                                                                              │
+│  LEARNING CURVE:                                                             │
+│  • Проще чем Python                                                         │
+│  • Проще чем JavaScript                                                     │
+│  • Familiar для OOP разработчиков                                           │
+│  • Quick to learn                                                           │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • Discord server                                                           │
+│  • GitHub repository                                                        │
+│  • Active community                                                         │
+│  • Helpful community                                                        │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+9. ПРОИЗВОДИТЕЛЬНОСТЬ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    WREN PERFORMANCE                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  RUNTIME PERFORMANCE:                                                        │
+│  • Быстрее чем Python (для многих задач)                                    │
+│  • Быстрее чем Ruby                                                         │
+│  • Медленнее чем Lua (иногда)                                               │
+│  • Good for scripting                                                       │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Очень быстрая компиляция                                                 │
+│  • Instant feedback                                                         │
+│  • No long compile times                                                    │
+│  • Like Lua, Python                                                         │
+│                                                                              │
+│  STARTUP TIME:                                                               │
+│  • Fast startup (< 100 ms)                                                  │
+│  • Small VM                                                                 │
+│  • No heavy initialization                                                  │
+│  • Suitable for scripting                                                   │
+│                                                                              │
+│  MEMORY USAGE:                                                               │
+│  • Low memory footprint                                                     │
+│  • ~50 KB VM                                                                │
+│  • GC overhead                                                              │
+│  • Predictable memory usage                                                 │
+│                                                                              │
+│  BENCHMARKS:                                                                 │
+│  • Numerical computations: 5-10x slower than C                              │
+│  • String processing: 2-5x slower than C                                    │
+│  • Object creation: Fast                                                    │
+│  • Function calls: Fast                                                     │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+10. ОГРАНИЧЕНИЯ И БУДУЩЕЕ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    WREN LIMITATIONS & FUTURE                                 │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CURRENT LIMITATIONS:                                                        │
+│  • Dynamic typing (нет static types)                                        │
+│  • No threads (только fibers)                                               │
+│  • No built-in async/await                                                  │
+│  • Smaller ecosystem чем Lua/Python                                         │
+│  • No package manager                                                       │
+│  • Less libraries                                                           │
+│                                                                              │
+│  FUTURE PLANS:                                                               │
+│  • Performance improvements                                                 │
+│  • More standard library                                                    │
+│  • Better tooling                                                           │
+│  • More documentation                                                       │
+│  • Community growth                                                         │
+│                                                                              │
+│  ROADMAP:                                                                    │
+│  • Stable releases                                                          │
+│  • Performance optimizations                                                │
+│  • More embedding features                                                  │
+│  • Better error messages                                                    │
+│  • Long-term: Production-ready                                              │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • Discord community                                                        │
+│  • GitHub repository                                                        │
+│  • Active development                                                       │
+│  • Community-driven                                                         │
+│  • No corporate backing                                                     │
+│                                                                              │
+│  WHEN TO USE:                                                                │
+│  • ✓ Game scripting                                                         │
+│  • ✓ Application scripting                                                  │
+│  • ✓ Plugin systems                                                         │
+│  • ✓ Embedding в C/C++                                                      │
+│  • ✓ Learning OOP                                                           │
+│  • ✗ Performance-critical (используйте C/C++)                               │
+│  • ✗ Large ecosystem нужен                                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                         КОНЕЦ FEATURES_WREN
+================================================================================

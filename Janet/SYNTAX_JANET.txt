@@ -1,0 +1,557 @@
+================================================================================
+              JANET - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Современный Lisp + Функциональный + Практичный
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис (Lisp стиль)
+2. Типы данных
+3. Переменные и присваивание
+4. Функции (first-class, closures)
+5. Коллекции (arrays, tuples, structs)
+6. Pattern Matching
+7. Fibers (корутины)
+8. Macros (метaprogramming)
+9. Error Handling
+10. Модули и импорты
+11. Типичные ошибки (РАСШИРЕНО!)
+12. Примеры Lisp-стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС (LISP СТИЛЬ)
+================================================================================
+
+# Комментарии (решётка)
+# Однострочные
+
+# S-выражения (как в Lisp)
+(+ 1 2 3)  # 6
+
+# Префиксная нотация
+(* (+ 1 2) 3)  # 9
+
+# Def для определений
+(def x 5)
+(def name "Janet")
+
+# Do блок (последнее значение возвращается)
+(do
+  (print "Hello")
+  (print "World")
+  42)  # Возвращает 42
+
+# Quasiquote (как backquote в Lisp)
+(def x 5)
+`(1 2 ,x 4)  # (1 2 5 4)
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ nil             │ nil (отсутствие значения)                                  │
+│ boolean         │ true, false                                                │
+│ number          │ 1, -10, 3.14 (number)                                      │
+│ string          │ "hello", "привет"                                          │
+│ symbol          │ 'name, 'foo (символы)                                      │
+│ keyword         │ :name, :foo (ключевые слова)                               │
+│ array           │ @[1 2 3] (изменяемый массив)                               │
+│ tuple           │ (1 2 3) (неизменяемый кортеж)                              │
+│ struct          │ {:a 1 :b 2} (неизменяемый словарь)                         │
+│ table           │ @{:a 1 :b 2} (изменяемый словарь)                          │
+│ function        │ (fn [x] (* x x))                                           │
+│ cfunction       │ C функции (через FFI)                                      │
+│ fiber           │ (fiber/new ...) (корутина)                                 │
+│ thread          │ (thread/new ...) (поток)                                   │
+│ buffer          │ (buffer) (изменяемая строка)                               │
+│ struct-type     │ (defstruct Point x y)                                      │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+# Проверка типа
+(type x)              # "nil", "number", "string", "array", etc.
+(number? x)
+(string? x)
+(array? x)
+(function? x)
+
+# Приведение типов
+(string 5)            # "5"
+(number "5")          # 5
+(array (tuple 1 2 3)) # @[1 2 3]
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+# Def (глобальные)
+(def x 5)
+(def name "Janet")
+
+# Var (изменяемые)
+(var count 0)
+(set count 1)  # Изменить
+
+# Let (локальные)
+(let [x 5
+      y 10]
+  (+ x y))  # 15
+
+# Set (изменение)
+(def counter 0)
+(set counter 1)
+
+# Const (константы)
+(def PI 3.14159)
+(def MAX-SIZE 100)
+
+# Destructuring
+(let [[a b c] @[1 2 3]]
+  a)  # 1
+
+(let [{:x x :y y} {:x 1 :y 2}]
+  x)  # 1
+
+# Swapping
+(let [a 1 b 2]
+  (set a b b a)
+  [a b])  # [2 1]
+
+================================================================================
+4. ФУНКЦИИ
+================================================================================
+
+# Базовая функция
+(defn add [a b]
+  (+ a b))
+
+# Анонимная функция
+(fn [x] (* x x))
+
+# Короткий синтаксис
+(* _ _)  # Анонимная с placeholder
+
+# Возврат нескольких значений
+(defn min-max [a b]
+  (tuple (min a b) (max a b)))
+
+(let [[min-val max-val] (min-max 5 10)]
+  min-val)  # 5
+
+# Varargs (&)
+(defn sum [& args]
+  (apply + args))
+
+(sum 1 2 3 4 5)  # 15
+
+# Default параметры
+(defn greet [name &opt greeting]
+  (string greeting ", " name))
+
+(greet "John")  # "Hello, John"
+(greet "John" "Hi")  # "Hi, John"
+
+# Замыкания (closures)
+(defn make-adder [n]
+  (fn [x] (+ x n)))
+
+(def add5 (make-adder 5))
+(add5 10)  # 15
+
+# Рекурсия
+(defn factorial [n]
+  (if (<= n 1)
+    1
+    (* n (factorial (- n 1)))))
+
+# Tail-рекурсия (оптимизирована)
+(defn factorial-tail [n &opt acc]
+  (if (<= n 1)
+    (or acc 1)
+    (factorial-tail (- n 1) (* (or acc 1) n))))
+
+================================================================================
+5. КОЛЛЕКЦИИ
+================================================================================
+
+# Array (изменяемый)
+(def arr @[1 2 3])
+(array/push arr 4)
+(array/pop arr)
+
+# Tuple (неизменяемый)
+(def tup (tuple 1 2 3))
+# tup нельзя изменить
+
+# Struct (неизменяемый словарь)
+(def st {:a 1 :b 2})
+(get st :a)  # 1
+
+# Table (изменяемый словарь)
+(def tb @{:a 1 :b 2})
+(table/put tb :c 3)
+(table/get tb :a)  # 1
+
+# Array операции
+(length @[1 2 3])  # 3
+(push @[1 2] 3)  # @[1 2 3]
+(pop @[1 2 3])  # @[1 2]
+(slice @[1 2 3 4] 1 3)  # @[2 3]
+
+# Tuple операции
+(tuple 1 2 3)
+(get (tuple 1 2 3) 1)  # 2
+
+# Struct операции
+(get {:a 1 :b 2} :a)  # 1
+(put {:a 1} :b 2)  # {:a 1 :b 2}
+
+# Table операции
+(table/put @{:a 1} :b 2)
+(table/get @{:a 1} :a)
+
+# Iteration
+(each [x @[1 2 3]]
+  (print x))
+
+(pairs {:a 1 :b 2}
+  (fn [k v]
+    (print k v)))
+
+================================================================================
+6. PATTERN MATCHING
+================================================================================
+
+# Match (как case в Lisp)
+(match x
+  1 "one"
+  2 "two"
+  "other")
+
+# Match с destructuring
+(match @[1 2 3]
+  @[1 2 3] "exact match"
+  @[a b c] (string "tuple: " a ", " b ", " c)
+  "no match")
+
+# Match с guard
+(match x
+  n (and (> n 0) (< n 10)) "small positive"
+  n (> n 0) "large positive"
+  "other")
+
+# Match с struct
+(match {:type :point :x 1 :y 2}
+  {:type :point :x x :y y} (string "Point(" x ", " y ")")
+  "not a point")
+
+# Conditional match
+(match x
+  (number? x) "it's a number"
+  (string? x) "it's a string"
+  "unknown")
+
+================================================================================
+7. FIBERS (КОРУТИНЫ)
+================================================================================
+
+# Создание fiber
+(def f (fiber/new
+  (fiber/yield 1)
+  (fiber/yield 2)
+  (fiber/yield 3)))
+
+# Resume fiber
+(fiber/resume f)  # 1
+(fiber/resume f)  # 2
+(fiber/resume f)  # 3
+
+# Fiber с передачей данных
+(def f (fiber/new
+  (let [value (fiber/yield)]
+    (print "Received:" value))))
+
+(fiber/resume f "Hello")
+
+# Fiber status
+(fiber/status f)  # "dead", "suspended", "pending"
+
+# Fiber ошибки
+(def f (fiber/new
+  (error "Something went wrong")))
+
+(def status (fiber/resume f))
+# status = (tuple :error "Something went wrong")
+
+# Producer-Consumer pattern
+(defn producer []
+  (fiber/new
+    (each [i (range 10)]
+      (fiber/yield i))))
+
+(defn consumer [prod]
+  (while (=:suspended (fiber/status prod))
+    (print (fiber/resume prod))))
+
+================================================================================
+8. MACROS (METAPROGRAMMING)
+================================================================================
+
+# Базовый макрос
+(defmacro unless [condition & body]
+  `(if (not ,condition)
+    (do ,@body)))
+
+(unless false
+  (print "This runs"))
+
+# Quote (цитирование)
+(quote (+ 1 2))  # (+ 1 2) не вычисляется
+
+# Quasiquote (с вычислением)
+(def x 5)
+`(1 2 ,x 4)  # (1 2 5 4)
+
+# Splicing
+(def xs @[1 2 3])
+`(0 ,@xs 4)  # (0 1 2 3 4)
+
+# Macro с гигиеной
+(defmacro when-positive [x & body]
+  `(let [temp ,x]
+    (when (> temp 0)
+      ,@body)))
+
+# Macro expansion
+(macroexpand '(unless false (print "test")))
+
+# Define with macro
+(defmacro defvar [name value]
+  `(def ,name ,value))
+
+(defvar x 5)
+
+# AST манипуляция
+(defmacro my-and [a b]
+  `(let [temp-a ,a]
+    (and temp-a ,b)))
+
+================================================================================
+9. ERROR HANDLING
+================================================================================
+
+# Error
+(error "Something went wrong")
+
+# Try/Catch (в Janet это fibers)
+(def result
+  (fiber/resume
+    (fiber/new
+      (error "Error"))))
+
+# Проверка на ошибку
+(if (tuple? result)
+  (print "Error:" (result 1))
+  (print "Success:" result))
+
+# Assert
+(assert (> x 0) "x must be positive")
+
+# Debug
+(debug/debug)  # Войти в отладчик
+
+# Stack trace
+(debug/stack-trace)
+
+# Custom error types
+(defn my-error [msg]
+  (error (tuple :my-error msg)))
+
+================================================================================
+10. МОДУЛИ И ИМПОРТЫ
+================================================================================
+
+# Import модуля
+(import os)
+(os/exit 0)
+
+# Import с alias
+(import math :as m)
+(m/sqrt 4)
+
+# Import конкретных функций
+(import [os :only [exit get-env]])
+
+# Use (короткий import)
+(use os)
+(exit 0)
+
+# Создание модуля
+# module.janet
+(export add multiply)
+
+(defn add [a b] (+ a b))
+(defn multiply [a b] (* a b))
+
+# Использование модуля
+(import ./module)
+(module/add 5 3)
+
+# Module path
+(print (os/which "janet"))
+
+# Environment variables
+(os/get-env "PATH")
+(os/set-env "MY_VAR" "value")
+
+================================================================================
+11. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Глобальные переменные
+(def x 5)  # Глобальная!
+
+✓ Решение:
+(let [x 5]  # Локальная
+  x)
+
+❌ Ошибка 2: Изменение tuple
+(def tup (tuple 1 2 3))
+(set tup 0 10)  # ОШИБКА! tuple неизменяемый
+
+✓ Решение:
+(def arr @[1 2 3])  # Array изменяемый
+(array/push arr 4)
+
+❌ Ошибка 3: Неправильный match
+(match x
+  1 "one"
+  2 "two")
+# Забыли default case!
+
+✓ Решение:
+(match x
+  1 "one"
+  2 "two"
+  "other")  # Default
+
+❌ Ошибка 4: Fiber без resume
+(def f (fiber/new (fiber/yield 1)))
+# Fiber создан но не resumed!
+
+✓ Решение:
+(fiber/resume f)
+
+❌ Ошибка 5: Macro без quote
+(defmacro my-if [cond then else]
+  (if cond then else))  # ОШИБКА! Вычисляется сразу
+
+✓ Решение:
+(defmacro my-if [cond then else]
+  `(if ,cond ,then ,else))
+
+❌ Ошибка 6: Неправильный destructuring
+(let [[a b] @[1 2 3]]
+  c)  # ОШИБКА! c не определён
+
+✓ Решение:
+(let [[a b c] @[1 2 3]]
+  c)
+
+❌ Ошибка 7: Table vs Struct
+(def st {:a 1})
+(table/put st :b 2)  # ОШИБКА! struct неизменяемый
+
+✓ Решение:
+(def tb @{:a 1})  # Table изменяемый
+(table/put tb :b 2)
+
+❌ Ошибка 8: Import без проверки
+(import nonexistent)  # ОШИБКА!
+
+✓ Решение:
+(try
+  (import existent)
+  (catch [_]
+    (print "Module not found")))
+
+❌ Ошибка 9: Рекурсия без базового случая
+(defn infinite []
+  (infinite))  # Бесконечная рекурсия!
+
+✓ Решение:
+(defn finite [n]
+  (if (<= n 0)
+    0
+    (+ n (finite (- n 1)))))
+
+❌ Ошибка 10: Игнорирование fiber статуса
+(def f (fiber/new (error "Error")))
+(fiber/resume f)  # Игнорируется ошибка!
+
+✓ Решение:
+(def result (fiber/resume f))
+(when (tuple? result)
+  (print "Error:" (result 1)))
+
+================================================================================
+12. ПРИМЕРЫ LISP-СТИЛЯ
+================================================================================
+
+Пример 1: Конфигурация как код
+-------------------------------
+(def config
+  {:host "localhost"
+   :port 8080
+   :debug true
+   :paths @["/api" "/web"]})
+
+# Использование как код, не JSON!
+
+Пример 2: DSL для игр
+---------------------
+(defmacro defentity [name & body]
+  `(def ,name
+    (struct/entity
+      ,@body)))
+
+(defentity player
+  :health 100
+  :position @{:x 0 :y 0}
+  :inventory @[])
+
+Пример 3: Macro для logging
+---------------------------
+(defmacro log [msg]
+  `(print (os/strftime "%Y-%m-%d %H:%M:%S" (os/time))
+     ":" ,msg))
+
+(log "Application started")
+
+Пример 4: Fiber для async
+-------------------------
+(defn fetch-async [url]
+  (fiber/new
+    (http/get url)))
+
+(def f1 (fetch-async "url1"))
+(def f2 (fetch-async "url2"))
+
+# Параллельное выполнение
+(fiber/resume f1)
+(fiber/resume f2)
+
+Пример 5: Metaprogramming для API
+---------------------------------
+(defmacro defapi [name path & methods]
+  `(def ,name
+    (api/endpoint ,path
+      ,@(map (fn [m] `(api/method ,m)) methods))))
+
+(defapi users "/users" :get :post :put :delete)
+
+================================================================================
+                         КОНЕЦ SYNTAX_JANET
+================================================================================

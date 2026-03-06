@@ -1,0 +1,615 @@
+================================================================================
+              CRYSTAL - ПОЛНЫЙ СПРАВОЧНИК ПО СИНТАКСИСУ
+                    Ruby Syntax + C Performance + Static Typing
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Базовый синтаксис
+2. Типы данных
+3. Переменные и присваивание
+4. Функции и методы
+5. Classes и modules
+6. Control Flow
+7. Blocks и Procs
+8. Error handling
+9. Concurrency (Fibers)
+10. Типичные ошибки (РАСШИРЕНО!)
+11. Примеры Ruby-like стиля
+
+================================================================================
+1. БАЗОВЫЙ СИНТАКСИС
+================================================================================
+
+# Комментарии (решётка)
+# Однострочные
+
+=begin
+    Многострочные
+    комментарии
+=end
+
+# Semicolons опционально
+x = 5
+y = 10
+
+# Semicolons разрешены
+z = 15;
+
+# No parentheses (опционально)
+puts "Hello"
+puts("Hello")
+
+# Main execution
+puts "Hello, Crystal!"
+
+================================================================================
+2. ТИПЫ ДАННЫХ
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Тип             │ Примеры                                                    │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Int8, Int16     │ 1, -10 (signed integers)                                   │
+│ Int32, Int64    │ Большие целые                                              │
+│ UInt8, UInt16   │ 0, 10 (unsigned)                                           │
+│ UInt32, UInt64  │ Большие беззнаковые                                        │
+│ Float32, Float64│ 3.14, -0.5                                                 │
+│ Bool            │ true, false                                                │
+│ Char            │ 'a', 'б' (Unicode)                                         │
+│ String          │ "hello", "привет"                                          │
+│ Symbol          │ :name, :age (immutable)                                    │
+│ Nil             │ nil (null value)                                           │
+│ Array(T)        │ [1, 2, 3]                                                  │
+│ Hash(K, V)      │ {"key" => "value"}                                         │
+│ Tuple           │ {1, "a", true}                                             │
+│ NamedTuple      │ {name: "John", age: 25}                                    │
+│ Union           │ Int32 | String                                             │
+│ Nilable         │ String? (String | Nil)                                     │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+# Type inference
+x = 5       # Int32
+y = "hello" # String
+
+# Explicit types
+x : Int32 = 5
+y : String = "hello"
+
+================================================================================
+3. ПЕРЕМЕННЫЕ И ПРИСВАИВАНИЕ
+================================================================================
+
+# Локальные переменные (строчные)
+name = "John"
+age = 25
+
+# Instance переменные (@)
+@name = "John"
+
+# Class переменные (@@)
+@@count = 0
+
+# Global переменные ($)
+$global = "global"
+
+# Constants (заглавные)
+PI = 3.14159
+MAX_SIZE = 100
+
+# Shadowing (переопределение)
+x = 5
+x = 10  # OK
+
+# Multiple assignment
+a, b = 1, 2
+a, b = b, a  # Swap
+
+# Destructuring
+point = {3, 4}
+x, y = point
+
+# Nilable variables
+name : String? = nil
+name = "John"  # OK
+
+================================================================================
+4. ФУНКЦИИ И МЕТОДЫ
+================================================================================
+
+# Функция (def)
+def add(a, b)
+  a + b
+end
+
+# С return type
+def add(a : Int32, b : Int32) : Int32
+  a + b
+end
+
+# Default параметры
+def greet(name, greeting = "Hello")
+  "#{greeting}, #{name}!"
+end
+
+# Variadic функции
+def sum(*nums)
+  nums.sum
+end
+
+# Named arguments
+def create(name:, age:)
+  {name, age}
+end
+create(name: "John", age: 25)
+
+# Methods в классах
+class Person
+  def initialize(@name : String, @age : Int32)
+  end
+  
+  def greet
+    "Hello, #{@name}!"
+  end
+end
+
+# Class methods
+class Person
+  def self.create(name, age)
+    new(name, age)
+  end
+end
+
+# Block arguments
+def twice
+  yield
+  yield
+end
+
+twice { puts "Hello" }
+
+================================================================================
+5. CLASSES И MODULES
+================================================================================
+
+# Class
+class Person
+  @name : String
+  @age : Int32
+  
+  def initialize(@name, @age)
+  end
+  
+  def greet
+    "Hello, #{@name}!"
+  end
+  
+  def age=(age : Int32)
+    @age = age
+  end
+end
+
+# Inheritance
+class Employee < Person
+  @salary : Float64
+  
+  def initialize(name, age, @salary)
+    super(name, age)
+  end
+end
+
+# Module (mixins)
+module Comparable
+  def >(other)
+    self <=> other > 0
+  end
+end
+
+class Person
+  include Comparable
+end
+
+# Abstract class
+abstract class Shape
+  abstract def area
+end
+
+class Circle < Shape
+  def initialize(@radius : Float64)
+  end
+  
+  def area
+    Math::PI * @radius ** 2
+  end
+end
+
+# Struct (value type)
+struct Point
+  getter x, y
+  
+  def initialize(@x : Int32, @y : Int32)
+  end
+end
+
+================================================================================
+6. CONTROL FLOW
+================================================================================
+
+# If/else
+if x > 5
+  puts "greater"
+elsif x == 5
+  puts "equal"
+else
+  puts "less"
+end
+
+# If как выражение
+result = if x > 5
+  "greater"
+else
+  "less"
+end
+
+# Unless (отрицание)
+unless x > 5
+  puts "less or equal"
+end
+
+# Case (switch)
+case x
+when 1
+  puts "one"
+when 2
+  puts "two"
+else
+  puts "other"
+end
+
+# While
+while x > 0
+  puts x
+  x -= 1
+end
+
+# Until (отрицание while)
+until x == 0
+  puts x
+  x -= 1
+end
+
+# For
+for i in 1..10
+  puts i
+end
+
+# Each (предпочтительно)
+(1..10).each do |i|
+  puts i
+end
+
+# Break/next
+(1..10).each do |i|
+  next if i == 5
+  break if i == 8
+  puts i
+end
+
+================================================================================
+7. BLOCKS И PROCS
+================================================================================
+
+# Block (do-end)
+[1, 2, 3].each do |x|
+  puts x
+end
+
+# Block ({})
+[1, 2, 3].each { |x| puts x }
+
+# Proc (явный)
+proc = ->(x : Int32) { x * 2 }
+proc.call(5)  # 10
+
+# Proc с типами
+proc : Int32 -> Int32
+proc = ->(x : Int32) { x * 2 }
+
+# Yield
+def twice
+  yield
+  yield
+end
+
+twice { puts "Hello" }
+
+# Yield с аргументами
+def repeat(n)
+  n.times { yield }
+end
+
+repeat(3) { puts "Hello" }
+
+# Block capture
+def &block
+  block.call
+end
+
+================================================================================
+8. ERROR HANDLING
+================================================================================
+
+# Raise exception
+raise "Error message"
+raise DivisionByZero.new
+
+# Custom exception
+class DivisionByZero < Exception
+end
+
+# Rescue
+begin
+  risky_operation
+rescue ex : DivisionByZero
+  puts "Division by zero"
+rescue ex
+  puts "Other error: #{ex.message}"
+ensure
+  puts "Always executed"
+end
+
+# Rescue modifier
+risky_operation rescue puts "Failed"
+
+# Nil checks
+name : String? = nil
+if name
+  puts name  # name is String здесь
+end
+
+# Safe navigation
+name&.upcase  # nil если name nil
+
+# Not nil assertion
+name.not_nil!  # Exception если nil
+
+================================================================================
+9. CONCURRENCY (FIBERS)
+================================================================================
+
+# Spawn fiber
+spawn do
+  puts "Running in fiber"
+end
+
+# Channel
+ch = Channel(Int32).new
+spawn { ch.send(5) }
+value = ch.receive
+puts value  # 5
+
+# Buffered channel
+ch = Channel(Int32).new(10)
+ch.send(5)  # Не блокирует
+
+# Select
+select
+when ch1.receive
+  # Handle ch1
+when ch2.receive
+  # Handle ch2
+end
+
+# Sleep
+sleep 1.second
+sleep 500.milliseconds
+
+# Fiber.yield
+Fiber.yield
+
+================================================================================
+10. ТИПИЧНЫЕ ОШИБКИ (РАСШИРЕНО!)
+================================================================================
+
+❌ Ошибка 1: Type mismatch
+def add(a : Int32, b : Int32) : Int32
+  a + b
+end
+add(5, "hello")  # ОШИБКА!
+
+✓ Решение:
+add(5, 10)  # OK
+
+❌ Ошибка 2: Nil без проверки
+name : String? = nil
+puts name.upcase  # ОШИБКА!
+
+✓ Решение:
+if name
+  puts name.upcase
+end
+
+❌ Ошибка 3: Instance variable без инициализации
+class Person
+  def greet
+    puts @name  # ОШИБКА! Не инициализировано
+  end
+end
+
+✓ Решение:
+class Person
+  def initialize(@name : String)
+  end
+end
+
+❌ Ошибка 4: Block без yield
+def twice
+  # Забыли yield!
+end
+twice { puts "Hello" }  # Ничего не выведет
+
+✓ Решение:
+def twice
+  yield
+  yield
+end
+
+❌ Ошибка 5: Channel без receive
+ch = Channel(Int32).new
+ch.send(5)  # Блокирует навсегда!
+
+✓ Решение:
+spawn { ch.send(5) }
+value = ch.receive
+
+❌ Ошибка 6: Abstract method не реализован
+abstract class Shape
+  abstract def area
+end
+
+class Circle < Shape
+  # Забыли реализовать area!
+end
+
+✓ Решение:
+class Circle < Shape
+  def area
+    Math::PI * @radius ** 2
+  end
+end
+
+❌ Ошибка 7: Mutable в hash key
+class MutableKey
+  property value
+end
+
+hash = {MutableKey.new(5) => "value"}
+hash.keys.first.value = 10  # ОШИБКА!
+
+✓ Решение:
+Использовать immutable types для keys
+
+❌ Ошибка 8: Rescue без указания типа
+begin
+  risky_operation
+rescue
+  # Ловит все exceptions
+end
+
+✓ Решение:
+begin
+  risky_operation
+rescue ex : SpecificError
+  # Ловит конкретный тип
+end
+
+❌ Ошибка 9: Memory leak с C pointers
+ptr = malloc(100)
+# Забыли free!
+
+✓ Решение:
+ptr = malloc(100)
+GC.add_finalizer(ptr) { free(ptr) }
+
+❌ Ошибка 10: Circular reference
+class Node
+  property parent : Node?
+  property children : Array(Node)
+end
+# Может вызвать memory leak
+
+✓ Решение:
+Использовать WeakReference для parent
+
+================================================================================
+11. ПРИМЕРЫ RUBY-LIKE СТИЛЯ
+================================================================================
+
+Пример 1: Web server (Kemal)
+----------------------------
+require "kemal"
+
+get "/" do
+  "Hello, Crystal!"
+end
+
+get "/users/:id" do |env|
+  "User #{env.params.url["id"]}"
+end
+
+Kemal.run
+
+Пример 2: JSON API
+------------------
+require "json"
+
+class User
+  include JSON::Serializable
+  
+  property name : String
+  property age : Int32
+end
+
+user = User.from_json(json_string)
+json = user.to_json
+
+Пример 3: Database (Crecto)
+---------------------------
+require "crecto"
+
+module Repo
+  include Crecto::Repo
+  config uri = "sqlite3:./db.sqlite3"
+end
+
+class User
+  include Crecto::Model
+  schema "users" do
+    field :name, String
+    field :age, Int32
+  end
+end
+
+Repo.insert(User.new(name: "John", age: 25))
+
+Пример 4: CLI tool
+------------------
+#!/usr/bin/env crystal
+
+require "option_parser"
+
+name = ""
+OptionParser.parse do |parser|
+  parser.on("-n NAME", "--name=NAME", "Name") do |n|
+    name = n
+  end
+end
+
+puts "Hello, #{name}!"
+
+Пример 5: Concurrent processing
+-------------------------------
+ch = Channel(Int32).new
+
+10.times do |i|
+  spawn do
+    ch.send(i * 2)
+  end
+end
+
+10.times do
+  puts ch.receive
+end
+
+Пример 6: HTTP client
+---------------------
+require "http/client"
+
+response = HTTP::Client.get("https://api.example.com/data")
+if response.status_code == 200
+  data = response.body
+end
+
+================================================================================
+                         КОНЕЦ SYNTAX_CRYSTAL
+================================================================================

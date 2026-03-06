@@ -1,0 +1,485 @@
+================================================================================
+                    HARE - КЛЮЧЕВЫЕ ОСОБЕННОСТИ ЯЗЫКА
+                         Simple Systems Programming + Stable + POSIX-focused
+================================================================================
+
+ОГЛАВЛЕНИЕ:
+-----------
+1. Архитектура и дизайн
+2. Система типов
+3. Управление памятью
+4. Компиляция
+5. Error handling
+6. POSIX интеграция
+7. Standard library
+8. Developer Experience
+9. Производительность
+10. Ограничения и будущее
+
+================================================================================
+1. АРХИТЕКТУРА И ДИЗАЙН
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    HARE ARCHITECTURE                                         │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  IMPLEMENTATION:                                                             │
+│  • Написан на C (для простоты и переносимости)                              │
+│  • Компилируется в native code                                              │
+│  • Нет runtime (кроме libc)                                                 │
+│  • POSIX-focused (Linux, BSD)                                               │
+│                                                                              │
+│  DESIGN PHILOSOPHY:                                                          │
+│  • Simple (простой язык, легко реализовать)                                 │
+│  • Stable (стабильный ABI и API)                                            │
+│  • Hackable (легко модифицировать)                                          │
+│  • No GC (нет garbage collector)                                            │
+│  • Manual memory management                                                 │
+│  • Static typing                                                            │
+│                                                                              │
+│  KEY FEATURES:                                                               │
+│  • Simple syntax (проще чем C)                                              │
+│  • No preprocessor                                                          │
+│  • No hidden control flow                                                   │
+│  • No hidden allocations                                                    │
+│  • Explicit error handling                                                  │
+│  • Tagged unions                                                            │
+│  • Type inference (ограниченный)                                            │
+│                                                                              │
+│  STATUS (2024):                                                              │
+│  • Alpha/early development                                                  │
+│  • Активная разработка                                                      │
+│  • Нет stable release                                                       │
+│  • Community-driven                                                         │
+│  • Open source (git.sr.ht/~sircmpwn/hare)                                   │
+│                                                                              │
+│  COMPARISON:                                                                 │
+│  • vs C: Проще, безопаснее, современнее                                     │
+│  • vs Rust: Проще, нет borrow checker, меньше features                      │
+│  • vs Zig: Похожая философия, Hare проще                                    │
+│  • vs Go: Нет GC, статическая линковка, проще                               │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+2. СИСТЕМА ТИПОВ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    HARE TYPE SYSTEM                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  STATIC TYPING:                                                              │
+│  • Все типы известны на compile-time                                        │
+│  • Ограниченный type inference                                              │
+│  • Strong type safety                                                       │
+│  • No implicit conversions                                                  │
+│                                                                              │
+│  BASIC TYPES:                                                                │
+│  • i8, i16, i32, i64 (signed integers)                                      │
+│  • u8, u16, u32, u64 (unsigned integers)                                    │
+│  • f32, f64 (floating point)                                                │
+│  • bool (boolean)                                                           │
+│  • char (character)                                                         │
+│  • void (no value)                                                          │
+│  • nullable pointers (*type)                                                │
+│                                                                              │
+│  COMPOUND TYPES:                                                             │
+│  • Arrays ([5]int)                                                          │
+│  • Slices ([*]int)                                                          │
+│  • Structs (struct { x: int, y: int })                                      │
+│  • Unions (union { int, float })                                            │
+│  • Tagged unions (struct { tag: enum, value: union })                       │
+│  • Pointers (*int)                                                          │
+│                                                                              │
+│  TYPE ALIASES:                                                               │
+│  • type size = usize                                                        │
+│  • type ssize = isize                                                       │
+│  • Custom type aliases                                                      │
+│                                                                              │
+│  NO IMPLICIT CONVERSIONS:                                                    │
+│  • Нет implicit narrowing                                                   │
+│  • Нет implicit pointer conversions                                         │
+│  • Explicit casts только                                                    │
+│  • Safer than C                                                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+3. УПРАВЛЕНИЕ ПАМЯТЬЮ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    HARE MEMORY MANAGEMENT                                    │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  NO GARBAGE COLLECTION:                                                      │
+│  • Нет GC пауз                                                              │
+│  • Predictable performance                                                  │
+│  • Manual memory management                                                 │
+│  • Как C                                                                    │
+│                                                                              │
+│  MANUAL ALLOCATION:                                                          │
+│  • malloc/free из libc                                                      │
+│  • Explicit allocation                                                      │
+│  • Explicit deallocation                                                    │
+│  • No hidden allocations                                                    │
+│                                                                              │
+│  DEFER (автоматическая очистка):                                             │
+│  • defer free(ptr)  # освобождает при выходе из scope                       │
+│  • Автоматическая очистка ресурсов                                          │
+│  • Как defer в Go                                                           │
+│  • Prevents memory leaks                                                    │
+│                                                                              │
+│  OWNERSHIP:                                                                  │
+│  • Нет ownership system (как Rust)                                          │
+│  • Programmer ответственность                                               │
+│  • Проще чем Rust                                                           │
+│  • Меньше safety guarantees                                                 │
+│                                                                              │
+│  STACK VS HEAP:                                                              │
+│  • Stack allocation по умолчанию                                            │
+│  • Heap allocation через malloc                                             │
+│  • Explicit choice                                                          │
+│  • No hidden heap allocations                                               │
+│                                                                              │
+│  MEMORY SAFETY:                                                              │
+│  • Нет bounds checking по умолчанию                                         │
+│  • Нет null pointer checking                                                │
+│  • Programmer ответственность                                               │
+│  • Safer than C но не как Rust                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+4. КОМПИЛЯЦИЯ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    HARE COMPILATION                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  FAST COMPILATION:                                                           │
+│  • Быстрая компиляция (написан на C)                                        │
+│  • Нет preprocessor                                                         │
+│  • Простой parser                                                           │
+│  • Incremental compilation                                                  │
+│                                                                              │
+│  NATIVE CODE:                                                                │
+│  • Компилируется в native code                                              │
+│  • Нет runtime (кроме libc)                                                 │
+│  • Static linking по умолчанию                                              │
+│  • Small binaries                                                           │
+│                                                                              │
+│  BUILD SYSTEM:                                                               │
+│  • hare build (встроенный build tool)                                       │
+│  • Простой чем Make/CMake                                                   │
+│  • Нет сложных конфигураций                                                 │
+│  • Deterministic builds                                                     │
+│                                                                              │
+│  TARGETS:                                                                    │
+│  • Linux (x86_64, aarch64)                                                  │
+│  • BSD (FreeBSD, OpenBSD)                                                   │
+│  • Windows (в разработке)                                                   │
+│  • POSIX-focused                                                            │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Hello World: < 100 ms                                                    │
+│  • Medium project: < 1 sec                                                  │
+│  • Large project: < 10 sec                                                  │
+│  • Faster than C (нет preprocessor)                                         │
+│                                                                              │
+│  NO PREPROCESSOR:                                                            │
+│  • Нет #define                                                              │
+│  • Нет #include                                                             │
+│  • Нет macros (как в C)                                                     │
+│  • Cleaner code                                                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+5. ERROR HANDLING
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    HARE ERROR HANDLING                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  EXPLICIT ERRORS:                                                            │
+│  • Нет exceptions                                                           │
+│  • Явная обработка ошибок                                                   │
+│  • Result types (в разработке)                                              │
+│  • Как Go но проще                                                          │
+│                                                                              │
+│  ERROR TYPES:                                                                │
+│  • errno из libc                                                            │
+│  • Custom error types                                                       │
+│  • Error enums                                                              │
+│  • Explicit error returns                                                   │
+│                                                                              │
+│  EXAMPLE:                                                                    │
+│  • fn open(path: str) => (file, error)                                      │
+│  • let (f, err) = open("file.txt");                                         │
+│  • if (err != null) { return err; }                                         │
+│                                                                              │
+│  ASSERTIONS:                                                                 │
+│  • assert(condition)                                                        │
+│  • Compile-time assertions                                                  │
+│  • Runtime assertions                                                       │
+│  • Debug builds                                                             │
+│                                                                              │
+│  NO EXCEPTIONS:                                                              │
+│  • Нет try/catch                                                            │
+│  • Нет unwinding                                                            │
+│  • Explicit control flow                                                    │
+│  • Predictable performance                                                  │
+│                                                                              │
+│  ERROR PROPAGATION:                                                          │
+│  • Explicit error returns                                                   │
+│  • No ? operator (пока)                                                     │
+│  • Manual propagation                                                       │
+│  • Clearer than exceptions                                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+6. POSIX ИНТЕГРАЦИЯ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    HARE POSIX INTEGRATION                                    │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  POSIX-FOCUSED:                                                              │
+│  • Designed for POSIX systems                                               │
+│  • Linux, BSD support                                                       │
+│  • POSIX APIs из коробки                                                    │
+│  • Нет Windows support (пока)                                               │
+│                                                                              │
+│  STANDARD LIBRARY:                                                           │
+│  • posix:: module (POSIX APIs)                                              │
+│  • io:: module (I/O operations)                                             │
+│  • os:: module (OS operations)                                              │
+│  • strings:: module (string operations)                                     │
+│  • Minimal standard library                                                 │
+│                                                                              │
+│  SYSTEM CALLS:                                                               │
+│  • Direct system calls                                                      │
+│  • Нет runtime overhead                                                     │
+│  • Как C                                                                    │
+│  • Explicit и понятный                                                      │
+│                                                                              │
+│  FILE I/O:                                                                   │
+│  • posix::open, posix::read, posix::write                                   │
+│  • File descriptors                                                         │
+│  • No hidden buffering                                                      │
+│  • Explicit control                                                         │
+│                                                                              │
+│  NETWORKING:                                                                 │
+│  • posix::socket, posix::bind, posix::connect                               │
+│  • BSD sockets                                                              │
+│  • No async by default                                                      │
+│  • Simple and explicit                                                      │
+│                                                                              │
+│  PROCESS MANAGEMENT:                                                         │
+│  • posix::fork, posix::exec                                                 │
+│  • Process creation                                                         │
+│  • Signal handling                                                          │
+│  • POSIX signals                                                            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+7. STANDARD LIBRARY
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    HARE STANDARD LIBRARY                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  MINIMAL BY DESIGN:                                                          │
+│  • Small standard library                                                   │
+│  • Нет bloated runtime                                                      │
+│  • Only essential functions                                                 │
+│  • Easy to understand                                                       │
+│                                                                              │
+│  CORE MODULES:                                                               │
+│  • core:: (basic types, functions)                                          │
+│  • posix:: (POSIX APIs)                                                     │
+│  • io:: (I/O operations)                                                    │
+│  • os:: (OS operations)                                                     │
+│  • strings:: (string operations)                                            │
+│  • encoding:: (encoding/decoding)                                           │
+│  • math:: (mathematical functions)                                          │
+│                                                                              │
+│  NO BLOAT:                                                                   │
+│  • Нет HTTP client в stdlib                                                 │
+│  • Нет JSON parser в stdlib                                                 │
+│  • Нет async runtime                                                        │
+│  • Third-party packages для этого                                           │
+│                                                                              │
+│  SOURCE CODE:                                                                │
+│  • Вся stdlib написана на Hare                                              │
+│  • Easy to read                                                             │
+│  • Easy to modify                                                           │
+│  • No hidden complexity                                                     │
+│                                                                              │
+│  DOCUMENTATION:                                                              │
+│  • Inline documentation                                                     │
+│  • Simple and clear                                                         │
+│  • No complex generation                                                    │
+│  • Readable source code                                                     │
+│                                                                              │
+│  THIRD-PARTY PACKAGES:                                                       │
+│  • Small ecosystem (очень новый)                                            │
+│  • git.sr.ht для хостинга                                                   │
+│  • No package manager (пока)                                                │
+│  • Manual dependency management                                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+8. DEVELOPER EXPERIENCE
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    HARE DEVELOPER EXPERIENCE                                 │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  SIMPLE SYNTAX:                                                              │
+│  • Проще чем C                                                              │
+│  • Нет preprocessor                                                         │
+│  • Нет semicolons (в большинстве случаев)                                   │
+│  • Clean readability                                                        │
+│                                                                              │
+│  TOOLING:                                                                    │
+│  • hare (компилятор)                                                        │
+│  • hare build (build tool)                                                  │
+│  • hare fmt (форматтер, планируется)                                        │
+│  • Minimal tooling                                                          │
+│                                                                              │
+│  DOCUMENTATION:                                                              │
+│  • Official documentation                                                   │
+│  • Simple and clear                                                         │
+│  • Examples included                                                        │
+│  • Source code as documentation                                             │
+│                                                                              │
+│  LEARNING CURVE:                                                             │
+│  • Проще чем Rust                                                           │
+│  • Проще чем C++                                                            │
+│  • Familiar для C разработчиков                                             │
+│  • Quick to learn                                                           │
+│                                                                              │
+│  DEBUGGING:                                                                  │
+│  • GDB support                                                              │
+│  • Simple error messages                                                    │
+│  • Clear compilation errors                                                 │
+│  • No complex diagnostics                                                   │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • Sourcehut (git.sr.ht)                                                    │
+│  • IRC/Matrix channels                                                      │
+│  • Small but active                                                         │
+│  • Open development                                                         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+9. ПРОИЗВОДИТЕЛЬНОСТЬ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    HARE PERFORMANCE                                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  RUNTIME PERFORMANCE:                                                        │
+│  • Как C (компилируется в native code)                                      │
+│  • Нет runtime overhead                                                     │
+│  • Нет GC                                                                   │
+│  • Predictable performance                                                  │
+│                                                                              │
+│  COMPILATION SPEED:                                                          │
+│  • Быстрее чем C (нет preprocessor)                                         │
+│  • Hello World: < 100 ms                                                    │
+│  • Medium project: < 1 sec                                                  │
+│  • Large project: < 10 sec                                                  │
+│                                                                              │
+│  BINARY SIZE:                                                                │
+│  • Small binaries (static linking)                                          │
+│  • Hello World: ~10 KB                                                      │
+│  • No runtime                                                               │
+│  • Smaller than Go                                                          │
+│                                                                              │
+│  MEMORY USAGE:                                                               │
+│  • Как C                                                                    │
+│  • No GC overhead                                                           │
+│  • Predictable memory usage                                                 │
+│  • Manual control                                                           │
+│                                                                              │
+│  BENCHMARKS:                                                                 │
+│  • Numerical computations: 1x C                                             │
+│  • String processing: 1x C                                                  │
+│  • System calls: 1x C                                                       │
+│  • Startup time: < 10 ms                                                    │
+│                                                                              │
+│  OPTIMIZATIONS:                                                              │
+│  • LLVM optimizations (планируется)                                         │
+│  • Current: Simple C backend                                                │
+│  • Room for improvement                                                     │
+│  • Focus on simplicity over speed                                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+10. ОГРАНИЧЕНИЯ И БУДУЩЕЕ
+================================================================================
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    HARE LIMITATIONS & FUTURE                                 │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CURRENT LIMITATIONS:                                                        │
+│  • Очень новый язык (2021+)                                                 │
+│  • Alpha status                                                             │
+│  • Нет stable release                                                       │
+│  • Маленькая экосистема                                                     │
+│  • Нет Windows support                                                      │
+│  • Limited standard library                                                 │
+│  • No package manager                                                       │
+│                                                                              │
+│  FUTURE PLANS:                                                               │
+│  • Stable release                                                           │
+│  • More platforms (Windows, macOS)                                          │
+│  • More libraries                                                           │
+│  • Package manager                                                          │
+│  • LLVM backend                                                             │
+│  • Better tooling                                                           │
+│                                                                              │
+│  ROADMAP:                                                                    │
+│  • Phase 1: Core language (готово)                                          │
+│  • Phase 2: Standard library (в разработке)                                 │
+│  • Phase 3: Stable release (планируется)                                    │
+│  • Long-term: Production-ready                                              │
+│                                                                              │
+│  COMMUNITY:                                                                  │
+│  • Sourcehut community                                                      │
+│  • IRC/Matrix channels                                                      │
+│  • Open development                                                         │
+│  • Community-driven                                                         │
+│  • No corporate backing                                                     │
+│                                                                              │
+│  WHEN TO USE:                                                                │
+│  • ✓ Early adopters                                                         │
+│  • ✓ Systems programming                                                    │
+│  • ✓ Learning/experimentation                                               │
+│  • ✓ Simple projects                                                        │
+│  • ✗ Production critical (ещё)                                              │
+│  • ✗ Need mature ecosystem                                                  │
+│  • ✗ Windows support нужен                                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                         КОНЕЦ FEATURES_HARE
+================================================================================
