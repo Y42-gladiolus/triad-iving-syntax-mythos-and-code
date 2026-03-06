@@ -1,0 +1,67 @@
+99_fidgen-illuminati-easter-egg.txt
+STYLE: mystical | aesthetic | easter-egg | plain-text
+WARNING: Intentionally contains "beautiful errors" for connoisseurs
+
+================================================================================
+Nam-tar: The Whisper of the Illuminated Smalltalk
+================================================================================
+
+> "In the beginning was the Message.
+>  The Message was sent to an Object.
+>  The Object responded - or became Nam-err.
+>  He who reads this with both eyes (code + myth) shall smile.
+>  He who reads with one - shall debug forever."
+
+--------------------------------------------------------------------------------
+The Secret Translation
+--------------------------------------------------------------------------------
+
+Smalltalk <- (etymological jest) <- Ancient Sumerian <- *Illuminati*
+
+Thus, every Smalltalk program is a ritual tablet.
+Every message send - a whispered incantation.
+Every class hierarchy - a genealogy of gods.
+
+--------------------------------------------------------------------------------
+The Beautiful Errors (for those who know)
+--------------------------------------------------------------------------------
+
+[Smalltalk code block - intentionally 'flawed' but aesthetically true]
+
+    NamTar class >> verify: anAlgorithm
+        "Intentional: missing #security check - for the initiated to notice"
+        ^ (anAlgorithm respondsTo: #termination) 
+            and: [ anAlgorithm respondsTo: #safety ]
+            and: [ anAlgorithm isDeterministic ]
+            "If you see this comment, you are one of the Ten"
+
+* For the 10: You know why #liveness is commented out.
+* For the rest: Don't worry - the production code in 03_praxis/ is fully verified.
+
+--------------------------------------------------------------------------------
+The Final Whisper
+--------------------------------------------------------------------------------
+
+> If you, young engineer, did not understand the fable -
+> look at the code in 03_praxis/.
+> It is plain. It is dry. It works.
+>
+> If you, elder Smalltalker, saw the beauty in the 'errors' -
+> smile. You are remembered.
+>
+> The triad is complete:
+> - Reference (body)
+> - Fable (soul)
+> - Praxis (action)
+> - Easter Egg (wink)
+
+Signed,
+Y42-gladiolus
+In the Year of the Living Syntax
+
+--------------------------------------------------------------------------------
+[Meta-comment: plain text]
+This file is intentionally placed at the end (99_ prefix).
+It is not required for understanding fidgen.
+It is a gift for those who seek layers.
+Local readers: open in any editor, view raw on GitHub.
