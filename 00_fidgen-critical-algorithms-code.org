@@ -1,0 +1,93 @@
+# -*- org -*-
+# TITLE: fidgen — Critical Algorithms: Code Specification
+# STYLE: reference | minimal-narrative | code-first
+# TRIAD-PART: 01_reference (extract)
+
+* КРИТИЧЕСКИЕ АЛГОРИТМЫ: СПЕЦИФИКАЦИЯ ПО КОДУ
+:PROPERTIES:
+:CUSTOM_ID: critical-algo-spec
+:END:
+
+#+BEGIN_QUOTE
+Определять алгоритм по существу → описывать ИНВАРИАНТЫ и ГРАНИЦЫ.
+Не «как написано», а «что гарантирует».
+#+END_QUOTE
+
+** Формальное определение
+:PROPERTIES:
+:CUSTOM_ID: formal-def
+:END:
+
+#+BEGIN_SRC text
+Algorithm_Critical = (Logic, Proof)
+
+Proof = {
+  Termination:  ∀input. ∃steps. halt(steps),
+  Safety:       ∀state. ¬(out_of_bounds(state) ∨ data_corruption(state)),
+  Liveness:     ∀progress. ∃next. step(next) ∧ ¬deadlock,
+  Security:     ∀untrusted_input. sanitize(input) ⇒ ¬exploit
+}
+#+END_SRC
+
+** Категории критических алгоритмов (таблица-справочник)
+:PROPERTIES:
+:CUSTOM_ID: categories-table
+:END:
+
+| Категория | Инвариант | Риск при нарушении | Примеры |
+|-----------+-----------+--------------------+---------|
+| Security  | ¬leak(secret) ∧ ¬inject(malicious) | RCE, data breach | AES, SHA-3, CSPRNG, input_sanitizer |
+| Safety    | ¬crash ∧ ¬deadlock ∧ memory_safe | System halt, corruption | malloc, mutex, scheduler, interrupt_handler |
+| Correctness | output = spec(input) ∧ deterministic | Silent corruption, loss | type_checker, WAL, TCP_state_machine |
+| Math      | |error| < ε ∧ convergence | Wrong decision, financial loss | BLAS kernel, SAT_solver, integrator |
+
+** I/O: бинарная классификация
+:PROPERTIES:
+:CUSTOM_ID: io-classification
+:END:
+
+#+BEGIN_SRC rust
+// НЕ критическое чтение
+fn read_config(path: &str) -> Result<Config> {
+    // Риск: программа упадёт, но данные целы
+    std::fs::read_to_string(path)?.parse()
+}
+
+// КРИТИЧЕСКОЕ чтение (недоверенный источник + время)
+fn receive_packet(socket: &Socket, timeout_ms: u64) -> Result<Packet> {
+    // Риск: RCE, race, leak, deadlock
+    let raw = socket.recv_with_timeout(timeout_ms)?;
+    strict_parser::validate(&raw)?;  // ← инвариант: ¬malicious_payload
+    Ok(Packet::from_validated(raw))
+}
+#+END_SRC
+
+*Правило:* `if untrusted || time_constrained → critical`.
+
+** Чек-лист: является ли алгоритм критическим?
+:PROPERTIES:
+:CUSTOM_ID: checklist
+:END:
+
+1. [ ] Выходные данные влияют на *сохранность* других данных?
+2. [ ] Входные данные могут быть *сформированы злоумышленником*?
+3. [ ] Ошибка ведёт к *необратимым последствиям* (финансы, безопасность, физика)?
+4. [ ] Алгоритм работает в *реальном времени* с дедлайнами?
+5. [ ] Результат используется для *принятия решений* без человеческой проверки?
+
+→ Если ≥2 «да»: маркировать как `#[critical]` / `Nam-tar`.
+
+** Ссылки на реализацию в проекте
+:PROPERTIES:
+:CUSTOM_ID: impl-links
+:END:
+
+- Прототип: `fidgen-fable.org` (история выбора mksh)
+- Верификация: `03_praxis/fidgen-rust/`, `03_praxis/fidgen-ocaml/`
+- Доказательство равенства: `03_praxis/verify-params/`
+
+#+BEGIN_COMMENT
+Этот файл — «сухой» слой триады.
+Для философского контекста см. 99_fidgen-illuminati-easter-egg.org
+Для учебного изложения см. 00_fidgen-critical-algorithms-primer.org
+#+END_COMMENT

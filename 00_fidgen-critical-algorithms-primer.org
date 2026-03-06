@@ -1,0 +1,116 @@
+# -*- org -*-
+# TITLE: fidgen — Critical Algorithms: Educational Primer
+# STYLE: academic | pedagogical | definition-first
+# AUDIENCE: students, junior engineers, documentation readers
+# TRIAD-PART: 01_reference (teaching layer)
+
+* Введение: что такое критический алгоритм?
+:PROPERTIES:
+:CUSTOM_ID: primer-intro
+:END:
+
+** Определение
+Критический алгоритм — это вычислительная процедура, нарушение корректности которой приводит к одному или нескольким из следующих последствий:
+
+1. *Потеря или порча данных* (data corruption)
+2. *Уязвимость безопасности* (security exploit)
+3. *Физический или системный ущерб* (safety violation)
+4. *Финансовые или репутационные потери* (consistency failure)
+
+** Почему это важно изучать?
+- Критические алгоритмы требуют *формальной верификации* или *доказанной корректности*
+- Они часто становятся *точками отказа* в распределённых системах
+- Понимание их природы помогает *архитектурно разделять* критический и некритический код
+
+** Классификация по доменам
+:PROPERTIES:
+:CUSTOM_ID: primer-categories
+:END:
+
+| Домен | Примеры задач | Ключевые инварианты |
+|-------+---------------+---------------------|
+| Криптография | Шифрование, хеширование, подписи | ¬leak(key), deterministic_output, collision_resistance |
+| Управление памятью | Аллокаторы, сборщики мусора | no_double_free, no_use_after_free, fragmentation_bound |
+| Синхронизация | Мьютексы, семафоры, барьеры | no_deadlock, fairness, progress_guarantee |
+| Сетевые протоколы | TCP state machine, парсинг пакетов | state_consistency, no_buffer_overflow, timeout_handling |
+| Базы данных | WAL, репликация, консенсус | durability, linearizability, crash_recovery |
+
+** Как отличить критическое чтение (I/O) от обычного?
+:PROPERTIES:
+:CUSTOM_ID: primer-io
+:END:
+
+*Вопрос:* Является ли чтение файла критическим алгоритмом?
+
+*Ответ:* Зависит от контекста. Примените правило:
+
+#+BEGIN_QUOTE
+Если входные данные *недоверенные* ИЛИ время доступа *ограничено дедлайном* → алгоритм чтения считается критическим.
+#+END_QUOTE
+
+*Примеры:*
+
+| Сценарий | Недоверенный ввод? | Ограничение по времени? | Критическое? |
+|----------+-------------------+------------------------+--------------|
+| Чтение config.yaml при старте | Нет | Нет | ❌ Нет |
+| Парсинг JSON от внешнего API | Да | Да (timeout) | ✅ Да |
+| Чтение из shared memory между потоками | Да (race) | Да (lock timeout) | ✅ Да |
+| Логирование в файл | Нет | Нет (лучше не блокировать) | ❌ Нет |
+
+** Математический подход: определение через свойства
+:PROPERTIES:
+:CUSTOM_ID: primer-math
+:END:
+
+В математике объекты определяются не через реализацию, а через *аксиомы* (свойства).
+
+*Пример: Группа (Group)*
+- Не важно, числа это или матрицы.
+- Важно наличие: операции, ассоциативности, нейтрального элемента, обратного элемента.
+
+*Аналогия: Критический алгоритм*
+- Не важно, написан ли он на Rust, C или ассемблере.
+- Важно наличие доказанных свойств:
+
+#+BEGIN_SRC text
+Critical_Algorithm ≡ 
+  (∀input. terminates(input)) ∧
+  (∀state. preserves_invariant(state)) ∧
+  (∀untrusted_input. sanitizes(input)) ∧
+  (∀execution. deterministic_output)
+#+END_SRC
+
+** Практическое задание для самопроверки
+:PROPERTIES:
+:CUSTOM_ID: primer-exercise
+:END:
+
+*Задача:* Определите, является ли следующий алгоритм критическим:
+
+#+BEGIN_SRC python
+def calculate_checksum(data: bytes) -> int:
+    return sum(data) % 256
+#+END_SRC
+
+*Вопросы для анализа:*
+1. Что произойдёт при ошибке в этом алгоритме?
+2. Используются ли его результаты для принятия решений?
+3. Могут ли входные данные быть сформированы злоумышленником?
+
+*Ответ:* (см. `solutions/checksum-analysis.org`)
+
+** Литература и дальнейшее чтение
+:PROPERTIES:
+:CUSTOM_ID: primer-references
+:END:
+
+1. Lamport L. "Proving the Correctness of Multiprocess Programs" (1977)
+2. Anderson J. "Real-Time Computing: A Tutorial" (2000)
+3. RFC 2119: "Key words for use in RFCs to Indicate Requirement Levels"
+4. Проект fidgen: `fidgen-fable.org` — история практического выбора инструмента
+
+#+BEGIN_COMMENT
+Этот файл — учебный слой триады.
+Для кодовой спецификации см. 00_fidgen-critical-algorithms-code.org
+Для философского контекста см. 99_fidgen-illuminati-easter-egg.org
+#+END_COMMENT

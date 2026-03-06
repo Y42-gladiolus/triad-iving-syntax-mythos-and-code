@@ -1,0 +1,97 @@
+# -*- org -*-
+# TITLE: 00_TRIAD-MANIFEST.org
+# PURPOSE: The philosophical and structural foundation of the triad
+# STYLE: manifest | pedagogical | reference
+
+* ТРИАДНЫЙ Манифест: Как читать этот репозиторий
+:PROPERTIES:
+:CUSTOM_ID: triad-manifest
+:END:
+
+#+BEGIN_QUOTE
+«Не ищи истину в одном слое.
+Истина — в резонансе трёх.»
+#+END_QUOTE
+
+** Структура слоёв (детальная таблица)
+:PROPERTIES:
+:CUSTOM_ID: layers-detail
+:END:
+
+| Слой | Префикс | Формат | Содержание | Инвариант |
+|------+---------+--------+------------+-----------|
+| 🔹 Reference | `01_`, `*-code` | Org, code blocks | Синтаксис, спецификации, инварианты, таблицы | ¬ambiguity ∧ verifiable |
+| 🔹 Fable | `*-fable`, `02_` | Org, narrative | Философия, контекст, история выбора, метафоры | ¬isolation ∧ contextual |
+| 🔹 Praxis | `03_`, `*-praxis/` | Code, tests, scripts | Рабочий код, примеры, тесты, сборка | ¬theory-only ∧ executable |
+| 🔹 Easter Egg | `99_`, `*-illuminati` | Org, poetic | Эстетика, намёки, «красивые ошибки» для посвящённых | ¬required ∧ delightful |
+
+** Правила чтения (алгоритм)
+:PROPERTIES:
+:CUSTOM_ID: reading-algorithm
+:END:
+
+#+BEGIN_SRC text
+FUNCTION read_concept(concept_name):
+    ref  = open(f"01_{concept_name}-code.org")   # Тело
+    fable = open(f"{concept_name}-fable.org")    # Душа
+    praxis = open(f"03_{concept_name}/main.*")   # Действие
+
+    PARALLEL:
+        READ ref   → extract invariants
+        READ fable → extract meaning
+        READ praxis → extract behavior
+
+    RETURN synthesize(ref, fable, praxis)
+END
+#+END_SRC
+
+*Почему параллельно?*
+- Слой *Reference* без *Fable* → сухая спецификация без смысла
+- Слой *Fable* без *Praxis* → поэзия без проверки реальностью
+- Слой *Praxis* без *Reference* → код без гарантий
+
+** Почему префиксы 00_, 01_, 02_, 03_, 99_?
+:PROPERTIES:
+:CUSTOM_ID: prefix-logic
+:END:
+
+| Префикс | Семантика | Сортировка |
+|---------+-----------+------------|
+| `00_` | Фундамент, манифесты, общие правила | В самом верху |
+| `01_` | Справочный слой (Reference) | После фундамента |
+| `02_` | Философский слой (Fable) | После справочника |
+| `03_` | Практический слой (Praxis) | После философии |
+| `99_` | Декоративный слой (Easter Egg) | В самом низу, как вишенка |
+
+*Принцип:* файловая система как навигация по смыслу.
+
+** Как добавлять новый язык/концепт?
+:PROPERTIES:
+:CUSTOM_ID: adding-new
+:END:
+
+1. Создайте папку языка: `MyLang/` (если ещё нет)
+2. Добавьте в три слоя:
+   - `01_MyLang-code.org` — синтаксис, типы, инварианты
+   - `MyLang-fable.org` — почему этот язык, метафоры, история
+   - `03_MyLang/main.ext` — рабочий пример + тест
+3. Обновите `CLASSIFICATION.md` (если язык новый в списке)
+4. *Опционально:* `99_MyLang-illuminati.org` — если есть эстетический слой
+
+** Чек-лист качества слоя
+:PROPERTIES:
+:CUSTOM_ID: quality-checklist
+:END:
+
+| Слой | Вопрос для самопроверки |
+|------|------------------------|
+| Reference | «Можно ли по этому файлу написать парсер/верификатор?» |
+| Fable | «Понятно ли, *почему* этот выбор был сделан, а не другой?» |
+| Praxis | «Можно ли запустить этот код и получить предсказуемый результат?» |
+| Easter Egg | «Улыбнётся ли тот, кто поймёт намёк?» |
+
+#+BEGIN_COMMENT
+Этот файл — мета-слой репозитория.
+Он не о конкретных языках, а о том, *как* их читать.
+Храните его в корне, под префиксом 00_, чтобы он был первым после README.
+#+END_COMMENT
