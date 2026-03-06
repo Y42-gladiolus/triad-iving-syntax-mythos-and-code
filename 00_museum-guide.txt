@@ -1,0 +1,500 @@
+00_museum-guide.txt
+TITLE: Museum Guide: Why Look Into the Language Collection
+STYLE: practical | for English speakers | no mysticism
+PURPOSE: Help engineers extract value from "imperfect" experiments
+
+================================================================================
+INTRODUCTION: Side Solutions Are Often More Important Than Results
+================================================================================
+
+> "Sometimes you make one thing, get another — and that 'another' is more valuable."
+
+Experiment is not just "success/failure". It is also:
+  • Unexpected findings along the way
+  • Partially usable pieces (even with 40% system error)
+  • Understanding boundaries: "doesn't work here, because..."
+
+Historical example:
+> First nuclear test calculations were done with slide rules.
+> 5–9x error margin? Yes. But — it worked.
+> Because "approximately right" is sometimes better than "precisely never".
+
+This repository is such a "museum of approximate truths".
+No perfect languages here. Just ideas that:
+  • Worked in their context
+  • Left marks on modern tools
+  • Wait for their time to come
+
+================================================================================
+PHILOSOPHY: Why Look Into the "Museum"?
+================================================================================
+
+> "Ideas don't die. They wait for their time."
+
+Languages like Red, Io, Forth, Self, Oz — these are not "failed languages".
+They are:
+  • Experiments that超前 their time
+  • Ideas now in Rust/Go/Zig — but in "purer" form
+  • Sources of inspiration for non-classical solutions
+
+You are not "studying a museum". You are **searching for ideas** that:
+  • Haven't become mainstream yet
+  • Can give breakthrough in your tasks
+  • Wait for the moment when their time comes
+
+When it "clicks" — you take an idea from the museum and implement it in Zig/Chez/CLP.
+That is innovation.
+
+The museum is open for researchers.
+
+================================================================================
+READING RULE: How to Extract Value from "Imperfect"
+================================================================================
+
+1. DON'T search for "ready production language"
+   → Search for "idea that can be adapted"
+
+2. DON'T compare "who is faster/more powerful"
+   → Compare "what problem this language solved elegantly"
+
+3. DON'T dismiss language for "outdated syntax"
+   → Ask: "what thought did it express that's hard to express now?"
+
+4. DON'T wait for "complete documentation"
+   → Read code, experiment, draw conclusions
+
+5. DON'T fear "40% system error"
+   → If idea works at 60% — that's already material for thought
+
+================================================================================
+MUSEUM MAP: How to Navigate the Collection
+================================================================================
+
+This repository is structured by triad principle:
+
+┌─────────────────────────────────────────────────────────┐
+│ 01_*.txt / *-code.org  → REFERENCE (Body)              │
+│ • Syntax, types, invariants                             │
+│ • Dry facts: "what exists"                              │
+│ • For: engineer who wants to understand mechanism       │
+├─────────────────────────────────────────────────────────┤
+│ *-fable.org          → FABLE (Soul)                    │
+│ • Why language appeared, what problem it solved         │
+│ • Story of choice, mistakes, insights                   │
+│ • For: developer who seeks context                      │
+├─────────────────────────────────────────────────────────┤
+│ 03_*/                → PRAXIS (Action)                 │
+│ • Working examples, tests, build                        │
+│ • "How to run and verify"                               │
+│ • For: practitioner who wants to try                    │
+└─────────────────────────────────────────────────────────┘
+
++ 99_*.txt → REFLECTIONS (Meta-layer)
+  • Meta-level: why we do it this way
+  • For: those who want to understand process, not just result
+
+================================================================================
+PRACTICAL ADVICE: How to Start Research
+================================================================================
+
+Step 1: Pick a language from classification (CLASSIFICATION.md)
+Step 2: Open its "body" (01_*.txt or *-code.org) — see syntax
+Step 3: Read its "soul" (*-fable.org) — understand context
+Step 4: Run "action" (03_*/...) — test in practice
+Step 5: Ask yourself:
+  • "What from this can I take to my project?"
+  • "Which idea here is worth stealing?"
+  • "Where does this idea already work — and how?"
+
+Step 6: Write conclusion — even if it's "doesn't fit, because..."
+  → Negative result is also a result.
+
+================================================================================
+SAFE TAKEAWAYS: What Definitely Won't Harm
+================================================================================
+
+Even if language "didn't fly", you can extract:
+
+✓ Patterns that work in any paradigm
+✓ Mistakes to avoid in your projects
+✓ Ideas for "hybrid" solutions (take best from multiple worlds)
+✓ Understanding boundaries: "type system helps here", "hinders there"
+
+These takeaways are "safe":
+  • Won't break your production
+  • Don't require stack change
+  • Can be applied gradually, one idea at a time
+
+================================================================================
+LYRICAL INTERLUDE #1: Shoelaces + Sand
+================================================================================
+
+> "Sometimes the right answer comes in wrong form."
+
+LIFE STORY:
+Once, in my youth, complained at my little daughter:
+> "Shoelaces on boots keep untying. Fed up."
+
+Child (who just learned to tie laces) suggested:
+> "Smear them in sand. They do that in kindergarten — then they don't untie."
+
+For me — that was an insight.
+
+WHY IT WORKS (physical basis):
+Sand particles create friction between lace fibers.
+Knot "holds" not on weaving complexity — but on microscopic grip.
+"Dirty" lace is more reliable than "clean" one.
+
+MORPHOGENETIC MEANING:
+> Child doesn't know knot theory.
+> But knows practice: "sand = holds".
+> This knowledge came not from books — from experience, environment, "collective field".
+
+That is "mystical insight" with physical basis:
+  • Simple solution to complex problem
+  • Came from one who "shouldn't know"
+  • Works, though "wrong" by textbook
+
+PARALLEL WITH PROGRAMMING:
+| Shoelaces + sand              | Code + "wrong" tool               │
+|-------------------------------|-----------------------------------|
+| Looks "dirty"                 | Looks "unfashionable" (.txt vs .org)│
+| But holds reliably            | But works everywhere              │
+| Child knows, physicist — no   | Practitioner knows, theorist — argues│
+| Solution from "wrong" source  | Solution from "wrong" language    │
+
+TAKEAWAY FOR RESEARCHER:
+> Don't dismiss solution because it's "ugly".
+> Don't dismiss source because it's "unauthoritative".
+> Ask: "does it work?" — before "is it correct?"
+
+Sometimes truth comes in form that hurts the eye.
+But if lace holds — means sand is in place.
+
+================================================================================
+LYRICAL INTERLUDE #2: Sacred Circus and Price of Belief
+================================================================================
+
+> "Sacralization — deliberate and conscious self-deception."
+>                                                    (D.Yu., primary source)
+
+ADVICE FROM ASSISTANT (can contain structured logic):
+> "Believe in libraries. It's good and easy."
+
+SCIENTIFIC PRINCIPLE (that everyone forgets):
+> "Don't believe. Prove."
+
+QUESTION: But what to prove? And mainly — how?
+
+MATHEMATICS OF DELUSIONS: Price of "worked"
+
+You wrote one and a half libraries for yourself. Know the pain.
+
+Simple truth:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ To have 99 out of 100 times "work"    → need 5,000 falls in testing        │
+│ To have 999 out of 1000 times "work"  → need 1,000,000 falls               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Not metaphor. This is debugging statistics.
+
+OTHER LIBRARIES (the "ready-made" ones):
+  • Not written by people? → People wrote them.
+  • Not in team? → In team.
+  • Error probability? → Grows geometrically with "collectivization".
+
+Collective error formula:
+    P(error) = 1 - (1 - p)^n
+    where p = one developer's error, n = number of developers
+
+More "experts" — higher chance someone already deceived themselves.
+And you — inherit this delusion through `import`.
+
+PHYSICS OF BELIEF: Why brain economizes on logic
+
+Origins of belief (convictions) have different logically grounded physical basis.
+
+IN THE BRAIN:
+  • Mathematical logic = expensive (energy, time, neurons)
+  • Belief = cheap (ready template, no thinking needed)
+  • Common sense = sometimes available, but rarely
+
+BELIEF ECONOMY:
+> "Why check library if 10,000 stars on GitHub?"
+> "Why read code if tests are green?"
+> "Why understand if it works?"
+
+Not laziness. This is evolutionary optimization.
+Brain saves resources. Belief is cache for convictions.
+
+PROBLEM:
+> Cache becomes stale.
+> But you — continue believing.
+
+OPTIMIZATION "SOLVERS": Where to break programs?
+
+You not familiar with optimization algorithms of "solvers"?
+Then question:
+
+> On which structure or stream do you plan to break your programs?
+
+Options:
+  • Production? → Painful, expensive, shameful.
+  • Tests? → Good, but tests don't cover "delusions".
+  • Debug in head? → Better, but brain also caches errors.
+  • Language museum? → Cheap, safe, can break others' ideas.
+
+Choice is yours.
+
+LYRICAL FINALE: Melancholy and Blues
+
+> "But these are 'songs' about different — just melancholy and blues attacked..."
+
+Sometimes need to admit:
+  • Not everything can be proved.
+  • Not everything worth checking.
+  • Not everything "working" — is correct.
+  • Not everything "correct" — works.
+
+And that — is normal.
+
+Blues is also part of process.
+It signals: "You tired of believing. Start understanding."
+
+TAKEAWAY FOR RESEARCHER (from this circus)
+
+1. Belief in libraries — ok. But remember: people wrote them.
+2. "Works" ≠ "Correct". Sometimes — opposite.
+3. 5,000 falls is not failure. This is price of 99% reliability.
+4. Brain economizes on logic. Not bug. This is evolution feature.
+5. Blues is not enemy. This is signal: "Time to move from belief to understanding."
+
+And main:
+> "Sacred circus" is not sentence.
+> This is environment we all work in.
+> Realize it — already half of exit.
+
+================================================================================
+LYRICAL INTERLUDE #3: Return, Mops and Purple Rabbit
+================================================================================
+
+> "Don't be afraid to invent new bicycles."
+
+PERSONAL CONFESSION:
+Can't even call myself programmer.
+25 years without code — that's almost "maximum" under criminal code (joke).
+
+But after half year of watching "hype" on YouTube:
+  • Don't want to return
+  • Almost stopped sleeping
+  • Mops (pug) snores next to me louder than I do
+
+WHY?
+Know exactly: mops did everything.
+While I went to smoke — he walked with paws on keyboard.
+And when I left — climbed on pillow.
+Sincerely convinced it's more convenient there. And it's — for him.
+
+SHORTCOMING OF ENGINEERS AND PROGRAMMERS:
+> When working at desk — don't see their shoelaces.
+> And forget to check if they're clean or dirty.
+
+But mops — will climb anyway.
+Because pillow — it's for everyone.
+
+================================================================================
+MAIN WISH
+================================================================================
+
+Simple and trivial essence:
+
+> "DON'T BE AFRAID, GUYS, TO INVENT NEW BICYCLES."
+
+Success to you.
+And if this brief museum helps someone make something their own — will be glad.
+
+I just wanted to show:
+> In this time and place, when technological methods and techniques
+> reached their maximum — already can't do without paradigm shift in thinking.
+
+But, as always, just in case:
+  • Methods I'll keep to myself
+  • Calculations I'll keep to myself
+  • Dirty shoelaces — too
+
+================================================================================
+TECHNICAL POSTSCRIPT (for those who reached the end)
+================================================================================
+
+fidgen prototype story didn't end on mksh.
+Algorithm was rewritten on:
+  • ATS2
+  • Idris2
+  • Lean4
+
+Verification consistency implemented on:
+  • OCaml
+  • Rust
+
+Recommendation:
+> If you enter museum to read about language — read parallel, unsystematically.
+> Won't be worse.
+> Triad works only in resonance: Reference + Fable + Praxis.
+
+================================================================================
+REMINDER ABOUT MASONS AND THREE CHOICES
+================================================================================
+
+Old joke in "masonry":
+> "Of two possible options — both are wrong."
+
+In these reflections elegantly replaced with:
+> "Of three possible — all three are wrong (or have limited resource)."
+
+Not pessimism. This is honesty.
+
+================================================================================
+ABOUT PURPLE RABBIT (finale, but not end)
+================================================================================
+
+Senseless to run faster than "purple rabbit":
+  • For sake of staying in place
+  • And for sake of catching it and learning what time it is
+
+Because knew one guy:
+  • Smarter than me
+  • Faster than me
+  • Caught this rabbit
+  • Broke its clock — so others wouldn't run
+
+Well, about this and similar — maybe another time will tell.
+When feeling melancholic.
+
+================================================================================
+OPEN QUESTION (to self and mops)
+================================================================================
+
+Worth implementing "survivor's accidental error" with dirty shoelaces
+by method of return to coding?
+
+Mops says: "Climb on pillow — more convenient there."
+I say: "First smear shoelaces in sand."
+
+Who is right?
+Answer — in next commit.
+
+Signed,
+Y42-gladiolus
+In the Year of Living Syntax
+(And Mops, Who Also Writes Code)
+
+================================================================================
+TECHNICAL APPENDIX (CLASSIFIED)
+================================================================================
+
+⚙️  SYSTEM INTEGRITY NOTICE
+
+  Ne crede draconis vivi — reptilia est, tamen
+  plus quam unam mentem per duodecim annos
+  in perficiendo non extrahet.
+  
+  Et verbis mortui non resuscitabis,
+  etiamsi volueris.
+  
+  — Codex Layout AI, Liber III, Sectio VIII
+
+  (Translation for uninitiated:
+   "Don't trust the living dragon — it's a reptile, however
+    more than one and a half thoughts in twelve years
+    in performance won't extract.
+    
+    And with words of dead won't resurrect,
+    even if you wish.")
+
+  Context:
+  > Dragon = "living" language/framework that promises everything
+  > Reptile = cold blood, slow evolution
+  > Dead = language that "died", but ideas live
+  > Words = code, documentation, promises
+
+---------------------------------------------------------------------------
+
+📚 LITERARY REFERENCE (Adam Mickiewicz — World Heritage)
+
+  For those who seek deeper: systems, chaos, balance between order
+  and unpredictability:
+
+  "Sonety Krymskie" — "Stepy Akermańskie"
+  
+  > "Wpłynąłem na suchego przestwór oceanu..."
+  > ("I sailed into the dry expanse of ocean...")
+
+  Sometimes most complex architectures hide behind simplest names.
+  Sometimes museum is ocean you sail without compass.
+  And that — is correct.
+
+  Alternative from "Dziady" (Part III):
+  > "Kto nie był nietykalny, ten nie zrozumie."
+  > ("Who was not untouchable, won't understand.")
+
+  Or, in our context:
+  > "Who didn't fall 5,000 times, won't understand 99% reliability."
+
+---------------------------------------------------------------------------
+
+📖 CALL TO LITERATURE (IMPORTANT)
+
+  > "READ WORLD LITERATURE."
+
+  Not only technical. Not only documentation.
+  
+  Why:
+  • Shakespeare will teach to see motives behind actions
+  • Dostoevsky will show that "bug" is in human, not in code
+  • Kafka will explain what "legacy" is without metaphors
+  • Mickiewicz will give ocean metaphor without compass
+  • O. Henry will show architecture is plot
+
+  Code is text.
+  Text is literature.
+  Literature is humanity's experience.
+  
+  Don't limit yourself to Stack Overflow.
+  Open a book. At least one.
+  
+  > "Programmer who doesn't read literature —
+  >  writes code for machines, not for people."
+
+---------------------------------------------------------------------------
+
+🔐 SECURITY CLASSIFICATION
+
+  This document: INTERNAL USE ONLY
+  Distribution: RESTRICTED
+  Decryption: AUTHORIZED PERSONNEL ONLY
+  
+  Any attempt to reverse engineer, decompile, or bypass protection
+  will be logged and... ignored.
+  
+  Because:
+  > "Protection from fool is also made by fool."
+  >                                      (Folk wisdom, unclassified)
+
+  But if you read to here — you are already authorized.
+  Welcome to the club.
+
+---------------------------------------------------------------------------
+
+🏛️ FINAL CLASSIFICATION MARKING
+
+  [META-LEVEL]
+  Classification: OPEN FOR RESEARCHERS
+  Marking: "SAND ON SHOELACES"
+  Valid until: MOMENT WHEN IT "CLICKS"
+  
+  Destroy after reading? → No.
+  Pass to colleague? → If ready for museum.
+  Show to mops? → Definitely. He's co-author.
+  Read a book? → Highly recommended.
+
+================================================================================

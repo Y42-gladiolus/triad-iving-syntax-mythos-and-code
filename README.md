@@ -38,3 +38,24 @@ Code without myth is dry. Myth without code is dream.
 Together — they become a **living syntax**.
 
 *Welcome to Triadic Programming.*
+---
+
+## 🇷🇺 Для русскоговорящих читателей
+
+> **Рекомендация:** Перед тем как начать изучать языки — прочитайте хотя бы один раздел из «музея».
+
+**Почему:**
+- Технические файлы (`01_*`, `*-code.org`) дают **синтаксис**
+- Философские файлы (`*-fable.org`, `00_uchebnik-museum.txt`) дают **контекст**
+- Без контекста синтаксис — просто набор правил
+
+**С чего начать:**
+1. 📖 [`00_uchebnik-museum.txt`](00_uchebnik-museum.txt) — учебник-музей (русский)
+2. 🎭 [`fidgen-fable.org`](fidgen-fable.org) — история пути (Lisp → Janet → mksh)
+3. 🏛️ [`99_razmyshlizmy.txt`](99_razmyshlizmy.txt) — размышлизмы о процессе
+
+> «Не бойтесь изобретать новый велосипед.»
+> «Шнурки сначала вымажь в песочек.»
+> «Ответ — в следующем коммите.»
+
+---
