@@ -1,0 +1,83 @@
+99_unfashionable-truths.txt
+TITLE: Unfashionable Truths (or: Why .txt Won Over .org)
+STYLE: meta-commentary | honest | technical
+
+================================================================================
+DISCLAIMER: Nobody Asked for These Thoughts
+================================================================================
+
+> "It is easy to believe in mysticism without knowing math and physics.
+>  But that is also a path to results."
+
+This file exists because sometimes the boring explanation matters more
+than the beautiful story.
+
+================================================================================
+PART I: The Janet/mksh Story — Just an Example
+================================================================================
+
+The tale of "Janet failed, mksh succeeded" is not unique.
+It is one instance of a universal pattern:
+
+    Aesthetic Tool (Janet/.org) -> Beautiful, expressive, fragile
+    Boring Tool (mksh/.txt)     -> Ugly, limited, reliable
+
+You can verify this pattern right inside this repository:
+- 99_fidgen-illuminati-easter-egg.org  <- beautiful, broken on GitHub
+- 99_fidgen-illuminati-easter-egg.txt  <- ugly, works everywhere
+
+The lesson is not about Janet vs mksh.
+The lesson is about **context of execution**.
+
+================================================================================
+PART II: The "Conspiracy" vs The Boring Truth
+================================================================================
+
+CONSPIRACY VERSION:
+> "They forbid publishing Smalltalk code. They silence the elders."
+
+BORING TECHNICAL TRUTH (actual reasons):
+
+Problem                          | Actual Cause
+---------------------------------|----------------------------------
+GitHub renders Org files poorly  | Org-mode is Emacs-native, not web-native
+#+BEGIN_SRC smalltalk broken     | 'smalltalk' not in GitHub's highlighter
+:PROPERTIES: blocks hidden       | GitHub strips unknown Org directives
+Backticks (`) lost in copy-paste | Terminal interprets special characters
+Curly quotes become straight     | Encoding conversion during paste
+Indentation drifts               | Whitespace handling varies by editor
+
+SOLUTION (unfashionable but working):
+> Save as .txt -- plain text, no rendering attempts.
+> GitHub displays it as-is. Indentation preserved. No magic.
+
+================================================================================
+PART III: Why This Hurts (Aesthetically)
+================================================================================
+
+.org with Org-mode directives:
+    - Feels like writing sacred tablets
+    - In Emacs: heaven. On GitHub: broken.
+
+.txt with plain text:
+    - Feels like writing a grocery list
+    - In Emacs: plain. On GitHub: works.
+
+It is not aesthetic. It is not trendy.
+But somehow -- it is more reliable.
+
+================================================================================
+EPILOGUE: The Real Easter Egg
+================================================================================
+
+The real easter egg is not the Smalltalk code.
+The real easter egg is this file.
+
+Because it says:
+> "We tried the beautiful way. It broke.
+>  We used the boring way. It worked.
+>  We kept both. That is honesty."
+
+Signed,
+Y42-gladiolus
+In the Year of the Living Syntax (and Dead Rendering Engines)
