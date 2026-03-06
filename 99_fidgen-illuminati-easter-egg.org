@@ -44,8 +44,8 @@ NamTar class >> verify: anAlgorithm
         "If you see this comment, you are one of the Ten"
 #+END_SRC
 
-*For the 10:* You know why `#liveness` is commented out.
-*For the rest:* Don't worry — the production code in `03_praxis/` is fully verified.
+*For the 10:* You know why #liveness is commented out.
+*For the rest:* Don't worry — the production code in 03_praxis/ is fully verified.
 
 ** The Final Whisper
 :PROPERTIES:
@@ -54,7 +54,7 @@ NamTar class >> verify: anAlgorithm
 
 #+BEGIN_QUOTE
 If you, young engineer, did not understand the fable —
-look at the code in `03_praxis/`.
+look at the code in 03_praxis/.
 It is plain. It is dry. It works.
 
 If you, elder Smalltalker, saw the beauty in the 'errors' —
@@ -76,4 +76,3 @@ This file is intentionally placed at the end (99_ prefix).
 It is not required for understanding fidgen.
 It is a gift for those who seek layers.
 #+END_COMMENT
-
